@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Builder 2.0 — Alpha 1</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="toolbar">
+        <div class="toolbar-brand">
+            <div class="toolbar-title-row"><h1>Story Builder</h1></div>
+        </div>
+
+        <nav class="project-toolbox" aria-label="Gestion du projet">
+            <button id="newProjectButton" class="project-tool-button" type="button" title="Créer un nouveau projet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v6h5M12 11v7M8.5 14.5h7"/></svg><span>Nouveau</span>
+            </button>
+            <button id="openProjectButton" class="project-tool-button" type="button" title="Ouvrir un projet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h7l2 2h9l-2 11H5z"/><path d="M3 7V4h7l2 2h7v3"/></svg><span>Ouvrir</span>
+            </button>
+            <button id="saveProjectButton" class="project-tool-button" type="button" title="Télécharger le projet au format .story.json">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h14l2 2v16H4z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg><span>Sauvegarder</span>
+            </button>
+            <span class="toolbar-separator" aria-hidden="true"></span>
+            <button id="exportScrollytellingArchiveButton" class="project-tool-button project-tool-button-primary" type="button" title="Exporter le scrollytelling complet">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6l2 2h8v14H4z"/><path d="M12 9v7"/><path d="m8.5 12.5 3.5 3.5 3.5-3.5"/></svg><span>Exporter</span>
+            </button>
+            <button id="toggleReaderModeButton" class="mode-switch" type="button" role="switch" aria-checked="false" aria-label="Passer au mode lecture" data-mode="edit">
+                <span class="mode-switch-label mode-switch-edit">Édition</span>
+                <span class="mode-switch-label mode-switch-reader">Lecture</span>
+            </button>
+            <input id="projectFileInput" type="file" accept=".story.json,.json,.js,application/json,text/javascript" hidden>
+        </nav>
+    </header>
+
+    <main>
+        <aside class="chapters-panel">
+            <section class="general-information-section" aria-labelledby="generalInformationHeading">
+                <div class="panel-header panel-header-compact">
+                    <h2 id="generalInformationHeading">Projet</h2>
+                </div>
+                <div id="generalInformationCard"></div>
+            </section>
+
+            <section class="chapters-list-section" aria-labelledby="chaptersHeading">
+                <div class="panel-header panel-header-compact">
+                    <h2 id="chaptersHeading">Chapitres</h2>
+                </div>
+                <div id="chapters"></div>
+            </section>
+            <div class="chapters-panel-footer">
+                <button id="addChapterButton" class="button button-primary chapter-add-button" type="button">Ajouter un chapitre</button>
+            </div>
+        </aside>
+
+        <section id="workspace">
+            <div id="mapStage" class="map-stage">
+            <div id="mapPanel" class="map-panel">
+                <div id="map"></div>
+
+                <div id="mapEmptyState" class="map-empty-state">
+                    <div class="map-empty-card">
+                        <h2>Connecter Mapbox</h2>
+                        <p>
+                            Ajoute un token public Mapbox dans les propriétés
+                            pour afficher la carte.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="mapCoordinates" class="map-coordinates">
+                    Carte non connectée
+                </div>
+
+            </div>
+
+                <div class="preview-overlay-stack">
+                    <article class="preview-card preview-card-overlay">
+                        <div id="previewImageContainer" class="preview-image-container">
+                            <img id="previewImage" alt="">
+                            <div id="previewImagePlaceholder" class="preview-image-placeholder" aria-label="Aucune image"></div>
+                        </div>
+                        <div class="preview-content">
+                            <h2 id="previewTitle">Aperçu</h2>
+                            <p id="previewDescription">Sélectionne un chapitre.</p>
+                            <p id="previewImageCaption" class="preview-caption"></p>
+                        </div>
+                    </article>
+                    <aside id="previewLegend" class="preview-map-legend" hidden aria-label="Aperçu de la légende"></aside>
+                </div>
+            </div>
+
+            <button
+                id="editorDeviceToggle"
+                class="editor-device-toggle"
+                type="button"
+                role="switch"
+                aria-checked="false"
+                aria-label="Basculer entre la prévisualisation desktop et mobile"
+                data-mode="desktop"
+            >
+                <span class="editor-device-option editor-device-option-desktop" title="Desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg><span class="sr-only">Desktop</span></span>
+                <span class="editor-device-option editor-device-option-mobile" title="Mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M10 5h4M11 18.5h2"></path></svg><span class="sr-only">Mobile</span></span>
+            </button>
+        </section>
+
+        
+
+
+        <section id="rightPanelsShell" class="right-panels-shell" aria-label="Panneaux d’édition">
+        <nav id="rightPanelsRail" class="right-panels-rail" aria-label="Choisir un panneau">
+            <button type="button" class="right-panel-rail-button" data-panel="properties" aria-label="Ouvrir Propriétés" title="Propriétés"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="layersPanel" aria-label="Ouvrir Calques" title="Calques"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
+        </nav>
+        <aside id="viewPanel" class="view-panel">
+            <header class="view-panel-header">
+                <div class="view-panel-title">
+                    <h2>Vue</h2>
+                </div>
+                <button id="toggleViewPanelButton" class="view-toggle-button" type="button" aria-label="Réduire la colonne Vue" aria-expanded="true" title="Réduire la colonne">›</button>
+            </header>
+            <div id="viewPanelContent" class="view-panel-content"></div>
+        </aside>
+
+        <aside id="layersPanel" class="layers-panel">
+            <header class="layers-panel-header">
+                <div class="layers-panel-title">
+                    <h2>Calques</h2>
+                </div>
+
+                <button
+                    id="toggleLayersPanelButton"
+                    class="layers-toggle-button"
+                    type="button"
+                    aria-label="Réduire la colonne des calques"
+                    aria-expanded="true"
+                    title="Réduire la colonne"
+                >
+                    ›
+                </button>
+            </header>
+
+            <div class="layers-panel-content">
+                <div class="layers-selection-summary">
+                    <strong id="layersSelectionCount">1 chapitre sélectionné</strong>
+                </div>
+
+                <div class="layers-tools">
+                    <label class="layers-search">
+                        <span class="visually-hidden">Rechercher un calque</span>
+                        <input id="layerSearchInput" type="search" placeholder="Rechercher un calque…">
+                    </label>
+                    <select id="layerTypeFilter" class="layers-type-filter" aria-label="Filtrer les calques par type">
+                        <option value="all">Tous les types</option>
+                    </select>
+                    <button id="resetSelectedLayerStylesButton" class="button button-primary layers-reset-selected" type="button" disabled>
+                        Réinitialiser les calques sélectionnés
+                    </button>
+                </div>
+
+                <div id="layerOpacityList" class="layer-opacity-list">
+                    <p class="layer-empty">
+                        Connecte la carte pour afficher les calques disponibles.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+
+
+        <aside id="legendPanel" class="legend-panel">
+            <header class="legend-panel-header">
+                <div class="legend-panel-title">
+                    <h2>Légendes</h2>
+                </div>
+            </header>
+            <div class="legend-panel-content">
+                <section class="legend-section" aria-labelledby="legendCurrentTitle">
+                    <div class="legend-section-heading">
+                        <h3 id="legendCurrentTitle">Légendes actives</h3>
+                        <span id="legendCurrentCount"></span>
+                    </div>
+                    <div id="legendCurrentItems" class="legend-current-list"></div>
+                </section>
+                <section class="legend-section" aria-labelledby="legendAvailableTitle">
+                    <div class="legend-section-heading">
+                        <h3 id="legendAvailableTitle">Légendes disponibles</h3>
+                        <span id="legendAvailableCount"></span>
+                    </div>
+                    <label class="legend-search layers-search">
+                        <span class="visually-hidden">Rechercher un calque pour la légende</span>
+                        <input id="legendLayerSearchInput" type="search" placeholder="Rechercher un calque…">
+                    </label>
+                    <div id="legendAvailableLayers" class="legend-available-list"></div>
+                    <button id="addSelectedLegendItemsButton" class="button button-primary legend-add-selected" type="button" disabled>
+                        Ajouter à la légende
+                    </button>
+                </section>
+            </div>
+        </aside>
+
+        <aside id="properties" class="properties-panel">
+            <header class="properties-panel-header">
+                <div class="properties-panel-title">
+                    <h2>Propriétés</h2>
+                </div>
+                <button id="togglePropertiesPanelButton" class="properties-toggle-button" type="button" aria-label="Réduire la colonne Propriétés" aria-expanded="true" title="Réduire la colonne">›</button>
+            </header>
+            <div id="propertiesContent" class="properties-panel-content"></div>
+        </aside>
+        </section>
+    </main>
+
+    <section id="readerOverlay" class="reader-overlay" hidden>
+        <div class="reader-stage">
+            <div id="readerViewport" class="reader-viewport desktop" aria-label="Fenêtre de prévisualisation desktop">
+                <iframe
+                    id="readerFrame"
+                    class="reader-frame"
+                    title="Aperçu du scrollytelling"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
+                ></iframe>
+            </div>
+        </div>
+
+        <button
+            id="readerDeviceToggle"
+            class="reader-device-toggle"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-label="Basculer entre la prévisualisation desktop et mobile"
+            data-mode="desktop"
+        >
+            <span class="reader-device-option reader-device-option-desktop" title="Desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg><span class="sr-only">Desktop</span></span>
+            <span class="reader-device-option reader-device-option-mobile" title="Mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M10 5h4M11 18.5h2"></path></svg><span class="sr-only">Mobile</span></span>
+        </button>
+    </section>
+
+    <div id="styleClipboardModal" class="modal style-clipboard-modal" hidden role="dialog" aria-modal="true" aria-labelledby="styleClipboardTitle">
+        <div class="modal-card style-clipboard-card">
+            <header class="modal-header">
+                <div>
+                    <h2 id="styleClipboardTitle">Appliquer les styles</h2>
+                    <p id="styleClipboardSource"></p>
+                </div>
+                <button id="closeStyleClipboardModalButton" class="modal-close-button" type="button" aria-label="Fermer">×</button>
+            </header>
+            <div class="style-clipboard-content">
+                <div class="style-clipboard-target-heading style-clipboard-options-heading">
+                    <h3>Éléments à dupliquer</h3>
+                    <button id="selectAllStyleOptionsButton" type="button" class="button button-secondary">Tout sélectionner</button>
+                </div>
+                <div id="styleClipboardOptions" class="style-clipboard-options"></div>
+                <div class="style-clipboard-target-heading">
+                    <h3>Appliquer aux chapitres</h3>
+                    <button id="selectAllStyleTargetsButton" type="button" class="button button-secondary">Tout sélectionner</button>
+                </div>
+                <div id="styleClipboardTargets" class="style-clipboard-targets"></div>
+            </div>
+            <footer class="modal-actions">
+                <button id="cancelStyleClipboardButton" class="button button-secondary" type="button">Annuler</button>
+                <button id="applyStyleClipboardButton" class="button button-primary" type="button" disabled>Appliquer les styles</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

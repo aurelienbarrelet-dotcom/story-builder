@@ -1,0 +1,3975 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --toolbar-height: 70px;
+    --panel-border: #dddddd;
+    --accent: #820b1c;
+    --accent-dark: #650816;
+    --accent-soft: #f6e9ec;
+    --accent-ring: rgba(130, 11, 28, .16);
+    --blue: var(--accent);
+    --blue-dark: var(--accent-dark);
+    --danger: #d32f2f;
+    --danger-dark: #b71c1c;
+}
+
+body {
+    min-width: 760px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #222;
+    background: #ececec;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+.toolbar {
+    min-height: var(--toolbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 20px;
+    color: white;
+    background: #222;
+}
+
+.toolbar-title,
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toolbar-title h1 {
+    font-size: 22px;
+}
+
+#saveStatus {
+    font-size: 13px;
+    color: #bcbcbc;
+}
+
+#saveStatus.unsaved {
+    color: #ffcc66;
+}
+
+.button {
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .1s, background-color .2s;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+}
+
+.button-primary {
+    color: white;
+    background: var(--blue);
+}
+
+.button-primary:hover {
+    background: var(--blue-dark);
+}
+
+.button-secondary {
+    color: white;
+    background: #444;
+}
+
+.button-secondary:hover {
+    background: #555;
+}
+
+.button-light {
+    color: #222;
+    background: #e8e8e8;
+}
+
+.button-light:hover {
+    background: #d5d5d5;
+}
+
+.button-danger {
+    color: white;
+    background: var(--danger);
+}
+
+.button-danger:hover {
+    background: var(--danger-dark);
+}
+
+.icon-button {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    color: white;
+    background: var(--blue);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 280px minmax(360px, 1fr) 360px 340px;
+    height: calc(100vh - var(--toolbar-height));
+}
+
+.chapters-panel {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--panel-border);
+    background: #f5f5f5;
+}
+
+.panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid var(--panel-border);
+    background: #f5f5f5;
+}
+
+.panel-header h2 {
+    margin-bottom: 4px;
+    font-size: 18px;
+}
+
+#chapterCount {
+    color: #777;
+    font-size: 12px;
+}
+
+#chapters {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.chapter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: background-color .2s, border-color .2s, opacity .2s, box-shadow .2s;
+}
+
+.chapter:hover {
+    border-color: #b4b4b4;
+}
+
+.chapter.selected {
+    color: white;
+    background: var(--blue);
+}
+
+.chapter-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.chapter-title,
+.chapter-id,
+.chapter-media-indicator {
+    display: block;
+}
+
+.chapter-title {
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.chapter-id {
+    font-size: 11px;
+    opacity: .72;
+}
+
+.chapter-media-indicator {
+    margin-top: 6px;
+    font-size: 11px;
+    opacity: .85;
+}
+
+.chapter-drag-handle {
+    color: #999;
+    font-size: 18px;
+    cursor: grab;
+    user-select: none;
+}
+
+.chapter.selected .chapter-drag-handle {
+    color: rgba(255,255,255,.75);
+}
+
+.chapter.dragging {
+    opacity: .4;
+}
+
+.chapter.drag-over {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(130,11,28,.2);
+}
+
+#workspace {
+    display: grid;
+    grid-template-rows: minmax(420px, 1fr) auto;
+    gap: 18px;
+    overflow-y: auto;
+    padding: 18px;
+    background: #e3e7eb;
+}
+
+.preview-card {
+    width: min(680px, 100%);
+    overflow: hidden;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
+}
+
+.preview-image-container {
+    position: relative;
+    min-height: 220px;
+    max-height: 430px;
+    background:
+        linear-gradient(135deg, #eeeeee 25%, #e4e4e4 25%, #e4e4e4 50%, #eeeeee 50%, #eeeeee 75%, #e4e4e4 75%);
+    background-size: 24px 24px;
+}
+
+#previewImage {
+    display: none;
+    width: 100%;
+    max-height: 430px;
+    object-fit: cover;
+}
+
+.preview-image-placeholder {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    font-size: 14px;
+}
+
+.preview-content {
+    padding: 34px 40px 40px;
+}
+
+#previewChapterId {
+    display: block;
+    margin-bottom: 12px;
+    color: #777;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+#previewTitle {
+    margin-bottom: 15px;
+}
+
+#previewDescription {
+    color: #555;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+.preview-caption {
+    margin-top: 14px;
+    color: #777;
+    font-size: 12px;
+    font-style: italic;
+}
+
+#properties {
+    overflow-y: auto;
+    padding: 20px;
+    border-left: 1px solid var(--panel-border);
+    background: #fafafa;
+}
+
+#properties h2 {
+    margin-bottom: 25px;
+}
+
+.property {
+    margin-bottom: 22px;
+}
+
+.property label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.property input,
+.property textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: white;
+}
+
+.property input:focus,
+.property textarea:focus {
+    border-color: var(--blue);
+    outline: 2px solid #b96c78;
+}
+
+.property textarea {
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.property-help {
+    display: block;
+    margin-top: 6px;
+    color: #777;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.media-box {
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+.media-thumb {
+    width: 100%;
+    max-height: 180px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.media-empty {
+    display: flex;
+    min-height: 100px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    color: #777;
+    background: #f7f7f7;
+}
+
+.media-actions,
+.property-actions {
+    display: grid;
+    gap: 10px;
+}
+
+.media-file-name {
+    margin-top: 10px;
+    color: #666;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.empty-message {
+    padding: 20px;
+    color: #777;
+    text-align: center;
+    line-height: 1.5;
+}
+
+@media (max-width: 1050px) {
+    main {
+        grid-template-columns: 240px 1fr;
+        height: auto;
+        min-height: calc(100vh - var(--toolbar-height));
+    }
+
+    #properties {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--panel-border);
+        border-left: 0;
+    }
+}
+
+
+/* =============================
+   SPRINT 6.5 — ÉTATS D'INTERFACE
+============================= */
+
+.button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.chapter[aria-current="true"] {
+    outline: 2px solid rgba(130, 11, 28, 0.15);
+}
+
+.app-error {
+    padding: 12px;
+    border: 1px solid #ef9a9a;
+    border-radius: 6px;
+    color: #8b1e1e;
+    background: #ffebee;
+    line-height: 1.5;
+}
+
+
+/* =============================
+   SPRINT 7 — MAPBOX
+============================= */
+
+.map-panel {
+    position: relative;
+    min-height: 420px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #d8dde2;
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
+}
+
+#map {
+    position: absolute;
+    inset: 0;
+}
+
+.map-empty-state {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background:
+        linear-gradient(rgba(230,234,238,.94), rgba(230,234,238,.94)),
+        linear-gradient(135deg, #dfe5ea 25%, #d3dae0 25%, #d3dae0 50%, #dfe5ea 50%, #dfe5ea 75%, #d3dae0 75%);
+    background-size: auto, 28px 28px;
+}
+
+.map-empty-state.hidden {
+    display: none;
+}
+
+.map-empty-card {
+    max-width: 390px;
+    padding: 28px;
+    border-radius: 12px;
+    text-align: center;
+    background: white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.1);
+}
+
+.map-empty-card h2 {
+    margin-bottom: 12px;
+}
+
+.map-empty-card p {
+    color: #666;
+    line-height: 1.55;
+}
+
+.map-toolbar {
+    position: absolute;
+    z-index: 4;
+    top: 14px;
+    left: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.map-coordinates {
+    position: absolute;
+    z-index: 4;
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 8px 11px;
+    border-radius: 6px;
+    color: white;
+    background: rgba(20, 20, 20, .78);
+    font-family: monospace;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.preview-card-compact {
+    width: 100%;
+}
+
+.preview-card-compact .preview-image-container {
+    min-height: 140px;
+    max-height: 240px;
+}
+
+.preview-card-compact #previewImage {
+    max-height: 240px;
+}
+
+.preview-card-compact .preview-image-placeholder {
+    min-height: 140px;
+}
+
+.preview-card-compact .preview-content {
+    padding: 22px 28px 26px;
+}
+
+.map-location-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.map-location-value {
+    padding: 9px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f5f5f5;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.token-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+.token-row .button {
+    white-space: nowrap;
+}
+
+.mapboxgl-ctrl-top-right {
+    top: 58px;
+}
+
+@media (max-width: 1050px) {
+    #workspace {
+        min-height: 780px;
+    }
+}
+
+
+/* =============================
+   SPRINT 7.1 — PARAMÈTRES
+============================= */
+
+.chapters-footer {
+    flex: 0 0 auto;
+    padding: 14px 16px 16px;
+    border-top: 1px solid var(--panel-border);
+    background: #eeeeee;
+}
+
+.settings-button {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #c9c9c9;
+    border-radius: 7px;
+    color: #333;
+    background: white;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color .2s,
+        background-color .2s,
+        transform .1s;
+}
+
+.settings-button:hover {
+    border-color: #999;
+    background: #fafafa;
+    transform: translateY(-1px);
+}
+
+.modal[hidden] {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(18, 22, 26, .62);
+    backdrop-filter: blur(3px);
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(560px, 100%);
+    overflow: hidden;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 24px 70px rgba(0,0,0,.26);
+}
+
+.modal-header,
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 24px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e3e3e3;
+}
+
+.modal-header h2 {
+    margin-top: 4px;
+    font-size: 22px;
+}
+
+.modal-kicker {
+    color: #777;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.modal-close-button {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    color: #555;
+    background: #eeeeee;
+    font-size: 25px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-close-button:hover {
+    background: #dddddd;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    justify-content: flex-end;
+    border-top: 1px solid #e3e3e3;
+    background: #fafafa;
+}
+
+.settings-message {
+    min-height: 20px;
+    color: #666;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.settings-message.error {
+    color: #b42318;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+/* =============================
+   SPRINT 8 — CAMÉRA ET CALQUES
+============================= */
+
+.property-section-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 9px;
+}
+
+.property-section-title > label {
+    margin: 0;
+}
+
+.property-section-title > span {
+    color: #777;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.camera-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.camera-field {
+    min-width: 0;
+}
+
+.camera-field-wide {
+    grid-column: 1 / -1;
+}
+
+.camera-field label {
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.camera-field input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+
+.layer-opacity-list {
+    display: grid;
+    max-height: 360px;
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.layer-control {
+    padding: 11px;
+    border: 1px solid #dedede;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.layer-control-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+}
+
+.layer-control-header strong {
+    display: block;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layer-control-header span {
+    display: block;
+    max-width: 180px;
+    margin-top: 3px;
+    overflow: hidden;
+    color: #888;
+    font-family: monospace;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layer-control-header output {
+    flex: 0 0 auto;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.layer-control-row {
+    display: grid;
+    grid-template-columns: 1fr 28px;
+    align-items: center;
+    gap: 8px;
+}
+
+.layer-control-row input[type="range"] {
+    width: 100%;
+    margin: 0;
+}
+
+.layer-reset-button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d1d1d1;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+}
+
+.layer-reset-button:hover {
+    border-color: #999;
+    background: #f0f0f0;
+}
+
+.layer-empty {
+    margin: 0;
+    padding: 13px;
+    border: 1px dashed #ccc;
+    border-radius: 7px;
+    color: #777;
+    background: #fafafa;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =============================
+   SPRINT 8.1 — COLONNE CALQUES
+============================= */
+
+.layers-panel {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 1px solid var(--panel-border);
+    background: #f5f5f5;
+    transition: width .22s ease;
+}
+
+.layers-panel-header {
+    display: flex;
+    min-height: 74px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 14px 16px 18px;
+    border-bottom: 1px solid var(--panel-border);
+    background: #f5f5f5;
+}
+
+.layers-panel-title {
+    min-width: 0;
+}
+
+.layers-panel-title h2 {
+    margin-bottom: 4px;
+    font-size: 18px;
+}
+
+.layers-panel-title span {
+    color: #777;
+    font-size: 11px;
+}
+
+.layers-toggle-button {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    color: #444;
+    background: white;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.layers-toggle-button:hover {
+    border-color: #999;
+    background: #eeeeee;
+}
+
+.layers-panel-content {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.layers-panel-help {
+    margin-bottom: 14px;
+    color: #777;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.layers-panel .layer-opacity-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+}
+
+.layers-panel.collapsed {
+    width: 54px;
+}
+
+main:has(.layers-panel.collapsed) {
+    grid-template-columns: 280px minmax(360px, 1fr) 360px 54px;
+}
+
+.layers-panel.collapsed .layers-panel-header {
+    justify-content: center;
+    padding: 16px 10px;
+}
+
+.layers-panel.collapsed .layers-panel-title,
+.layers-panel.collapsed .layers-panel-content {
+    display: none;
+}
+
+@media (max-width: 1380px) {
+    main {
+        grid-template-columns: 240px minmax(340px, 1fr) 330px 300px;
+    }
+
+    main:has(.layers-panel.collapsed) {
+        grid-template-columns: 240px minmax(340px, 1fr) 330px 54px;
+    }
+}
+
+
+/* =============================
+   SPRINT 9 — LAYOUT ÉDITORIAL
+============================= */
+main { grid-template-columns: 280px minmax(440px, 1fr) 340px 360px; }
+main:has(.layers-panel.collapsed) { grid-template-columns: 280px minmax(440px, 1fr) 54px 360px; }
+#workspace { display:block; overflow:hidden; padding:18px; }
+.map-panel { position:relative; height:100%; min-height:520px; }
+.preview-card-overlay {
+    position:absolute; z-index:5; left:28px; bottom:28px;
+    width:min(420px, calc(100% - 56px)); max-height:none;
+    overflow:visible; border-radius:4px; background:rgba(255,255,255,.96);
+    box-shadow:0 16px 42px rgba(0,0,0,.28); backdrop-filter:blur(8px);
+}
+.preview-card-overlay .preview-image-container { min-height:150px; max-height:230px; }
+.preview-card-overlay #previewImage { max-height:230px; }
+.preview-card-overlay .preview-image-placeholder { min-height:150px; }
+.preview-card-overlay .preview-content { padding:22px 24px 26px; }
+.preview-card-overlay #previewTitle { font-size:26px; }
+.chapter { position:relative; }
+.chapter.multi-selected { color:white; background:var(--blue); border-color:#b96c78; box-shadow:0 0 0 2px rgba(130,11,28,.18); }
+.chapter.multi-selected .chapter-drag-handle { color:rgba(255,255,255,.75); }
+.chapter.multi-selected .chapter-menu-button { color:white; }
+.chapter.selected { box-shadow:0 0 0 2px rgba(130,11,28,.28); }
+
+.chapter-actions { position:relative; flex:0 0 auto; }
+.chapter-menu-button { width:30px; height:30px; border:0; border-radius:6px; background:transparent; font-size:20px; cursor:pointer; }
+.chapter.selected .chapter-menu-button { color:white; }
+.chapter-menu-button:hover { background:rgba(0,0,0,.08); }
+.chapter-menu { position:absolute; z-index:20; top:34px; right:0; min-width:130px; padding:6px; border:1px solid #ddd; border-radius:8px; background:white; box-shadow:0 12px 28px rgba(0,0,0,.18); }
+.chapter-menu button { display:block; width:100%; padding:9px 10px; border:0; border-radius:5px; text-align:left; background:transparent; cursor:pointer; }
+.chapter-menu button:hover { background:#eee; }
+.chapter-menu button.danger { color:var(--danger); }
+.layers-selection-summary { margin-bottom:14px; padding:12px; border-radius:8px; background:var(--accent-soft); }
+.layers-selection-summary strong, .layers-selection-summary span { display:block; }
+.layers-selection-summary strong { margin-bottom:4px; font-size:13px; }
+.layers-selection-summary span { color:#7a5860; font-size:11px; line-height:1.4; }
+.property-module { margin-bottom:14px; border:1px solid #ddd; border-radius:9px; background:#fafafa; overflow:hidden; }
+.property-module summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px; cursor:pointer; list-style:none; font-weight:700; }
+.property-module summary::-webkit-details-marker { display:none; }
+.property-module summary::after { content:"+"; font-size:20px; font-weight:400; }
+.property-module[open] summary::after { content:"−"; }
+.property-module summary small { margin-left:auto; color:#888; font-size:10px; font-weight:400; }
+.property-module-content { padding:4px 14px 14px; border-top:1px solid #e5e5e5; }
+.property-module-content .property:last-child { margin-bottom:0; }
+@media (max-width:1380px) {
+  main { grid-template-columns:240px minmax(400px,1fr) 300px 330px; }
+  main:has(.layers-panel.collapsed) { grid-template-columns:240px minmax(400px,1fr) 54px 330px; }
+}
+
+
+/* =============================
+   SPRINT 10 — LECTURE ET FINITIONS
+============================= */
+.camera-field input,
+.property-module input[type="number"],
+.property-module select {
+    appearance: none;
+    border: 1px solid var(--panel-border);
+    outline: none;
+    box-shadow: none;
+    background: white;
+}
+.camera-field input:focus,
+.property-module input[type="number"]:focus,
+.property-module select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(130,11,28,.12);
+}
+.preview-card-overlay { height:auto; }
+.preview-card-overlay .preview-content { overflow-wrap:anywhere; }
+.preview-card-overlay #previewDescription { white-space:pre-wrap; line-height:1.55; }
+.reader-overlay { position:fixed; inset:0; z-index:100; background:#111; }
+.reader-overlay[hidden] { display:none; }
+.reader-toolbar { position:fixed; z-index:104; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 18px; background:rgba(255,255,255,.96); box-shadow:0 4px 18px rgba(0,0,0,.18); }
+.reader-toolbar > div { display:flex; gap:8px; }
+.reader-chapters { position:absolute; z-index:103; inset:64px auto 0 0; width:min(460px, 42vw); overflow-y:auto; padding:28vh 28px 40vh; scroll-behavior:smooth; }
+.reader-chapter { margin-bottom:55vh; border-radius:5px; overflow:hidden; background:rgba(255,255,255,.96); box-shadow:0 18px 45px rgba(0,0,0,.3); }
+.reader-chapter img { display:block; width:100%; max-height:280px; object-fit:cover; }
+.reader-chapter-content { padding:24px 26px 28px; }
+.reader-chapter-content span { color:#777; font-size:11px; text-transform:uppercase; }
+.reader-chapter-content h2 { margin:8px 0 12px; font-size:28px; }
+.reader-chapter-content p { margin:0; white-space:pre-wrap; line-height:1.6; }
+.reader-chapter-content small { display:block; margin-top:14px; color:#777; }
+.reader-mode main, .reader-mode > .toolbar, .reader-mode #settingsModal { visibility:hidden; }
+.reader-mode #mapPanel { visibility:visible; position:fixed; inset:0; z-index:101; }
+.reader-mode #map { position:absolute; inset:0; }
+.reader-mode .preview-card-overlay, .reader-mode .map-toolbar, .reader-mode .map-coordinates { display:none; }
+.reader-map-shade { position:absolute; z-index:102; inset:0; pointer-events:none; background:linear-gradient(90deg, rgba(0,0,0,.18), transparent 55%); }
+@media (max-width:800px) {
+    .reader-toolbar { align-items:flex-start; flex-direction:column; }
+    .reader-toolbar > div { flex-wrap:wrap; }
+    .reader-chapters { inset:120px 0 0 0; width:auto; padding-left:18px; padding-right:18px; }
+}
+
+/* Sprint 10.1 — aperçu scrollytelling fonctionnel */
+.reader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    overflow: hidden;
+    background: #111;
+}
+
+.reader-overlay[hidden] { display: none; }
+
+.reader-map-host,
+.reader-map-host #mapPanel,
+.reader-map-host #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.reader-map-host #mapPanel {
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+}
+
+.reader-map-host .preview-card-overlay,
+.reader-map-host .map-toolbar,
+.reader-map-host .map-coordinates {
+    display: none;
+}
+
+.reader-map-shade {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .04) 58%, transparent 78%);
+}
+
+.reader-toolbar {
+    position: absolute;
+    z-index: 5;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px 12px 18px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+    backdrop-filter: blur(12px);
+}
+
+.reader-toolbar-actions { display: flex; gap: 8px; }
+
+.reader-chapters {
+    position: absolute;
+    z-index: 4;
+    inset: 0 auto 0 0;
+    width: min(470px, 44vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    padding: 34vh 28px 42vh;
+    scrollbar-width: thin;
+}
+
+.reader-chapter {
+    margin: 0 0 58vh;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .32);
+    opacity: .72;
+    transform: translateY(8px) scale(.985);
+    transition: opacity .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+.reader-chapter.active {
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 24px 65px rgba(0, 0, 0, .4);
+}
+
+.reader-chapter:last-child { margin-bottom: 0; }
+.reader-chapter img { display: block; width: 100%; max-height: 300px; object-fit: cover; }
+.reader-chapter-content { padding: 24px 26px 28px; }
+.reader-chapter-content span { color: #6e6e6e; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.reader-chapter-content h2 { margin: 8px 0 12px; font-size: 28px; line-height: 1.12; }
+.reader-chapter-content p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.reader-chapter-content small { display: block; margin-top: 14px; color: #6e6e6e; line-height: 1.45; }
+
+.reader-mode > main {
+    visibility: hidden;
+}
+
+.reader-mode > .toolbar {
+    position: relative;
+    z-index: 102;
+    visibility: visible;
+}
+
+@media (max-width: 760px) {
+    .reader-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .reader-toolbar-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .reader-toolbar-actions #readerCloseButton { grid-column: 1 / -1; }
+
+    .reader-chapters {
+        width: 100%;
+        padding: 40vh 18px 38vh;
+    }
+
+    .reader-chapter { margin-bottom: 52vh; }
+}
+.reader-mode .reader-map-host #mapPanel {
+    z-index: 1;
+    visibility: visible;
+}
+
+/* Sprint 10.2 — lecteur fidèle desktop / mobile */
+body.reader-mode { overflow: hidden; }
+
+.reader-overlay {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    top: var(--toolbar-height);
+    padding: 14px;
+    gap: 14px;
+    background: #232323;
+}
+
+.reader-overlay[hidden] { display: none; }
+
+.reader-toolbar {
+    position: relative;
+    inset: auto;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) auto minmax(360px, 1fr);
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px 10px 16px;
+}
+
+.reader-device-switch {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.reader-device-switch .button.active {
+    color: #fff;
+    border-color: #222;
+    background: #222;
+}
+
+.reader-toolbar-actions {
+    justify-self: end;
+}
+
+.reader-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.reader-viewport {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+    transition: width .25s ease, height .25s ease, border-radius .25s ease;
+}
+
+.reader-viewport.desktop {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+}
+
+.reader-viewport.mobile {
+    width: min(390px, 100%);
+    height: min(844px, 100%);
+    border: 8px solid #111;
+    border-radius: 28px;
+}
+
+.reader-map-host,
+.reader-map-host #mapPanel,
+.reader-map-host #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.reader-map-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.12));
+}
+
+.reader-chapters {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 34vh 24px 40vh;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.reader-chapters::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.reader-step {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 66vh;
+}
+
+.reader-step:last-child { min-height: 42vh; }
+
+.reader-chapter {
+    align-self: flex-start;
+    width: min(440px, calc(100% - 24px));
+    margin: 0;
+}
+
+.reader-viewport.mobile .reader-chapters {
+    padding: 30vh 10px 36vh;
+}
+
+.reader-viewport.mobile .reader-step {
+    min-height: 70vh;
+}
+
+.reader-viewport.mobile .reader-chapter {
+    width: calc(100% - 12px);
+    border-radius: 4px;
+}
+
+.reader-viewport.mobile .reader-chapter-content {
+    padding: 20px 18px 22px;
+}
+
+.reader-viewport.mobile .reader-chapter-content h2 {
+    font-size: 23px;
+}
+
+.reader-mode .reader-map-host #mapPanel {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    visibility: visible;
+}
+
+@media (max-width: 900px) {
+    .reader-toolbar {
+        grid-template-columns: 1fr auto;
+    }
+
+    .reader-toolbar > strong { grid-column: 1; }
+    .reader-device-switch { grid-column: 2; }
+    .reader-toolbar-actions {
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr 2fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .reader-overlay { padding: 8px; gap: 8px; }
+    .reader-toolbar { display: flex; flex-direction: column; align-items: stretch; }
+    .reader-toolbar > strong { text-align: center; }
+    .reader-device-switch .button { flex: 1; }
+    .reader-toolbar-actions { grid-template-columns: 1fr 1fr; }
+    .reader-toolbar-actions #readerCloseButton { grid-column: 1 / -1; }
+}
+
+/* Sprint 10.3 — navigation unifiée édition / lecture */
+:root { --toolbar-height: 112px; }
+
+.toolbar {
+    min-height: var(--toolbar-height);
+    align-items: stretch;
+    padding: 14px 20px;
+}
+
+.toolbar-brand {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.toolbar-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.toolbar-title-row h1 { font-size: 22px; }
+
+.project-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.project-actions .button {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.mode-toggle-button {
+    align-self: flex-start;
+    margin-left: auto;
+}
+
+.reader-mode > .toolbar {
+    visibility: visible;
+}
+
+.reader-mode > main {
+    visibility: hidden;
+}
+
+.reader-overlay {
+    top: var(--toolbar-height);
+    grid-template-rows: minmax(0, 1fr);
+    padding: 14px;
+}
+
+.reader-stage { grid-row: 1; }
+
+.reader-device-toggle {
+    position: fixed;
+    z-index: 120;
+    left: 50%;
+    bottom: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 220px;
+    padding: 4px;
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(24, 24, 24, .9);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, .35);
+    cursor: pointer;
+    transform: translateX(-50%);
+    backdrop-filter: blur(12px);
+}
+
+.reader-device-toggle::before {
+    position: absolute;
+    z-index: -1;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: var(--blue);
+    content: "";
+    transition: transform .22s ease;
+}
+
+.reader-device-toggle[data-mode="mobile"]::before {
+    transform: translateX(100%);
+}
+
+.reader-device-option {
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    opacity: .65;
+    transition: opacity .2s ease;
+}
+
+.reader-device-toggle[data-mode="desktop"] .reader-device-option-desktop,
+.reader-device-toggle[data-mode="mobile"] .reader-device-option-mobile {
+    opacity: 1;
+}
+
+@media (max-width: 900px) {
+    :root { --toolbar-height: 126px; }
+
+    .toolbar {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .project-actions { flex-wrap: wrap; }
+    .project-actions .button { font-size: 12px; }
+}
+
+/* Sprint 11 — éditeur avancé des calques */
+.visually-hidden {
+    position:absolute!important;
+    width:1px!important;
+    height:1px!important;
+    padding:0!important;
+    margin:-1px!important;
+    overflow:hidden!important;
+    clip:rect(0,0,0,0)!important;
+    white-space:nowrap!important;
+    border:0!important;
+}
+.layers-tools {
+    display:grid;
+    grid-template-columns:1fr 126px;
+    gap:8px;
+    padding:0 0 14px;
+}
+.layers-search input,
+.layers-type-filter {
+    width:100%;
+    min-width:0;
+    height:36px;
+    border:1px solid #d6d8de;
+    border-radius:8px;
+    background:#fff;
+    color:#20242c;
+    font:inherit;
+    font-size:12px;
+    outline:none;
+}
+.layers-search input { padding:0 10px; }
+.layers-type-filter { padding:0 8px; }
+.layers-search input:focus,
+.layers-type-filter:focus {
+    border-color:#9f3b4b;
+    box-shadow:0 0 0 3px rgba(130,11,28,.12);
+}
+.layers-reset-all {
+    grid-column:1 / -1;
+    border:0;
+    background:transparent;
+    color:#6a6f7a;
+    font:inherit;
+    font-size:11px;
+    text-align:left;
+    padding:2px 0;
+    cursor:pointer;
+}
+.layers-reset-all:hover { color:#1d2430; text-decoration:underline; }
+.layer-opacity-list { display:flex; flex-direction:column; gap:9px; }
+.layer-module {
+    border:1px solid #dfe1e6;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+}
+.layer-module.is-modified { border-color:#c58a94; box-shadow:inset 3px 0 0 var(--accent); }
+.layer-module > summary {
+    display:grid;
+    grid-template-columns:8px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+    padding:11px 10px;
+    cursor:pointer;
+    list-style:none;
+    user-select:none;
+}
+.layer-module > summary::-webkit-details-marker { display:none; }
+.layer-state-dot { width:7px; height:7px; border-radius:50%; background:#c8cbd3; }
+.layer-module.is-modified .layer-state-dot { background:var(--accent); }
+.layer-summary-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.layer-summary-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.layer-summary-copy small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#858a94; font-size:9px; }
+.layer-modified-label { color:var(--accent); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.layer-module-body { padding:4px 11px 12px; border-top:1px solid #eceef2; background:#fbfbfc; }
+.layer-control { padding:10px 0; border-bottom:1px solid #e9ebef; }
+.layer-control-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.layer-control-header label { font-size:11px; font-weight:650; color:#333842; }
+.layer-control-value { color:#7b818c; font-size:9px; }
+.layer-control-row { display:flex; align-items:center; gap:8px; }
+.layer-control-row > input[type="range"] { flex:1; min-width:0; accent-color:var(--accent); }
+.layer-select,
+.layer-number {
+    flex:1;
+    min-width:0;
+    height:32px;
+    border:1px solid #d6d8de;
+    border-radius:7px;
+    background:#fff;
+    padding:0 8px;
+    color:#262b33;
+    font:inherit;
+    font-size:11px;
+    outline:none;
+}
+.layer-number:focus,
+.layer-select:focus { border-color:#9f3b4b; box-shadow:0 0 0 3px rgba(130,11,28,.1); }
+.layer-color { width:46px; height:32px; padding:3px; border:1px solid #d6d8de; border-radius:7px; background:#fff; cursor:pointer; }
+.layer-control-reset {
+    flex:0 0 30px;
+    width:30px;
+    height:30px;
+    border:1px solid #dfe1e6;
+    border-radius:7px;
+    background:#fff;
+    color:#6d737e;
+    cursor:pointer;
+}
+.layer-control-reset:hover { background:#f0f2f7; color:#20242c; }
+.is-mixed { opacity:.62; outline:1px dashed #a96c76; outline-offset:2px; }
+.layer-module-actions { padding-top:11px; }
+.layer-reset-button {
+    border:0;
+    background:transparent;
+    color:#777e89;
+    font:inherit;
+    font-size:10px;
+    padding:0;
+    cursor:pointer;
+}
+.layer-reset-button:hover { color:#c73f4d; text-decoration:underline; }
+
+/* Sprint 11.4 — interface allégée et modes clair / sombre */
+:root { --toolbar-height: 70px; }
+
+.toolbar {
+    min-height: var(--toolbar-height);
+    align-items: center;
+    padding: 10px 18px;
+    color: #1d2430;
+    background: #fff;
+    border-bottom: 1px solid #dfe3e8;
+    box-shadow: 0 2px 12px rgba(25, 34, 47, .06);
+    transition: color .2s ease, background-color .2s ease, border-color .2s ease;
+}
+.toolbar-brand { gap: 0; }
+.toolbar-title-row { align-items: center; }
+.toolbar-title-row h1 { color: inherit; }
+#saveStatus { color: #7b8491; }
+#saveStatus.unsaved { color: #a76500; }
+
+.reader-mode > .toolbar {
+    color: #fff;
+    background: #17191d;
+    border-bottom-color: #2d3138;
+    box-shadow: 0 5px 22px rgba(0,0,0,.28);
+}
+.reader-mode #saveStatus { color: #aeb4bd; }
+.reader-mode #saveStatus.unsaved { color: #ffd178; }
+
+.mode-switch {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 190px;
+    padding: 4px;
+    border: 1px solid #d8dde5;
+    border-radius: 999px;
+    color: #5e6875;
+    background: #f0f2f5;
+    cursor: pointer;
+    isolation: isolate;
+}
+.mode-switch::before {
+    position: absolute;
+    z-index: -1;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(23,31,43,.15);
+    content: "";
+    transition: transform .22s ease, background-color .22s ease;
+}
+.mode-switch[data-mode="reader"]::before { transform: translateX(100%); }
+.mode-switch-label {
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    opacity: .58;
+    transition: opacity .2s ease, color .2s ease;
+}
+.mode-switch[data-mode="edit"] .mode-switch-edit,
+.mode-switch[data-mode="reader"] .mode-switch-reader { color: #1d2430; opacity: 1; }
+.reader-mode .mode-switch {
+    color: #bbc1ca;
+    border-color: #3a3f47;
+    background: #292d33;
+}
+.reader-mode .mode-switch::before { background: #fff; }
+
+.project-toolbox {
+    display: grid;
+    grid-template-columns: repeat(4, 36px);
+    gap: 6px;
+    align-self: center;
+    margin: 12px 14px 0;
+    padding: 7px;
+    border: 1px solid #e0e3e8;
+    border-radius: 12px;
+    background: rgba(255,255,255,.72);
+    box-shadow: 0 4px 14px rgba(30,40,55,.05);
+}
+.project-tool-button {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    color: #697382;
+    background: transparent;
+    cursor: pointer;
+    transition: color .18s ease, background-color .18s ease, transform .1s ease;
+}
+.project-tool-button:hover { color: #1e2937; background: #e9edf2; transform: translateY(-1px); }
+.project-tool-button-primary { color: var(--blue); }
+.project-tool-button svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.panel-header { padding-top: 14px; }
+.chapter-id, #previewChapterId, .reader-chapter-content > span { display: none !important; }
+.chapter-title { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+    :root { --toolbar-height: 70px; }
+    .toolbar { padding: 9px 12px; }
+    .toolbar-title-row h1 { font-size: 19px; }
+    #saveStatus { display: none; }
+    .mode-switch { width: 168px; }
+}
+
+/* Sprint 11.5 — finitions d’interface et redimensionnement du lecteur */
+:root {
+    --editor-canvas: #e9edf2;
+    --editor-panel: #f4f6f8;
+    --editor-surface: #ffffff;
+    --editor-subtle: #eef1f4;
+    --editor-border: #d9dee5;
+    --editor-muted: #6f7885;
+    --panel-border: var(--editor-border);
+}
+
+body:not(.reader-mode) { background: var(--editor-canvas); }
+body:not(.reader-mode) .chapters-panel,
+body:not(.reader-mode) .layers-panel,
+body:not(.reader-mode) #properties,
+body:not(.reader-mode) .panel-header,
+body:not(.reader-mode) .layers-panel-header {
+    background: var(--editor-panel);
+}
+body:not(.reader-mode) #workspace { background: var(--editor-canvas); }
+body:not(.reader-mode) .chapter,
+body:not(.reader-mode) .preview-card,
+body:not(.reader-mode) .media-box,
+body:not(.reader-mode) .modal-dialog,
+body:not(.reader-mode) .layer-module,
+body:not(.reader-mode) .property-module,
+body:not(.reader-mode) .property input,
+body:not(.reader-mode) .property textarea,
+body:not(.reader-mode) .camera-field input,
+body:not(.reader-mode) .layers-toggle-button,
+body:not(.reader-mode) .layer-control-reset,
+body:not(.reader-mode) .layer-color,
+body:not(.reader-mode) .layer-number,
+body:not(.reader-mode) .layer-select {
+    background: var(--editor-surface);
+    border-color: var(--editor-border);
+}
+body:not(.reader-mode) .layer-module-body,
+body:not(.reader-mode) .media-empty,
+body:not(.reader-mode) .map-location-value,
+body:not(.reader-mode) .layer-empty,
+body:not(.reader-mode) .modal-footer,
+body:not(.reader-mode) .layers-tools,
+body:not(.reader-mode) .layers-selection-summary {
+    background: var(--editor-subtle);
+}
+
+.project-toolbox {
+    width: calc(100% - 28px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-self: stretch;
+    justify-self: stretch;
+    background: var(--editor-surface);
+    border-color: var(--editor-border);
+}
+.project-tool-button { width: 100%; }
+
+/* La transition visuelle reste fluide, tandis que ResizeObserver resynchronise Mapbox. */
+.reader-viewport { contain: layout size; }
+
+/* Sprint 11.6 — sélection des chapitres et titres de panneaux */
+body:not(.reader-mode) .chapter.selected,
+body:not(.reader-mode) .chapter.multi-selected {
+    color: #fff;
+    background: var(--blue);
+    border-color: #b96c78;
+}
+body:not(.reader-mode) .chapter.selected .chapter-title,
+body:not(.reader-mode) .chapter.multi-selected .chapter-title,
+body:not(.reader-mode) .chapter.selected .chapter-media-indicator,
+body:not(.reader-mode) .chapter.multi-selected .chapter-media-indicator {
+    color: inherit;
+}
+body:not(.reader-mode) .chapter.selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.multi-selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.selected .chapter-drag-handle,
+body:not(.reader-mode) .chapter.multi-selected .chapter-drag-handle {
+    color: rgba(255, 255, 255, .9);
+}
+
+.panel-header h2,
+.layers-panel-title h2,
+#properties > h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+/* Sprint 11.7 — informations générales */
+.chapter-general {
+    width: 100%;
+    border: 1px solid #c8ccd1;
+    border-radius: 8px;
+    background: #dfe2e5;
+    color: #202327;
+    text-align: left;
+    margin-bottom: 12px;
+    padding: 11px 10px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+}
+.chapter-general:hover { background: #d5d9dd; }
+.chapter-general.selected { background: #c8cdd2; box-shadow: inset 3px 0 0 #1f6feb; }
+.chapter-general-icon { font-size: 10px; opacity: .7; }
+.chapter-general .chapter-content { min-width: 0; }
+.chapter-general .chapter-media-indicator { color: #60656b; }
+.properties-context { margin: 0 0 14px; padding: 10px 12px; border-radius: 8px; background: #e8eaec; display: grid; gap: 2px; }
+.properties-context span { font-size: 12px; color: #676c72; }
+.compact-label { font-size: 12px !important; font-weight: 500 !important; color: #666c72; }
+.collection-list { display: grid; gap: 12px; }
+.collection-card { padding: 12px; border: 1px solid #d4d7da; border-radius: 8px; background: #f4f5f6; }
+.collection-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.collection-card-header strong { font-size: 13px; }
+.text-danger { border: 0; background: transparent; color: #a72b2b; font-size: 12px; cursor: pointer; padding: 3px; }
+.collection-add { width: 100%; }
+.property-subtitle { margin: 16px 0 9px; font-size: 13px; }
+.author-image-row { display: flex; align-items: center; gap: 8px; }
+.author-image-row img, .author-image-row > span { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; background: #e0e2e4; display: grid; place-items: center; font-size: 10px; color: #71767c; }
+.reader-title-slide { min-height: 100%; display: grid; place-items: center; padding: 12vh 8vw; position: relative; z-index: 2; }
+.reader-title-content { width: min(680px, 88%); padding: 32px; border-radius: 4px; background: rgba(255,255,255,.94); box-shadow: 0 18px 50px rgba(0,0,0,.2); text-align: center; }
+.reader-title-content h1 { margin: 5px 0 14px; font-size: clamp(32px, 5vw, 64px); line-height: 1.02; }
+.reader-title-content > p { margin: 0 auto 18px; max-width: 54ch; font-size: 18px; line-height: 1.5; }
+.reader-kicker { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+.reader-title-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+.reader-authors { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 20px; margin: 18px 0; }
+.reader-author { display: flex; align-items: center; gap: 8px; }
+.reader-author img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.reader-author a, .reader-footer a { color: inherit; text-decoration: underline; }
+.reader-footer { position: relative; z-index: 2; background: #111315; color: white; padding: 70px max(7vw, 28px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 50px; }
+.reader-footer h2 { font-size: 15px; margin: 0 0 18px; }
+.reader-footer p, .reader-footer li { font-size: 13px; line-height: 1.6; }
+.reader-footer ul { margin: 0; padding-left: 18px; }
+.reader-viewport.mobile .reader-title-content { width: 90%; padding: 23px 18px; }
+.reader-viewport.mobile .reader-title-content h1 { font-size: 34px; }
+.reader-viewport.mobile .reader-title-content > p { font-size: 15px; }
+.reader-viewport.mobile .reader-footer { grid-template-columns: 1fr; gap: 28px; padding: 50px 24px 90px; }
+
+.author-card > summary { cursor: pointer; list-style: none; }
+.author-card > summary::-webkit-details-marker { display: none; }
+.author-card .collection-card-content { padding-top: 12px; }
+.author-card:not([open]) .collection-card-header span { transform: rotate(-90deg); }
+.author-remove { margin-top: 8px; }
+
+/* Sprint 11.9 fixes */
+.author-card { padding:0; border-radius:8px; overflow:visible; }
+.author-card > summary { min-height:52px; padding:8px 10px; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; }
+.author-card > summary::-webkit-details-marker { display:none; }
+.author-card-title { min-width:0; display:flex; align-items:center; gap:9px; }
+.author-card-title strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.author-card-title img, .author-avatar-placeholder { width:30px; height:30px; border-radius:50%; object-fit:cover; flex:0 0 auto; }
+.author-avatar-placeholder { display:grid; place-items:center; background:#e4e7ec; color:#68707d; font-size:12px; font-weight:700; }
+.author-actions { position:relative; margin-left:auto; }
+.author-menu { top:30px; right:0; }
+.author-card .collection-card-content { padding:10px; border-top:1px solid var(--editor-border, #ddd); }
+.author-image-row { min-height:40px; gap:7px; }
+.author-image-row img { width:38px; height:38px; }
+.collection-add.button-primary { width:100%; justify-content:center; background:#2673ff; color:#fff; border-color:#2673ff; }
+.collection-add.button-primary:hover { background:#125ee6; }
+
+
+/* Sprint 11.10 — Vue séparée, auteurs compacts et ajout de chapitre */
+main { grid-template-columns: 260px minmax(380px, 1fr) 250px 320px 340px; }
+main:has(.view-panel.collapsed) { grid-template-columns: 260px minmax(380px, 1fr) 54px 320px 340px; }
+main:has(.layers-panel.collapsed) { grid-template-columns: 260px minmax(380px, 1fr) 250px 54px 340px; }
+main:has(.view-panel.collapsed):has(.layers-panel.collapsed) { grid-template-columns: 260px minmax(380px, 1fr) 54px 54px 340px; }
+
+.chapters-panel-footer { margin-top:auto; padding:12px; border-top:1px solid var(--panel-border); background:#f5f5f5; }
+.chapter-add-button { width:100%; justify-content:center; min-height:40px; }
+.panel-header { padding-right:20px; }
+
+.view-panel { min-width:0; overflow:hidden; border-left:1px solid var(--panel-border); border-right:1px solid var(--panel-border); background:#f5f5f5; transition:width .18s ease; }
+.view-panel-header { display:flex; align-items:center; justify-content:space-between; min-height:72px; padding:16px; border-bottom:1px solid var(--panel-border); }
+.view-panel-title h2 { margin:0 0 4px; font-size:18px; line-height:1.2; }
+.view-panel-title span { color:#73777d; font-size:12px; }
+.view-panel-content { padding:16px; overflow:auto; height:calc(100% - 72px); box-sizing:border-box; }
+.view-toggle-button { width:30px; height:30px; border:0; border-radius:6px; background:#e3e5e8; cursor:pointer; font-size:20px; }
+.view-panel.collapsed .view-panel-title, .view-panel.collapsed .view-panel-content { display:none; }
+.view-panel.collapsed .view-panel-header { justify-content:center; padding:16px 8px; }
+.view-camera-form { grid-template-columns:1fr; }
+.view-camera-form .camera-field-wide { grid-column:auto; }
+.view-help { display:block; margin-top:12px; }
+.panel-empty-message { color:#73777d; font-size:13px; line-height:1.5; }
+
+.author-card:not([open]) .collection-card-header span { transform:none !important; }
+.author-card > summary::after { content:none !important; display:none !important; }
+.author-card > summary { flex-direction:row !important; }
+.author-card-title { flex-direction:row !important; }
+.author-actions { display:flex; align-items:center; }
+
+@media (max-width: 1450px) {
+  main { grid-template-columns:230px minmax(340px,1fr) 220px 290px 310px; }
+  main:has(.view-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 54px 290px 310px; }
+  main:has(.layers-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 220px 54px 310px; }
+  main:has(.view-panel.collapsed):has(.layers-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 54px 54px 310px; }
+}
+
+
+/* Sprint 11.13 — panneau Propriétés repliable et pictogrammes */
+#properties.properties-panel { padding:0; overflow:hidden; min-width:0; }
+.properties-panel-header { display:flex; align-items:center; justify-content:space-between; min-height:72px; padding:16px; border-bottom:1px solid var(--panel-border); box-sizing:border-box; }
+.properties-panel-title h2 { margin:0 0 4px; font-size:18px; line-height:1.2; }
+.properties-panel-title span { color:#73777d; font-size:12px; }
+.properties-panel-content { height:calc(100% - 72px); overflow-y:auto; padding:20px; box-sizing:border-box; }
+.properties-toggle-button, .view-toggle-button, .layers-toggle-button { display:grid; place-items:center; flex:0 0 auto; }
+.properties-toggle-button { width:30px; height:30px; border:0; border-radius:6px; background:#e3e5e8; cursor:pointer; font-size:20px; }
+.properties-toggle-button svg, .view-toggle-button svg, .layers-toggle-button svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.properties-panel.collapsed .properties-panel-title, .properties-panel.collapsed .properties-panel-content { display:none; }
+.properties-panel.collapsed .properties-panel-header { justify-content:center; padding:16px 8px; }
+main:has(.properties-panel.collapsed) { grid-template-columns:260px minmax(380px,1fr) 250px 320px 54px; }
+main:has(.view-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:260px minmax(380px,1fr) 54px 320px 54px; }
+main:has(.layers-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:260px minmax(380px,1fr) 250px 54px 54px; }
+main:has(.view-panel.collapsed):has(.layers-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:260px minmax(380px,1fr) 54px 54px 54px; }
+@media (max-width:1450px) {
+  main:has(.properties-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 220px 290px 54px; }
+  main:has(.view-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 54px 290px 54px; }
+  main:has(.layers-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 220px 54px 54px; }
+  main:has(.view-panel.collapsed):has(.layers-panel.collapsed):has(.properties-panel.collapsed) { grid-template-columns:230px minmax(340px,1fr) 54px 54px 54px; }
+}
+
+
+/* Sprint 11.14 — actions Vue, création contextuelle et harmonisation des volets */
+.view-panel, .layers-panel, #properties.properties-panel { background:#f5f5f5; }
+.view-panel-header, .layers-panel-header, .properties-panel-header {
+    min-height:68px; padding:14px 16px; background:#f5f5f5; border-bottom:1px solid var(--panel-border);
+}
+.view-panel-title h2, .layers-panel-title h2, .properties-panel-title h2 {
+    margin:0 0 3px; font-size:17px; line-height:1.2; font-weight:700;
+}
+.view-panel-title span, .layers-panel-title span, .properties-panel-title span {
+    color:#73777d; font-size:11px; line-height:1.3;
+}
+.view-panel-content, .layers-panel-content, .properties-panel-content { padding:16px; }
+.view-toggle-button, .layers-toggle-button, .properties-toggle-button {
+    width:30px; height:30px; border-radius:7px; color:#34383d; background:#e5e7ea;
+}
+.view-toggle-button:hover, .layers-toggle-button:hover, .properties-toggle-button:hover { background:#d8dce0; }
+.panel-actions { display:grid; gap:8px; margin-top:14px; }
+.panel-actions .button { width:100%; min-height:38px; padding:9px 12px; border-radius:7px; font-size:13px; }
+.view-actions .button-light { color:#2f3439; background:#e4e7ea; }
+.view-actions .button-light:hover { background:#d7dbe0; }
+.camera-field label, .property label, .layers-tools label { font-size:12px; font-weight:600; color:#555b62; }
+.camera-field input, .property input, .property textarea, .property select, .layers-tools input, .layers-tools select {
+    border:1px solid #cfd3d8; border-radius:7px; background:#fff;
+}
+.view-help, .property-help, .panel-empty-message { font-size:12px; line-height:1.45; color:#737980; }
+
+/* Sprint 11.15 — harmonisation stricte des volets de droite */
+:root {
+    --right-panel-width: 320px;
+    --right-panel-collapsed-width: 56px;
+    --right-panel-bg: #f5f5f5;
+    --right-panel-header-height: 68px;
+    --right-panel-padding: 16px;
+    --right-panel-radius: 7px;
+    --right-panel-field-height: 38px;
+}
+
+main {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-width) var(--right-panel-width) var(--right-panel-width);
+}
+main:has(.view-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-width) var(--right-panel-width);
+}
+main:has(.layers-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-width) var(--right-panel-collapsed-width) var(--right-panel-width);
+}
+main:has(.properties-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-width) var(--right-panel-width) var(--right-panel-collapsed-width);
+}
+main:has(.view-panel.collapsed):has(.layers-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width) var(--right-panel-width);
+}
+main:has(.view-panel.collapsed):has(.properties-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-width) var(--right-panel-collapsed-width);
+}
+main:has(.layers-panel.collapsed):has(.properties-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-width) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width);
+}
+main:has(.view-panel.collapsed):has(.layers-panel.collapsed):has(.properties-panel.collapsed) {
+    grid-template-columns: 260px minmax(380px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width);
+}
+
+.view-panel,
+.layers-panel,
+#properties.properties-panel {
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    border: 0;
+    border-left: 1px solid var(--panel-border);
+    background: var(--right-panel-bg);
+}
+
+.view-panel-header,
+.layers-panel-header,
+.properties-panel-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: var(--right-panel-header-height);
+    height: var(--right-panel-header-height);
+    padding: 14px var(--right-panel-padding);
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--right-panel-bg);
+}
+
+.view-panel-title,
+.layers-panel-title,
+.properties-panel-title {
+    min-width: 0;
+    padding-right: 42px;
+}
+
+.view-panel-title h2,
+.layers-panel-title h2,
+.properties-panel-title h2 {
+    margin: 0 0 3px;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.view-panel-title span,
+.layers-panel-title span,
+.properties-panel-title span {
+    display: block;
+    overflow: hidden;
+    color: #73777d;
+    font-size: 11px;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.view-toggle-button,
+.layers-toggle-button,
+.properties-toggle-button {
+    position: absolute;
+    top: 50%;
+    right: var(--right-panel-padding);
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 0;
+    border-radius: var(--right-panel-radius);
+    color: #34383d;
+    background: #e5e7ea;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.view-toggle-button:hover,
+.layers-toggle-button:hover,
+.properties-toggle-button:hover {
+    background: #d8dce0;
+}
+
+.view-toggle-button svg,
+.layers-toggle-button svg,
+.properties-toggle-button svg {
+    width: 19px;
+    height: 19px;
+}
+
+.view-panel-content,
+.layers-panel-content,
+.properties-panel-content {
+    height: calc(100% - var(--right-panel-header-height));
+    padding: var(--right-panel-padding);
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--right-panel-bg);
+}
+
+.view-panel.collapsed .view-panel-header,
+.layers-panel.collapsed .layers-panel-header,
+.properties-panel.collapsed .properties-panel-header {
+    justify-content: center;
+    width: 100%;
+    padding: 0;
+}
+
+.view-panel.collapsed .view-toggle-button,
+.layers-panel.collapsed .layers-toggle-button,
+.properties-panel.collapsed .properties-toggle-button {
+    position: static;
+    transform: none;
+}
+
+.view-panel.collapsed .view-panel-title,
+.layers-panel.collapsed .layers-panel-title,
+.properties-panel.collapsed .properties-panel-title,
+.view-panel.collapsed .view-panel-content,
+.layers-panel.collapsed .layers-panel-content,
+.properties-panel.collapsed .properties-panel-content {
+    display: none;
+}
+
+.view-panel input,
+.view-panel select,
+.view-panel textarea,
+.layers-panel input,
+.layers-panel select,
+.layers-panel textarea,
+.properties-panel input,
+.properties-panel select,
+.properties-panel textarea {
+    width: 100%;
+    min-height: var(--right-panel-field-height);
+    padding: 9px 10px;
+    border: 1px solid #cfd3d8;
+    border-radius: var(--right-panel-radius);
+    background: #fff;
+    color: #25282c;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.view-panel textarea,
+.layers-panel textarea,
+.properties-panel textarea {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.view-panel label,
+.layers-panel label,
+.properties-panel label {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #555b62;
+}
+
+.view-panel .button,
+.layers-panel .button,
+.properties-panel .button,
+.layers-reset-all {
+    min-height: var(--right-panel-field-height);
+    padding: 9px 12px;
+    border-radius: var(--right-panel-radius);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.layers-tools,
+.view-camera-form,
+.properties-panel-content .property,
+.panel-actions {
+    gap: 10px;
+}
+
+@media (max-width: 1450px) {
+    :root { --right-panel-width: 290px; }
+    main {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-width) var(--right-panel-width) var(--right-panel-width);
+    }
+    main:has(.view-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-width) var(--right-panel-width);
+    }
+    main:has(.layers-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-width) var(--right-panel-collapsed-width) var(--right-panel-width);
+    }
+    main:has(.properties-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-width) var(--right-panel-width) var(--right-panel-collapsed-width);
+    }
+    main:has(.view-panel.collapsed):has(.layers-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width) var(--right-panel-width);
+    }
+    main:has(.view-panel.collapsed):has(.properties-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-width) var(--right-panel-collapsed-width);
+    }
+    main:has(.layers-panel.collapsed):has(.properties-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-width) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width);
+    }
+    main:has(.view-panel.collapsed):has(.layers-panel.collapsed):has(.properties-panel.collapsed) {
+        grid-template-columns: 230px minmax(340px, 1fr) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width) var(--right-panel-collapsed-width);
+    }
+}
+
+
+/* Sprint 11.16 — alignement des en-têtes et sélection multiple de calques */
+.view-panel-title,
+.layers-panel-title,
+.properties-panel-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+}
+
+.view-panel-title h2,
+.layers-panel-title h2,
+.properties-panel-title h2 {
+    margin: 0;
+}
+
+.view-panel-title span,
+.layers-panel-title span,
+.properties-panel-title span {
+    margin: 0;
+}
+
+.layers-reset-selected {
+    width: 100%;
+    justify-content: center;
+}
+
+.layers-reset-selected:disabled {
+    color: #8b929b;
+    background: #dfe3e8;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.layer-module > summary {
+    grid-template-columns: 18px 8px minmax(0, 1fr) auto;
+}
+
+.layer-selection-checkbox {
+    width: 16px !important;
+    min-width: 16px;
+    height: 16px;
+    min-height: 16px !important;
+    margin: 0;
+    padding: 0 !important;
+    accent-color: var(--blue);
+    cursor: pointer;
+}
+
+
+/* Sprint 11.18 — correctif stable */
+.chapter-content { min-width: 0; overflow: hidden; }
+.chapter-title {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.layers-reset-selected {
+    width: 100% !important;
+    justify-content: center;
+}
+.button-primary,
+.chapter-add-button,
+.collection-add.button-primary,
+.layers-reset-selected {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+}
+/* En-tête Propriétés : deux zones seulement, sans colonne fantôme. */
+.properties-panel-header {
+    position: relative;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    min-height: var(--right-panel-header-height) !important;
+    height: auto !important;
+    padding: 14px var(--right-panel-padding) !important;
+}
+.properties-panel-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.properties-panel-title h2,
+.properties-panel-title span { margin: 0 !important; }
+.properties-toggle-button {
+    position: static !important;
+    flex: 0 0 30px;
+    transform: none !important;
+    margin: 0 !important;
+}
+.properties-panel.collapsed .properties-panel-header {
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+/* Sprint 11.19 — menu vertical exclusif pour les volets de droite */
+main {
+    grid-template-columns: 260px minmax(380px, 1fr) minmax(376px, 376px) !important;
+}
+
+.right-panels-shell {
+    min-width: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: var(--right-panel-collapsed-width) minmax(0, 1fr);
+    grid-template-rows: repeat(3, var(--right-panel-header-height)) minmax(0, 1fr);
+    overflow: hidden;
+    background: var(--right-panel-bg);
+    border-left: 1px solid var(--panel-border);
+}
+
+.right-panels-shell > .view-panel,
+.right-panels-shell > .layers-panel,
+.right-panels-shell > .properties-panel {
+    width: auto !important;
+    min-width: 0;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    grid-column: 1;
+    overflow: hidden;
+}
+
+.right-panels-shell > .view-panel { grid-row: 1; }
+.right-panels-shell > .layers-panel { grid-row: 2; }
+.right-panels-shell > .properties-panel { grid-row: 3; }
+
+.right-panels-shell > .active-right-panel {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    height: 100%;
+    border-left: 1px solid var(--panel-border) !important;
+}
+
+.right-panels-shell > .collapsed {
+    height: var(--right-panel-header-height);
+}
+
+.right-panels-shell > .collapsed .view-panel-header,
+.right-panels-shell > .collapsed .layers-panel-header,
+.right-panels-shell > .collapsed .properties-panel-header {
+    height: var(--right-panel-header-height) !important;
+    min-height: var(--right-panel-header-height) !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.right-panels-shell > .collapsed .view-toggle-button,
+.right-panels-shell > .collapsed .layers-toggle-button,
+.right-panels-shell > .collapsed .properties-toggle-button {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+.right-panels-shell > .collapsed .view-toggle-button:hover,
+.right-panels-shell > .collapsed .layers-toggle-button:hover,
+.right-panels-shell > .collapsed .properties-toggle-button:hover {
+    background: #e4e7ea !important;
+}
+
+.right-panels-shell > .active-right-panel .view-panel-header,
+.right-panels-shell > .active-right-panel .layers-panel-header,
+.right-panels-shell > .active-right-panel .properties-panel-header {
+    display: flex !important;
+}
+
+.layers-tools {
+    width: 100%;
+}
+
+.layers-reset-selected {
+    display: flex !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+
+@media (max-width: 1450px) {
+    main {
+        grid-template-columns: 230px minmax(340px, 1fr) minmax(346px, 346px) !important;
+    }
+}
+
+/* Sprint 11.20 — rail fixe à droite et icônes persistantes */
+.right-panels-shell {
+    grid-template-columns: minmax(0, 1fr) var(--right-panel-collapsed-width) !important;
+    grid-template-rows: 1fr !important;
+}
+
+.right-panels-rail {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: #eef0f2;
+    border-left: 1px solid var(--panel-border);
+    z-index: 3;
+}
+
+.right-panel-rail-button {
+    width: 100%;
+    height: var(--right-panel-header-height);
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--panel-border);
+    background: transparent;
+    color: #68717c;
+    cursor: pointer;
+}
+
+.right-panel-rail-button svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.right-panel-rail-button:hover { background: #e2e6ea; }
+.right-panel-rail-button.active {
+    color: var(--blue);
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.right-panels-shell > .view-panel,
+.right-panels-shell > .layers-panel,
+.right-panels-shell > .properties-panel,
+.right-panels-shell > .active-right-panel {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    height: 100% !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+}
+
+.right-panels-shell > [hidden] { display: none !important; }
+
+/* Le rail remplace les boutons de repli dans les en-têtes. */
+.right-panels-shell .view-toggle-button,
+.right-panels-shell .layers-toggle-button,
+.right-panels-shell .properties-toggle-button {
+    display: none !important;
+}
+
+.layers-tools {
+    grid-template-columns: minmax(0, 1fr) 126px !important;
+    align-items: stretch;
+}
+
+.layers-reset-selected {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Sprint 11.21 — onglet Légendes */
+.right-panels-shell > .legend-panel {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: auto;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--right-panel-bg);
+}
+
+.right-panels-shell > .legend-panel[hidden] { display: none !important; }
+
+.legend-panel-header {
+    flex: 0 0 var(--right-panel-header-height);
+    min-height: var(--right-panel-header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.legend-panel-title h2 { margin: 0; font-size: 16px; }
+.legend-panel-title span { display: block; margin-top: 2px; font-size: 11px; color: #7a818a; }
+
+.legend-panel-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.legend-selection-summary {
+    display: grid;
+    gap: 3px;
+    margin-bottom: 18px;
+}
+.legend-selection-summary strong { font-size: 13px; }
+.legend-selection-summary span { font-size: 11px; color: #737b84; }
+
+.legend-section + .legend-section { margin-top: 22px; }
+.legend-section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.legend-section-heading h3 { margin: 0; font-size: 13px; }
+.legend-section-heading span { font-size: 11px; color: #818892; }
+.legend-search { display: block; margin-bottom: 10px; }
+.legend-search input { width: 100%; box-sizing: border-box; }
+
+.legend-available-list,
+.legend-current-list { display: grid; gap: 8px; }
+.legend-available-list { max-height: 310px; overflow-y: auto; padding-right: 2px; }
+
+.legend-available-row {
+    display: grid;
+    grid-template-columns: auto 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    min-height: 52px;
+    padding: 8px 10px;
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+}
+.legend-available-row:hover { border-color: #b7c7e9; }
+.legend-available-row.is-added { opacity: .58; cursor: default; }
+.legend-available-copy { min-width: 0; display: grid; gap: 2px; }
+.legend-available-copy strong,
+.legend-available-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-available-copy strong { font-size: 12px; }
+.legend-available-copy small { color: #7b838c; font-size: 10px; }
+.legend-added-state { color: var(--blue); font-size: 10px; font-weight: 600; }
+
+.legend-add-selected {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.legend-item-card {
+    padding: 10px;
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    background: #fff;
+}
+.legend-item-top {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+.legend-item-top input { width: 100%; min-width: 0; box-sizing: border-box; }
+.legend-item-actions { display: flex; gap: 3px; }
+.legend-icon-button {
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    background: #f7f8f9;
+    cursor: pointer;
+}
+.legend-icon-button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+.legend-icon-button:disabled { opacity: .35; cursor: default; }
+.legend-item-meta { margin: 7px 0 0 36px; color: #858c94; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend-empty { margin: 0; padding: 16px 10px; border: 1px dashed #ccd1d6; border-radius: 7px; color: #7a828b; font-size: 12px; text-align: center; }
+
+.legend-symbol {
+    --legend-color: #4b78ff;
+    --legend-outline: #4b78ff;
+    --legend-opacity: 1;
+    --legend-width: 2px;
+    display: inline-block;
+    width: 22px;
+    height: 16px;
+    box-sizing: border-box;
+    opacity: var(--legend-opacity);
+    flex: 0 0 auto;
+}
+.legend-symbol-fill,
+.legend-symbol-fill-extrusion,
+.legend-symbol-background,
+.legend-symbol-raster,
+.legend-symbol-heatmap {
+    background: var(--legend-color);
+    border: 2px solid var(--legend-outline);
+    border-radius: 3px;
+}
+.legend-symbol-line {
+    height: 0;
+    border-top: var(--legend-width) solid var(--legend-color);
+}
+.legend-symbol-circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--legend-color);
+    border: 2px solid var(--legend-outline);
+}
+.legend-symbol-symbol {
+    width: 18px;
+    height: 18px;
+    border-radius: 2px;
+    background: var(--legend-color);
+    box-shadow: inset 0 0 0 2px var(--legend-outline);
+    transform: rotate(45deg) scale(.72);
+}
+
+.reader-legend {
+    display: grid;
+    gap: 7px;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,.12);
+}
+.reader-legend-item { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+
+/* Sprint 11.22 — légendes et copie de styles */
+.legend-panel-content .legend-section:first-child { margin-top: 0; }
+.legend-panel-content .legend-section + .legend-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--panel-border);
+}
+.legend-search.layers-search {
+    margin-bottom: 10px;
+}
+.legend-search.layers-search input,
+.panel-text-input {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid #c9ced4;
+    border-radius: 6px;
+    background: #fff;
+    color: #23272c;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+.legend-search.layers-search input:focus,
+.panel-text-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(130,11,28,.14);
+}
+.legend-item-top {
+    grid-template-columns: 18px 28px minmax(0, 1fr) 27px;
+}
+.legend-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a9199;
+    font-size: 13px;
+    cursor: grab;
+    user-select: none;
+}
+.legend-item-card.dragging { opacity: .48; }
+.legend-item-card.drag-over {
+    border-color: var(--blue);
+    box-shadow: inset 0 3px 0 var(--blue);
+}
+.legend-item-meta { margin-left: 54px; }
+
+.preview-map-legend {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    z-index: 8;
+    display: grid;
+    gap: 7px;
+    max-width: min(260px, calc(100% - 36px));
+    padding: 11px 13px;
+    border: 1px solid rgba(0,0,0,.14);
+    border-radius: 8px;
+    background: rgba(255,255,255,.94);
+    box-shadow: 0 5px 18px rgba(0,0,0,.12);
+    backdrop-filter: blur(5px);
+}
+.preview-map-legend[hidden] { display: none !important; }
+.preview-map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    color: #252a30;
+    font-size: 11px;
+}
+.preview-map-legend-item > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.style-clipboard-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(20,25,31,.48);
+}
+.style-clipboard-modal[hidden] { display: none !important; }
+.style-clipboard-card {
+    width: min(520px, 100%);
+    max-height: min(720px, calc(100vh - 48px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(0,0,0,.24);
+}
+.style-clipboard-card .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--panel-border);
+}
+.style-clipboard-card .modal-header h2 { margin: 0; font-size: 18px; }
+.style-clipboard-card .modal-header p { margin: 4px 0 0; color: #717982; font-size: 12px; }
+.style-clipboard-content {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 22px;
+}
+.style-clipboard-summary {
+    display: grid;
+    gap: 3px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 7px;
+    background: #f2f6ff;
+}
+.style-clipboard-summary strong { font-size: 13px; }
+.style-clipboard-summary span { color: #647080; font-size: 11px; }
+.style-clipboard-target-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.style-clipboard-target-heading h3 { margin: 0; font-size: 13px; }
+.style-clipboard-targets { display: grid; gap: 7px; }
+.style-target-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+}
+.style-target-row:hover { border-color: #b7c7e9; }
+.style-target-row input { accent-color: var(--blue); }
+.style-target-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.style-target-empty { margin: 0; color: #7a828b; font-size: 12px; }
+.style-clipboard-card .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding: 15px 22px;
+    border-top: 1px solid var(--panel-border);
+}
+
+/* Sprint 11.23 — aperçu de légende sous la carte du chapitre */
+.preview-overlay-stack {
+    position: absolute;
+    z-index: 5;
+    left: 28px;
+    bottom: 28px;
+    display: grid;
+    gap: 10px;
+    width: min(420px, calc(100% - 56px));
+    max-height: calc(100% - 56px);
+    pointer-events: none;
+}
+
+.preview-overlay-stack > * {
+    pointer-events: auto;
+}
+
+.preview-overlay-stack .preview-card-overlay {
+    position: static;
+    width: 100%;
+}
+
+.preview-overlay-stack .preview-map-legend {
+    position: static;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 11px 13px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 12px 30px rgba(0,0,0,.20);
+}
+
+.reader-mode .preview-overlay-stack,
+.reader-map-host .preview-overlay-stack {
+    display: none;
+}
+
+/* Sprint 11.25 — transfert simplifié des styles */
+.style-clipboard-card { width: min(620px, 100%); }
+.style-clipboard-options {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.style-clipboard-options-heading { margin-bottom: 10px; }
+.style-option-group {
+    display: grid;
+    gap: 7px;
+}
+.style-option-group h4 {
+    margin: 0;
+    color: #69727d;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+}
+.style-option-rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+.style-option-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    background: #fff;
+    cursor: pointer;
+}
+.style-option-row:hover { border-color: #b7c7e9; }
+.style-option-row:has(input:checked) {
+    border-color: #8eb0f5;
+    background: #f3f7ff;
+}
+.style-option-row input,
+.style-target-row input {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    accent-color: var(--blue);
+}
+.style-checkbox-content {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+.style-checkbox-label {
+    overflow: hidden;
+    color: #20262d;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.style-checkbox-content small {
+    overflow: hidden;
+    color: #7a838e;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.style-option-empty {
+    margin: 0;
+    padding: 11px 12px;
+    border: 1px dashed var(--panel-border);
+    border-radius: 7px;
+    color: #7a828b;
+    font-size: 12px;
+}
+@media (max-width: 620px) {
+    .style-option-rows { grid-template-columns: 1fr; }
+}
+
+
+/* Sprint 11.26 — mise en forme légère de la description */
+.text-format-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 7px;
+}
+
+.text-format-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border, #d9dee8);
+    border-radius: 7px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.text-format-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #f4f7ff;
+}
+
+.text-format-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.text-format-clear {
+    width: 38px;
+    font-size: 12px;
+    text-decoration: line-through;
+}
+
+#previewDescription strong,
+.reader-chapter-content strong {
+    font-weight: 700;
+}
+
+#previewDescription em,
+.reader-chapter-content em {
+    font-style: italic;
+}
+
+#previewDescription a,
+.reader-chapter-content a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+
+/* Sprint 11.27 — éditeur de description visible et solidaire */
+.description-property {
+    gap: 7px !important;
+}
+
+.description-editor {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #cfd5df;
+    border-radius: var(--right-panel-radius, 8px);
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.description-editor .text-format-toolbar {
+    display: flex !important;
+    visibility: visible !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 42px;
+    margin: 0 !important;
+    padding: 5px 7px;
+    border-bottom: 1px solid #dfe3ea;
+    background: #f5f6f8;
+    box-sizing: border-box;
+}
+
+.description-editor .text-format-button {
+    display: inline-flex !important;
+    visibility: visible !important;
+    width: auto !important;
+    min-width: 31px;
+    height: 30px;
+    min-height: 30px !important;
+    padding: 0 9px !important;
+    border: 1px solid #c9ced8;
+    border-radius: 6px;
+    background: #fff;
+    color: #25282c;
+    font-size: 12px !important;
+    font-weight: 600;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+.description-editor .text-format-button:hover {
+    border-color: var(--accent, #820b1c);
+    color: var(--accent, #820b1c);
+    background: #edf3ff;
+}
+
+.description-editor .text-format-button strong { font-size: 15px; }
+.description-editor .text-format-button em { font-size: 15px; }
+.description-editor .text-format-clear { text-decoration: none; }
+.description-editor .text-format-separator {
+    width: 1px;
+    height: 20px;
+    margin: 0 2px;
+    background: #d5d9e1;
+}
+
+.description-editor #descriptionInput {
+    display: block;
+    width: 100%;
+    min-height: 130px;
+    margin: 0;
+    padding: 11px 12px;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none;
+    box-shadow: none !important;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.description-editor:focus-within {
+    border-color: var(--accent, #820b1c);
+    box-shadow: 0 0 0 2px rgba(47, 111, 237, .14);
+}
+
+.reader-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #fff;
+}
+
+/* Sprint 12.7 — barre persistante et viewport responsive réel */
+.reader-mode > .toolbar { position: relative; z-index: 102; visibility: visible !important; }
+.reader-mode > main { visibility: hidden; }
+.reader-overlay { inset: var(--toolbar-height) 0 0; }
+.reader-viewport.mobile .reader-frame { width: 390px; max-width: 100%; }
+.reader-viewport.desktop .reader-frame { width: 100%; }
+
+/* Sprint 12.8 — contrôles sous l’aperçu et viewport mobile sans débordement */
+.reader-overlay {
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
+}
+
+.reader-stage {
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.reader-device-toggle {
+    position: relative;
+    z-index: 2;
+    left: auto;
+    bottom: auto;
+    grid-row: 2;
+    justify-self: center;
+    transform: none;
+    flex: 0 0 auto;
+}
+
+.reader-viewport,
+.reader-frame {
+    box-sizing: border-box;
+}
+
+.reader-viewport.mobile {
+    width: min(390px, 100%);
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.reader-viewport.mobile .reader-frame,
+.reader-viewport.desktop .reader-frame {
+    width: 100%;
+    max-width: 100%;
+}
+
+
+/* Sprint 12.9 — aperçu sans barres et synchronisation fiable */
+.reader-overlay,
+.reader-stage,
+.reader-viewport {
+    overflow: hidden !important;
+}
+
+.reader-frame {
+    display: block;
+    overflow: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.reader-frame::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+
+/* Sprint 12.10 — barre de projet pleine largeur et paramètres Mapbox dans les informations générales */
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(150px, auto) minmax(480px, 1fr) auto;
+    align-items: center;
+    gap: 18px;
+    padding: 9px 18px;
+}
+.toolbar .project-toolbox {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+    gap: 5px;
+    border-radius: 10px;
+}
+.toolbar .project-tool-button {
+    width: 100%;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    white-space: nowrap;
+}
+.toolbar .project-tool-button span { font-size: 13px; font-weight: 650; }
+.chapters-panel > .project-toolbox { display: none !important; }
+#metaMapboxMessage { min-height: 20px; margin-bottom: 8px; }
+@media (max-width: 980px) {
+    :root { --toolbar-height: 122px; }
+    .toolbar { grid-template-columns: 1fr auto; gap: 8px 12px; }
+    .toolbar-brand { grid-column: 1; }
+    .toolbar .mode-switch { grid-column: 2; grid-row: 1; }
+    .toolbar .project-toolbox { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 640px) {
+    :root { --toolbar-height: 174px; }
+    .toolbar .project-toolbox { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .toolbar .project-tool-button { height: 38px; }
+}
+
+/* Sprint 12.11 — bandeau titre + barre d’actions compacte */
+:root {
+    --toolbar-height: 92px;
+}
+
+.toolbar {
+    min-height: var(--toolbar-height);
+    height: var(--toolbar-height);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 52px 40px;
+    gap: 0;
+    background: #ffffff;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.toolbar-brand {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+}
+
+.toolbar-title-row h1 {
+    margin: 0;
+    font-size: 21px;
+    line-height: 1;
+}
+
+.toolbar .mode-switch {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin-right: 14px;
+}
+
+.toolbar .project-toolbox {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+    border: 0;
+    border-top: 1px solid var(--panel-border);
+    border-radius: 0;
+    background: #fafafa;
+    box-shadow: none;
+}
+
+.toolbar .project-tool-button {
+    width: auto;
+    min-width: 0;
+    height: 30px;
+    padding: 0 10px;
+    gap: 6px;
+    border-radius: 6px;
+    background: transparent;
+    border-color: transparent;
+}
+
+.toolbar .project-tool-button:hover {
+    background: #ffffff;
+    border-color: var(--panel-border);
+}
+
+.toolbar .project-tool-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.toolbar .project-tool-button span {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.toolbar .project-tool-button-primary {
+    margin-left: 4px;
+}
+
+/* Les titres des modules suffisent : suppression des sous-libellés décoratifs. */
+.property-module > summary small,
+.properties-panel .property-module > summary small {
+    display: none !important;
+}
+
+@media (max-width: 980px) {
+    :root { --toolbar-height: 92px; }
+    .toolbar {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: 52px 40px;
+    }
+    .toolbar-brand { grid-column: 1; grid-row: 1; }
+    .toolbar .mode-switch { grid-column: 2; grid-row: 1; }
+    .toolbar .project-toolbox { grid-column: 1 / -1; grid-row: 2; }
+}
+
+@media (max-width: 640px) {
+    :root { --toolbar-height: 92px; }
+    .toolbar .project-toolbox {
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+    }
+    .toolbar .project-tool-button {
+        flex: 0 0 auto;
+        height: 30px;
+    }
+}
+
+
+/* Sprint 12.12 — titre à gauche, switch dans la barre d’actions et thème lecture */
+.toolbar {
+    grid-template-columns: 1fr;
+}
+
+.toolbar-brand {
+    grid-column: 1;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.toolbar-title-row {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.toolbar .project-toolbox {
+    position: relative;
+}
+
+.toolbar .mode-switch {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: center;
+    margin: 0 0 0 auto;
+    flex: 0 0 auto;
+}
+
+.reader-mode .toolbar .project-toolbox {
+    background: #17191d;
+    border-top-color: #30343b;
+    border-bottom-color: #30343b;
+}
+
+.reader-mode .toolbar .project-tool-button {
+    color: #e9edf2;
+}
+
+.reader-mode .toolbar .project-tool-button svg {
+    stroke: currentColor;
+}
+
+.reader-mode .toolbar .project-tool-button:hover {
+    background: #262a30;
+    border-color: #3a4048;
+}
+
+.reader-mode .toolbar .project-tool-button-primary {
+    background: #2d3239;
+    border-color: #404751;
+}
+
+.reader-mode .toolbar .mode-switch {
+    background: #090a0c;
+    border-color: #3d424a;
+}
+
+@media (max-width: 980px) {
+    .toolbar { grid-template-columns: 1fr; }
+    .toolbar-brand { grid-column: 1; grid-row: 1; }
+    .toolbar .project-toolbox { grid-column: 1; grid-row: 2; }
+    .toolbar .mode-switch { grid-column: auto; grid-row: auto; }
+}
+
+@media (max-width: 640px) {
+    .toolbar .mode-switch {
+        margin-left: 8px;
+        width: 154px;
+        min-width: 154px;
+    }
+}
+
+/* Sprint 12.13 — alignements et respiration de la navigation */
+:root {
+    --toolbar-title-height: 54px;
+    --toolbar-actions-height: 50px;
+    --toolbar-height: calc(var(--toolbar-title-height) + var(--toolbar-actions-height));
+}
+
+.toolbar {
+    min-height: var(--toolbar-height);
+    height: var(--toolbar-height);
+    grid-template-rows: var(--toolbar-title-height) var(--toolbar-actions-height);
+}
+
+.toolbar-brand {
+    height: var(--toolbar-title-height);
+    min-height: 0;
+    padding: 0 18px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.toolbar-title-row {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.toolbar-title-row h1 {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    line-height: 1.15;
+}
+
+.toolbar .project-toolbox {
+    height: var(--toolbar-actions-height);
+    padding: 7px 12px;
+    align-items: center;
+}
+
+.toolbar .project-tool-button {
+    height: 34px;
+    padding: 0 11px;
+}
+
+.toolbar .mode-switch {
+    min-height: 36px;
+    height: 36px;
+    padding: 3px;
+}
+
+.toolbar .mode-switch::before {
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+}
+
+.toolbar .mode-switch-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+@media (max-width: 980px) {
+    :root {
+        --toolbar-title-height: 54px;
+        --toolbar-actions-height: 50px;
+        --toolbar-height: 104px;
+    }
+    .toolbar {
+        grid-template-rows: var(--toolbar-title-height) var(--toolbar-actions-height);
+    }
+}
+
+@media (max-width: 640px) {
+    .toolbar .project-toolbox {
+        padding-top: 7px;
+        padding-bottom: 7px;
+    }
+    .toolbar .project-tool-button {
+        height: 34px;
+    }
+}
+
+
+/* Sprint 12.14 — interface épurée et nom de projet */
+.mode-switch::before {
+    background: var(--accent, #820b1c);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, .28);
+}
+.mode-switch[data-mode="edit"] .mode-switch-edit,
+.mode-switch[data-mode="reader"] .mode-switch-reader {
+    color: #fff;
+}
+.reader-mode .mode-switch::before { background: var(--accent, #820b1c); }
+
+.panel-header > div > span,
+.view-panel-title > span,
+.layers-panel-title > span,
+.legend-panel-title > span,
+.properties-panel-title > span,
+.layers-selection-summary > span {
+    display: none !important;
+}
+
+
+/* Sprint 12.15 — Informations générales séparées des chapitres */
+.general-information-section {
+    padding-bottom: 16px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.chapters-list-section {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.panel-header.panel-header-compact {
+    min-height: auto;
+    padding: 0 0 8px;
+    border: 0;
+}
+
+.panel-header.panel-header-compact h2 {
+    margin: 0;
+}
+
+#generalInformationCard .chapter-general {
+    width: 100%;
+    margin: 0;
+}
+
+#chapters {
+    min-height: 0;
+}
+
+
+/* Sprint 12.16 — colonne Projet harmonisée et état non enregistré */
+.general-information-section {
+    padding: 20px 20px 18px;
+    margin: 0;
+    border-bottom: 1px solid var(--panel-border);
+    box-sizing: border-box;
+}
+.general-information-section .panel-header.panel-header-compact {
+    padding: 0 0 10px;
+}
+.chapters-list-section .panel-header.panel-header-compact {
+    padding: 18px 20px 10px;
+}
+#generalInformationCard .chapter-general {
+    margin: 0;
+}
+#chapters {
+    padding: 0 20px 20px;
+}
+.chapters-panel-footer {
+    padding: 14px 20px 20px;
+}
+.project-status-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+    background: #8a929c;
+    box-shadow: 0 0 0 3px rgba(138, 146, 156, .14);
+    transition: background-color .18s, box-shadow .18s;
+}
+.chapter-general.selected .project-status-dot {
+    background: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .16);
+}
+.chapter-general.is-dirty .project-status-dot,
+body[data-project-dirty="true"] #generalInformationCard .project-status-dot {
+    background: #d93025;
+    box-shadow: 0 0 0 3px rgba(217, 48, 37, .16);
+}
+
+/* Sprint 12.19 — cadrages Desktop / Mobile */
+.view-device-switch { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:8px; padding:4px; border-radius:9px; background:#e5e8eb; }
+.view-device-button { min-height:34px; border:0; border-radius:6px; background:transparent; color:#62686f; font:inherit; font-size:12px; font-weight:650; cursor:pointer; }
+.view-device-button:hover { color:#2e3338; }
+.view-device-button.active { background:#fff; color:#202428; box-shadow:0 1px 3px rgba(20,25,30,.12); }
+.view-device-status { margin:0 0 14px; font-size:12px; color:#5e646b; }
+.view-device-status.is-inherited { color:#777d84; font-style:italic; }
+.view-actions { display:grid; gap:8px; }
+
+
+/* =============================
+   SPRINT 12.26 — VIEWPORT D’ÉDITION CONSOLIDÉ
+============================= */
+#workspace {
+    transition: background-color .2s ease;
+}
+
+/* La scène garde une géométrie stable dans les deux modes. */
+#workspace.editing-mobile-viewport,
+#workspace.editing-desktop-viewport {
+    display: block;
+    overflow: hidden;
+    padding: 18px;
+    background: var(--editor-canvas);
+}
+
+#workspace.editing-mobile-viewport .map-stage,
+#workspace.editing-desktop-viewport .map-stage {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    min-height: 520px;
+    margin: 0;
+}
+
+/* Desktop : la carte remplit entièrement la scène. */
+#workspace.editing-desktop-viewport .map-stage > .map-panel {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    min-height: 520px;
+    margin: 0;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+/* Mobile : seule la carte simule le téléphone. */
+#workspace.editing-mobile-viewport .map-stage > .map-panel {
+    width: min(390px, 100%);
+    max-width: 390px;
+    height: min(780px, 100%);
+    min-height: 0;
+    margin: 0 auto;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(20, 25, 30, .22);
+}
+
+/* La slide est toujours ancrée à la scène globale, jamais au téléphone. */
+#workspace.editing-mobile-viewport .map-stage > .preview-overlay-stack,
+#workspace.editing-desktop-viewport .map-stage > .preview-overlay-stack {
+    position: absolute;
+    z-index: 20;
+    left: 28px;
+    bottom: 28px;
+    width: min(420px, calc(100% - 56px));
+    max-width: none;
+}
+
+#workspace.editing-mobile-viewport .map-coordinates {
+    right: 14px;
+    bottom: 14px;
+}
+
+/* L’aperçu d’image vide reste visible. */
+#previewImageContainer { display: block; }
+#previewImagePlaceholder { display: flex; }
+#previewImageContainer[style*="display: none"] { display: block !important; }
+
+#captureViewButton:disabled {
+    opacity: .45;
+    cursor: default;
+    box-shadow: none;
+}
+
+@media (max-height: 760px) {
+    #workspace.editing-mobile-viewport,
+    #workspace.editing-desktop-viewport { padding: 14px; }
+
+    #workspace.editing-mobile-viewport .map-stage > .map-panel {
+        height: 100%;
+        border-radius: 22px;
+    }
+}
+
+/* Sprint 13.1 — Historique et presse-papiers */
+.toolbar-separator { width: 1px; height: 28px; background: var(--border-color, #d9d9d9); margin: 0 2px; }
+.project-tool-button.icon-only { min-width: 38px; padding-inline: 9px; font-size: 18px; }
+.project-tool-button.icon-only:disabled { opacity: .35; cursor: default; }
+
+
+/* Sprint 13.6 — réglages de calques */
+.layers-panel-content { padding: 18px; }
+.layer-module-body { padding: 10px 14px 14px; }
+.layer-control { padding: 12px 0; }
+.layer-control:first-child { padding-top: 4px; }
+.layer-control:last-child { border-bottom: 0; padding-bottom: 2px; }
+.layer-control-header { align-items: baseline; margin-bottom: 10px; }
+.layer-control-header label { line-height: 1.35; }
+.layer-control-value { flex: 0 0 auto; font-family: monospace; font-size: 10px; }
+.layer-control-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 30px; gap: 9px; align-items: center; }
+.layer-control-row > .layer-select,
+.layer-control-row > .layer-number,
+.layer-control-row > .layer-color { grid-column: 1 / 3; }
+.layer-control-row > input[type="range"] { width: 100%; min-width: 0; margin: 0; }
+.layer-percent-number { width: 64px; height: 32px; box-sizing: border-box; border: 1px solid #d6d8de; border-radius: 7px; padding: 0 7px; background: #fff; color: #262b33; font: inherit; font-size: 11px; text-align: right; outline: none; }
+.layer-percent-number:focus { border-color: #9f3b4b; box-shadow: 0 0 0 3px rgba(130,11,28,.1); }
+.layer-percent-number.is-mixed { border-style: dashed; }
+
+/* Sprint 13.7 — contrôles d’opacité */
+.layer-control-percent .layer-control-value { display: none; }
+.layer-control-percent .layer-control-row {
+    grid-template-columns: minmax(0, 1fr) 72px 28px;
+    gap: 10px;
+}
+.layer-control-percent input[type="range"] {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.layer-percent-number {
+    width: 72px;
+    min-width: 72px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    text-align: right;
+}
+
+
+/* Sprint 13.9 — popup de duplication et simulateur mobile harmonisé */
+.style-target-row.is-source {
+    opacity: .58;
+    cursor: default;
+    background: #f5f6f8;
+}
+.style-target-row.is-source:hover { border-color: var(--panel-border); }
+.style-checkbox-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    width: 100%;
+}
+.style-checkbox-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.style-checkbox-meta {
+    flex: 0 0 auto;
+    color: #747c86;
+    font-size: 10px;
+}
+
+/* Même géométrie que le viewport Mobile du mode Lecture. */
+#workspace.editing-mobile-viewport .map-stage {
+    display: grid;
+    place-items: center;
+}
+#workspace.editing-mobile-viewport .map-stage > .map-panel {
+    box-sizing: border-box;
+    width: min(390px, 100%);
+    max-width: 100%;
+    height: min(844px, 100%);
+    min-height: 0;
+    margin: 0;
+    border: 8px solid #111;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #111;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+}
+#workspace.editing-desktop-viewport .map-stage {
+    display: block;
+}
+#workspace.editing-desktop-viewport .map-stage > .map-panel {
+    box-sizing: border-box;
+    border: 0;
+}
+
+/* Sprint 13.10 — numérotation dynamique et indicateurs de contenu */
+.chapter-content {
+    display: grid;
+    gap: 3px;
+}
+.chapter-number {
+    display: block;
+    color: #7a838d;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: .02em;
+}
+.chapter-title {
+    margin: 0;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.chapter-status-icons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+}
+.chapter-status-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    color: var(--blue);
+    background: #edf3ff;
+}
+.chapter-status-icon svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+}
+.chapter.selected .chapter-number,
+.chapter.multi-selected .chapter-number { color: rgba(255,255,255,.72); }
+.chapter.selected .chapter-status-icon,
+.chapter.multi-selected .chapter-status-icon {
+    color: #155bd7;
+    background: rgba(255,255,255,.92);
+}
+
+.style-target-row .style-checkbox-content {
+    position: relative;
+    display: grid;
+    justify-content: stretch;
+    gap: 2px;
+    padding-right: 52px;
+}
+.style-target-row .style-checkbox-label {
+    font-size: 12px;
+    font-weight: 650;
+}
+.style-checkbox-description {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #7a838e;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.style-target-row .style-checkbox-meta {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+
+/* Sprint 13.11 — sélecteur de viewport unifié */
+#workspace.editing-mobile-viewport,
+#workspace.editing-desktop-viewport {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 14px;
+}
+
+.editor-device-toggle {
+    position: relative;
+    z-index: 30;
+    justify-self: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 220px;
+    padding: 4px;
+    border: 0;
+    border-radius: 999px;
+    color: #333941;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 28px rgba(29, 35, 42, .16);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+}
+.editor-device-toggle::before {
+    position: absolute;
+    z-index: -1;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: var(--blue);
+    content: "";
+    transition: transform .22s ease;
+}
+.editor-device-toggle[data-mode="mobile"]::before { transform: translateX(100%); }
+.editor-device-option {
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    opacity: .58;
+    transition: color .2s ease, opacity .2s ease;
+}
+.editor-device-toggle[data-mode="desktop"] .editor-device-option-desktop,
+.editor-device-toggle[data-mode="mobile"] .editor-device-option-mobile {
+    color: #fff;
+    opacity: 1;
+}
+
+/* Le téléphone est défini par son format, pas par un contour noir. */
+.reader-viewport.mobile {
+    border: 0;
+    background: #fff;
+}
+#workspace.editing-mobile-viewport .map-stage > .map-panel {
+    border: 0;
+    background: #fff;
+}
+
+
+/* Sprint 13.13 — sélection harmonisée et toggles pictographiques */
+body:not(.reader-mode) .chapter.selected,
+body:not(.reader-mode) .chapter.multi-selected {
+    color: #2f343b;
+    background: rgba(130, 11, 28, .075);
+    border-color: rgba(130, 11, 28, .72);
+    box-shadow: 0 0 0 1px rgba(130, 11, 28, .10);
+}
+body:not(.reader-mode) .chapter.selected .chapter-title,
+body:not(.reader-mode) .chapter.multi-selected .chapter-title {
+    color: #2f343b;
+}
+body:not(.reader-mode) .chapter.selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.multi-selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.selected .chapter-drag-handle,
+body:not(.reader-mode) .chapter.multi-selected .chapter-drag-handle {
+    color: #820b1c;
+}
+body:not(.reader-mode) .chapter.selected .chapter-media-indicator,
+body:not(.reader-mode) .chapter.multi-selected .chapter-media-indicator {
+    color: #820b1c;
+}
+
+.editor-device-toggle,
+.reader-device-toggle {
+    width: 116px;
+}
+.editor-device-option,
+.reader-device-option {
+    min-height: 38px;
+    padding: 8px 10px;
+    display: grid;
+    place-items: center;
+}
+.editor-device-option svg,
+.reader-device-option svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.editor-device-toggle[data-mode="desktop"] .editor-device-option-mobile,
+.editor-device-toggle[data-mode="mobile"] .editor-device-option-desktop,
+.reader-device-toggle[data-mode="desktop"] .reader-device-option-mobile,
+.reader-device-toggle[data-mode="mobile"] .reader-device-option-desktop {
+    opacity: .55;
+}
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Sprint 13.14 — derniers ajustements de cartes et prévisualisation */
+body:not(.reader-mode) .chapter.selected .chapter-number,
+body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+    color: #1f2328;
+}
+.chapter-number {
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.preview-image-placeholder,
+.preview-card-compact .preview-image-placeholder,
+.preview-card-overlay .preview-image-placeholder {
+    color: transparent;
+    background: #dfe2e6;
+    background-image: none;
+}

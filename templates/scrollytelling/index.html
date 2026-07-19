@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Mapbox Storytelling</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="icon" type="image/x-icon"
+        href="https://raw.githubusercontent.com/mapbox/assembly/publisher-staging/src/svgs/mapbox.svg">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.8.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/mapbox-gl-globe-minimap@1.2.0/dist/bundle.js"></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="map"></div>
+    <div id="legend"></div>
+    <div id="map-overlay"></div>
+    <div id="story"></div>
+
+    <script src="./config.js"></script>
+    <script>
+        var initLoad = true;
+        var layerTypes = {
+            'fill': ['fill-opacity'],
+            'line': ['line-opacity'],
+            'circle': ['circle-opacity', 'circle-stroke-opacity'],
+            'symbol': ['icon-opacity', 'text-opacity'],
+            'raster': ['raster-opacity'],
+            'fill-extrusion': ['fill-extrusion-opacity'],
+            'heatmap': ['heatmap-opacity']
+        }
+
+        var alignments = {
+            'left': 'lefty',
+            'center': 'centered',
+            'right': 'righty',
+            'full': 'fully'
+        }
+
+/*script legendes*/
+
+        function updateLegend(chapter) {
+            const legend = document.getElementById('legend');
+            const items = Array.isArray(chapter?.legend)
+                ? chapter.legend
+                : (Array.isArray(chapter?.mapboxStoryBuilder?.legend) ? chapter.mapboxStoryBuilder.legend : []);
+
+            if (!items.length) {
+                legend.innerHTML = '';
+                legend.style.display = 'none';
+                return;
+            }
+
+            legend.innerHTML = items.map(item => {
+                const symbol = item.symbol || {};
+                const color = symbol.color || item.color || '#4b78ff';
+                const outline = symbol.outlineColor || color;
+                const opacity = Number.isFinite(Number(symbol.opacity)) ? Number(symbol.opacity) : 1;
+                const width = Math.max(1, Math.min(8, Number(symbol.width) || 2));
+                const type = symbol.type || 'fill';
+                return `
+                    <div class="legend-item">
+                        <span class="legend-symbol legend-symbol-${type}" style="--legend-color:${color};--legend-outline:${outline};--legend-opacity:${opacity};--legend-width:${width}px"></span>
+                        <span>${escapeLegendText(item.label || item.layerId || 'Élément')}</span>
+                    </div>
+                `;
+            }).join('');
+            legend.style.display = 'block';
+        }
+
+        function escapeLegendText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+/*-----*/
+
+        function getLayerPaintType(layer) {
+            var layerType = map.getLayer(layer).type;
+            return layerTypes[layerType];
+        }
+
+        function setLayerOpacity(layer) {
+            if (!map.getLayer(layer.layer)) return;
+            var paintProps = getLayerPaintType(layer.layer) || [];
+            paintProps.forEach(function (prop) {
+                if (layer.duration) map.setPaintProperty(layer.layer, prop + "-transition", { duration: layer.duration });
+                map.setPaintProperty(layer.layer, prop, layer.opacity);
+            });
+        }
+
+        var managedLayerBase = {};
+
+        function collectManagedLayerProperties() {
+            var states = [config.projectLayerStyles].concat((config.chapters || []).map(function (chapter) { return chapter.layerState; }));
+            var managed = {};
+            states.forEach(function (state) {
+                if (!state) return;
+                Object.keys(state.layerOpacity || {}).forEach(function (layerId) {
+                    managed[layerId] = managed[layerId] || { paint: {}, layout: {} };
+                    var layer = map.getLayer(layerId);
+                    if (!layer) return;
+                    (layerTypes[layer.type] || []).forEach(function (property) { managed[layerId].paint[property] = true; });
+                });
+                Object.entries(state.layerStyles || {}).forEach(function (entry) {
+                    var layerId = entry[0], style = entry[1] || {};
+                    managed[layerId] = managed[layerId] || { paint: {}, layout: {} };
+                    Object.keys(style.paint || {}).forEach(function (property) { managed[layerId].paint[property] = true; });
+                    Object.keys(style.layout || {}).forEach(function (property) { managed[layerId].layout[property] = true; });
+                });
+            });
+            return managed;
+        }
+
+        function captureManagedLayerBase() {
+            var managed = collectManagedLayerProperties();
+            Object.entries(managed).forEach(function (entry) {
+                var layerId = entry[0], sections = entry[1];
+                if (!map.getLayer(layerId)) return;
+                managedLayerBase[layerId] = { paint: {}, layout: {} };
+                Object.keys(sections.paint).forEach(function (property) {
+                    try { managedLayerBase[layerId].paint[property] = map.getPaintProperty(layerId, property); } catch (error) {}
+                });
+                Object.keys(sections.layout).forEach(function (property) {
+                    try { managedLayerBase[layerId].layout[property] = map.getLayoutProperty(layerId, property); } catch (error) {}
+                });
+            });
+        }
+
+        function applyLayerStyleState(state) {
+            state = state || { layerOpacity: {}, layerStyles: {}, transition: {} };
+            var duration = Number(state.transition && state.transition.duration) || 0;
+            var delay = Number(state.transition && state.transition.delay) || 0;
+
+            Object.entries(managedLayerBase).forEach(function (entry) {
+                var layerId = entry[0], base = entry[1];
+                if (!map.getLayer(layerId)) return;
+                Object.entries(base.paint || {}).forEach(function (propertyEntry) {
+                    var property = propertyEntry[0], value = propertyEntry[1];
+                    try {
+                        map.setPaintProperty(layerId, property + "-transition", { duration: duration, delay: delay });
+                        map.setPaintProperty(layerId, property, value);
+                    } catch (error) {}
+                });
+                Object.entries(base.layout || {}).forEach(function (propertyEntry) {
+                    try { map.setLayoutProperty(layerId, propertyEntry[0], propertyEntry[1]); } catch (error) {}
+                });
+            });
+
+            Object.entries(state.layerOpacity || {}).forEach(function (entry) {
+                setLayerOpacity({ layer: entry[0], opacity: entry[1], duration: duration });
+            });
+            Object.entries(state.layerStyles || {}).forEach(function (entry) {
+                var layerId = entry[0], style = entry[1] || {};
+                if (!map.getLayer(layerId)) return;
+                Object.entries(style.paint || {}).forEach(function (propertyEntry) {
+                    try {
+                        map.setPaintProperty(layerId, propertyEntry[0] + "-transition", { duration: duration, delay: delay });
+                        map.setPaintProperty(layerId, propertyEntry[0], propertyEntry[1]);
+                    } catch (error) {}
+                });
+                Object.entries(style.layout || {}).forEach(function (propertyEntry) {
+                    try { map.setLayoutProperty(layerId, propertyEntry[0], propertyEntry[1]); } catch (error) {}
+                });
+            });
+        }
+
+        var story = document.getElementById('story');
+        var features = document.createElement('div');
+        features.setAttribute('id', 'features');
+
+        var header = document.createElement('div');
+
+        if (config.title) {
+            var titleText = document.createElement('h1');
+            titleText.innerText = config.title;
+            header.appendChild(titleText);
+        }
+
+        if (config.subtitle) {
+            var subtitleText = document.createElement('h2');
+            subtitleText.innerText = config.subtitle;
+            header.appendChild(subtitleText);
+        }
+
+        if (config.byline) {
+            var bylineText = document.createElement('p');
+            bylineText.innerHTML = config.byline;
+            header.appendChild(bylineText);
+        }
+
+        if (header.innerText.length > 0) {
+            header.classList.add(config.theme);
+            header.setAttribute('id', 'header');
+            story.appendChild(header);
+        }
+
+        config.chapters.forEach((record, idx) => {
+            var container = document.createElement('div');
+            var chapter = document.createElement('div');
+
+            if (record.title) {
+                var title = document.createElement('h3');
+                title.innerText = record.title;
+                chapter.appendChild(title);
+            }
+
+            if (record.image) {
+                var image = new Image();
+                image.src = record.image;
+                chapter.appendChild(image);
+            }
+
+            if (record.description) {
+                var story = document.createElement('p');
+                story.innerHTML = record.description;
+                chapter.appendChild(story);
+            }
+
+            container.setAttribute('id', record.id);
+            container.classList.add('step');
+
+            chapter.classList.add(config.theme);
+            container.appendChild(chapter);
+            container.classList.add(alignments[record.alignment] || 'centered');
+            if (record.hidden) {
+                container.classList.add('hidden');
+            }
+            features.appendChild(container);
+        });
+
+        story.appendChild(features);
+
+
+        var footer = document.createElement('div');
+
+        if (config.footer) {
+            var footerText = document.createElement('p');
+            footerText.innerHTML = config.footer;
+            footer.appendChild(footerText);
+        }
+
+        if (footer.innerText.length > 0) {
+            footer.classList.add(config.theme);
+            footer.setAttribute('id', 'footer');
+            story.appendChild(footer);
+        }
+
+        mapboxgl.accessToken = config.accessToken;
+
+        var isInitialMobile = window.innerWidth <= 750;
+        var initialLocation = isInitialMobile && config.initialLocationMobile
+            ? config.initialLocationMobile
+            : (config.initialLocation || config.chapters[0].location);
+
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: config.style,
+            center: initialLocation.center,
+            zoom: initialLocation.zoom,
+            bearing: initialLocation.bearing,
+            pitch: initialLocation.pitch,
+            interactive: false,
+            projection: config.projection
+        });
+
+        // Create a inset map if enabled in config.js
+        if (config.inset) {
+            map.addControl(
+                new GlobeMinimap({ ...config.insetOptions }),
+                config.insetPosition
+            );
+        }
+
+        if (config.showMarkers) {
+            var marker = new mapboxgl.Marker({ color: config.markerColor });
+            marker.setLngLat(initialLocation.center).addTo(map);
+        }
+
+        // instantiate the scrollama
+        var scroller = scrollama();
+
+
+        map.on("load", function () {
+            // L'introduction constitue un état distinct : aucune légende de
+            // chapitre n'est affichée avant l'entrée réelle dans le récit.
+            updateLegend(null);
+            captureManagedLayerBase();
+            if (config.projectLayerStyles) {
+                applyLayerStyleState(config.projectLayerStyles);
+            } else {
+                (config.projectLayerState || []).forEach(setLayerOpacity);
+            }
+            if (config.use3dTerrain) {
+                map.addSource('mapbox-dem', {
+                    'type': 'raster-dem',
+                    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                    'tileSize': 512,
+                    'maxzoom': 14
+                });
+                // add the DEM source as a terrain layer with exaggerated height
+                map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+
+                // add a sky layer that will show when the map is highly pitched
+                map.addLayer({
+                    'id': 'sky',
+                    'type': 'sky',
+                    'paint': {
+                        'sky-type': 'atmosphere',
+                        'sky-atmosphere-sun': [0.0, 0.0],
+                        'sky-atmosphere-sun-intensity': 15
+                    }
+                });
+            };
+
+            // Le template Mapbox d'origine laisse Scrollama décider
+            // quand un chapitre devient actif. L'introduction ne préactive
+            // donc ni le chapitre 1, ni sa légende.
+            document.querySelectorAll('.step').forEach(function (step) {
+                step.classList.remove('active');
+            });
+
+            scroller
+                .setup({
+                    step: '.step',
+                    offset: 0.5,
+                    progress: true
+                })
+                .onStepEnter(async response => {
+                    var current_chapter = config.chapters.findIndex(chap => chap.id === response.element.id);
+                    var chapter = config.chapters[current_chapter];
+
+                    updateLegend(chapter);
+
+                    document.querySelectorAll('.step.active').forEach(function (step) {
+                        step.classList.remove('active');
+                    });
+                    response.element.classList.add('active');
+                    const isMobile = window.innerWidth <= 750;
+
+                    const targetLocation =
+                        isMobile && chapter.locationMobile
+                            ? chapter.locationMobile
+                            : chapter.location;
+
+                    map[chapter.mapAnimation || 'flyTo'](targetLocation);
+
+                    if (config.showMarkers) {
+                        marker.setLngLat(targetLocation.center);
+                    }
+                    if (chapter.layerState) {
+                        applyLayerStyleState(chapter.layerState);
+                    } else if (chapter.onChapterEnter.length > 0) {
+                        chapter.onChapterEnter.forEach(setLayerOpacity);
+                    }
+                    if (chapter.callback) {
+                        window[chapter.callback]();
+                    }
+                    if (chapter.rotateAnimation) {
+                        map.once('moveend', () => {
+                            const rotateNumber = map.getBearing();
+                            map.rotateTo(rotateNumber + 180, {
+                                duration: 30000, easing: function (t) {
+                                    return t;
+                                }
+                            });
+                        });
+                    }
+                    if (config.auto) {
+                        var next_chapter = (current_chapter + 1) % config.chapters.length;
+                        map.once('moveend', () => {
+                            document.querySelectorAll('[data-scrollama-index="' + next_chapter.toString() + '"]')[0].scrollIntoView();
+                        });
+                    }
+                })
+                .onStepExit(response => {
+                    var current_chapter = config.chapters.findIndex(chap => chap.id === response.element.id);
+                    var chapter = config.chapters[current_chapter];
+                    response.element.classList.remove('active');
+
+                    // En remontant au-dessus du premier chapitre, on retrouve
+                    // l'état d'introduction : aucune légende de chapitre.
+                    if (current_chapter === 0 && response.direction === 'up') {
+                        updateLegend(null);
+                        map[chapter.mapAnimation || 'flyTo'](initialLocation);
+                        if (config.showMarkers) marker.setLngLat(initialLocation.center);
+                        if (config.projectLayerStyles) {
+                            applyLayerStyleState(config.projectLayerStyles);
+                        } else {
+                            (config.projectLayerState || []).forEach(setLayerOpacity);
+                        }
+                    }
+
+                    if (chapter.onChapterExit.length > 0) {
+                        chapter.onChapterExit.forEach(setLayerOpacity);
+                    }
+                });
+
+            // Recalculer les seuils après les mises en page asynchrones évite
+            // que le chapitre 1 soit détecté trop tard après l'introduction.
+            requestAnimationFrame(function () { scroller.resize(); });
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function () { scroller.resize(); });
+            }
+
+            if (config.auto) {
+                document.querySelectorAll('[data-scrollama-index="0"]')[0].scrollIntoView();
+            }
+        });    
+
+    </script>
+
+</body>
+
+</html>
