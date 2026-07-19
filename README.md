@@ -226,3 +226,7 @@ Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCH
 - adaptateur local déplacé dans `js/core/storage-adapters/` ;
 - registre d’adaptateurs avec `register`, `use` et `listProviders` ;
 - préparation de l’intégration future de Supabase sans changement de comportement pour l’utilisateur.
+
+## Alpha 5 — Asset Manager
+
+Le panneau Ressources permet d'importer, renommer, réutiliser et supprimer des images enregistrées dans le projet.

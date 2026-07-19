@@ -37,12 +37,14 @@ import { renderLegendPanel, setupLegendPanel } from "./features/legend/legend-pa
 import { setupChapterStyleClipboard } from "./features/chapters/chapter-style-clipboard.js";
 import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
+import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
 
 function renderApplication(options = {}) {
     renderChapterList();
     renderPreview();
     renderViewPanel();
     renderLegendPanel();
+    renderAssetsPanel();
 
     if (!options.preserveProperties) {
         renderProperties();
@@ -62,6 +64,7 @@ function setupApplicationEvents() {
         renderChapterList();
         renderPreview();
         renderLegendPanel();
+        renderAssetsPanel();
     });
 
     on(EVENTS.PROJECT_REPLACED, ({ reason } = {}) => {
@@ -208,6 +211,7 @@ function startApplication() {
     setupPropertiesPanel();
     setupRightPanels();
     setupLegendPanel();
+    setupAssetsPanel();
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();
