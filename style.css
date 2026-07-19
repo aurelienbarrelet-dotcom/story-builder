@@ -4013,6 +4013,7 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
     border: 1px solid var(--panel-border);
     border-radius: var(--right-panel-radius);
     background: #fff;
+    cursor: pointer;
     transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 .asset-card.selected {
@@ -4046,10 +4047,28 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
     font-size: 14px;
     font-weight: 800;
 }
-.asset-card.selected .asset-selection-check { color: #fff; background: var(--accent); }
-.asset-card-body { display: grid; gap: 8px; padding: 10px; }
-.asset-card-body input { width: 100%; min-width: 0; box-sizing: border-box; }
-.asset-caption-input { font-size: 12px; }
+.asset-card.active .asset-selection-check { color: #fff; background: var(--accent); }
+.asset-card-body { display: grid; gap: 6px; padding: 10px; }
+.asset-name-static,
+.asset-caption-static { margin: 0; overflow-wrap: anywhere; }
+.asset-name-static { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.asset-caption-static { font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
+.asset-card-body input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 2px 0;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.asset-card-body input:focus { box-shadow: inset 0 -1px 0 var(--accent); }
+.asset-name-input { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.asset-caption-input { font-size: 12px; color: var(--text-secondary); }
+.asset-card-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 8px; }
+.asset-card-actions .button { min-width: 0; justify-content: center; }
 .assets-empty-state {
     margin: 0;
     padding: 16px 10px;

@@ -1,0 +1,248 @@
+diff --git a/README.md b/README.md
+index 25337ba..f9732bc 100644
+--- a/README.md
++++ b/README.md
+@@ -235,3 +235,10 @@ Le panneau Ressources permet d'importer, renommer, réutiliser et supprimer des
+ ### Alpha 5.2
+ 
+ La gestion des images de chapitre est centralisée dans le panneau Enrichissements. Une ressource utilisée par le chapitre sélectionné est mise en évidence et peut être retirée directement depuis sa carte.
++
++### Alpha 5.3
++
++- Les cartes image sont désormais sélectionnées indépendamment de leur utilisation dans un chapitre.
++- Le titre et la légende restent statiques hors sélection, puis deviennent éditables sur la carte sélectionnée.
++- Les actions « Ajouter l’image » et « Supprimer » apparaissent uniquement sur la carte sélectionnée.
++- La coche indique exclusivement qu’une image est utilisée par le chapitre courant et permet de la retirer.
+diff --git a/index.html b/index.html
+index cdb69f8..6114aba 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0 Alpha 5.2</title>
++    <title>Story Builder — 2.0 Alpha 5.3</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 0723b10..7c3083b 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.5.2";
++export const APP_VERSION = "2.0.0-alpha.5.3";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index 6937680..34421b6 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -3,6 +3,8 @@ import { commitProjectChange } from "../../core/project-service.js";
+ import { getProject, getSelectedChapter } from "../../core/store.js";
+ import { readFileAsDataUrl } from "../../core/utils.js";
+ 
++let selectedAssetId = null;
++
+ function getImages() {
+     const project = getProject();
+     project.assets ??= { images: [], icons: [], fonts: [] };
+@@ -14,19 +16,40 @@ function escapeHtml(value) {
+     return String(value ?? "").replace(/[&<>\"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
+ }
+ 
+-function toggleAsset(asset) {
++function useAsset(asset) {
+     const chapter = getSelectedChapter();
+     if (!chapter) return alert("Sélectionne d’abord un chapitre.");
+ 
+-    if (chapter.image === asset.data) {
++    chapter.image = asset.data;
++    chapter.imageName = asset.name;
++    chapter.imageCaption = asset.caption ?? "";
++    commitProjectChange();
++}
++
++function removeAssetFromChapter(asset) {
++    const chapter = getSelectedChapter();
++    if (!chapter || chapter.image !== asset.data) return;
++
++    chapter.image = null;
++    chapter.imageName = "";
++    chapter.imageCaption = "";
++    commitProjectChange();
++}
++
++function deleteAsset(asset) {
++    const images = getImages();
++    const index = images.findIndex(item => item.id === asset.id);
++    if (index < 0) return;
++
++    const chapter = getSelectedChapter();
++    if (chapter?.image === asset.data) {
+         chapter.image = null;
+         chapter.imageName = "";
+         chapter.imageCaption = "";
+-    } else {
+-        chapter.image = asset.data;
+-        chapter.imageName = asset.name;
+-        chapter.imageCaption = asset.caption ?? "";
+     }
++
++    images.splice(index, 1);
++    selectedAssetId = null;
+     commitProjectChange();
+ }
+ 
+@@ -34,25 +57,46 @@ export function renderAssetsPanel() {
+     const container = document.getElementById("assetsPanelContent");
+     if (!container) return;
+     const images = getImages();
++
++    if (selectedAssetId && !images.some(asset => asset.id === selectedAssetId)) selectedAssetId = null;
++
+     container.innerHTML = images.length ? `
+         <div class="assets-grid">
+             ${images.map(asset => {
+-                const isSelected = getSelectedChapter()?.image === asset.data;
++                const isActive = getSelectedChapter()?.image === asset.data;
++                const isSelected = selectedAssetId === asset.id;
+                 return `
+-                <article class="asset-card ${isSelected ? "selected" : ""}" data-asset-id="${asset.id}">
+-                    <button type="button" class="asset-preview" data-toggle-asset="${asset.id}" aria-pressed="${isSelected}" aria-label="${isSelected ? "Retirer" : "Utiliser"} cette image">
++                <article class="asset-card ${isSelected ? "selected" : ""} ${isActive ? "active" : ""}" data-select-asset="${asset.id}">
++                    <button type="button" class="asset-preview" data-toggle-asset="${asset.id}" aria-pressed="${isActive}" aria-label="${isActive ? "Retirer" : "Ajouter"} cette image au chapitre">
+                         <img src="${asset.data}" alt="">
+                         <span class="asset-selection-check" aria-hidden="true">✓</span>
+                     </button>
+                     <div class="asset-card-body">
+-                        <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de l’image">
+-                        <input class="asset-caption-input" data-asset-caption="${asset.id}" value="${escapeHtml(asset.caption ?? "")}" placeholder="Ajouter une légende…" aria-label="Légende de l’image">
++                        ${isSelected ? `
++                            <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de l’image">
++                            <input class="asset-caption-input" data-asset-caption="${asset.id}" value="${escapeHtml(asset.caption ?? "")}" placeholder="Ajouter une légende…" aria-label="Légende de l’image">
++                            <div class="asset-card-actions">
++                                <button type="button" class="button button-secondary" data-use-asset="${asset.id}">Ajouter l’image</button>
++                                <button type="button" class="button button-danger" data-delete-asset="${asset.id}">Supprimer</button>
++                            </div>
++                        ` : `
++                            <p class="asset-name-static">${escapeHtml(asset.name)}</p>
++                            <p class="asset-caption-static">${escapeHtml(asset.caption || "Aucune légende")}</p>
++                        `}
+                     </div>
+                 </article>`;
+             }).join("")}
+         </div>` : `
+         <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
+ 
++    container.querySelectorAll("[data-select-asset]").forEach(card => {
++        card.addEventListener("click", event => {
++            if (event.target.closest("button, input")) return;
++            selectedAssetId = card.dataset.selectAsset;
++            renderAssetsPanel();
++        });
++    });
++
+     container.querySelectorAll("[data-asset-name]").forEach(input => {
+         input.addEventListener("change", () => {
+             const asset = getImages().find(item => item.id === input.dataset.assetName);
+@@ -76,9 +120,30 @@ export function renderAssetsPanel() {
+     });
+ 
+     container.querySelectorAll("[data-toggle-asset]").forEach(button => {
+-        button.addEventListener("click", () => {
++        button.addEventListener("click", event => {
++            event.stopPropagation();
+             const asset = getImages().find(item => item.id === button.dataset.toggleAsset);
+-            if (asset) toggleAsset(asset);
++            if (!asset) return;
++            selectedAssetId = asset.id;
++            const isActive = getSelectedChapter()?.image === asset.data;
++            if (isActive) removeAssetFromChapter(asset);
++            else useAsset(asset);
++        });
++    });
++
++    container.querySelectorAll("[data-use-asset]").forEach(button => {
++        button.addEventListener("click", event => {
++            event.stopPropagation();
++            const asset = getImages().find(item => item.id === button.dataset.useAsset);
++            if (asset) useAsset(asset);
++        });
++    });
++
++    container.querySelectorAll("[data-delete-asset]").forEach(button => {
++        button.addEventListener("click", event => {
++            event.stopPropagation();
++            const asset = getImages().find(item => item.id === button.dataset.deleteAsset);
++            if (asset) deleteAsset(asset);
+         });
+     });
+ }
+@@ -88,7 +153,7 @@ async function importImages(files) {
+         if (!file.type.startsWith("image/")) continue;
+         if (file.size > MAX_IMAGE_SIZE) throw new Error(`${file.name} dépasse la limite de 2,5 Mo.`);
+         const data = await readFileAsDataUrl(file);
+-        getImages().push({
++        const asset = {
+             id: crypto.randomUUID(),
+             name: file.name,
+             caption: "",
+@@ -97,7 +162,9 @@ async function importImages(files) {
+             size: file.size,
+             data,
+             createdAt: new Date().toISOString()
+-        });
++        };
++        getImages().push(asset);
++        selectedAssetId = asset.id;
+     }
+     commitProjectChange();
+ }
+diff --git a/style.css b/style.css
+index cdf7f08..d7e9168 100644
+--- a/style.css
++++ b/style.css
+@@ -4013,6 +4013,7 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+     border: 1px solid var(--panel-border);
+     border-radius: var(--right-panel-radius);
+     background: #fff;
++    cursor: pointer;
+     transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+ }
+ .asset-card.selected {
+@@ -4046,10 +4047,28 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+     font-size: 14px;
+     font-weight: 800;
+ }
+-.asset-card.selected .asset-selection-check { color: #fff; background: var(--accent); }
+-.asset-card-body { display: grid; gap: 8px; padding: 10px; }
+-.asset-card-body input { width: 100%; min-width: 0; box-sizing: border-box; }
+-.asset-caption-input { font-size: 12px; }
++.asset-card.active .asset-selection-check { color: #fff; background: var(--accent); }
++.asset-card-body { display: grid; gap: 6px; padding: 10px; }
++.asset-name-static,
++.asset-caption-static { margin: 0; overflow-wrap: anywhere; }
++.asset-name-static { font-size: 13px; font-weight: 700; color: var(--text-primary); }
++.asset-caption-static { font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
++.asset-card-body input {
++    width: 100%;
++    min-width: 0;
++    box-sizing: border-box;
++    padding: 2px 0;
++    border: 0;
++    border-radius: 0;
++    outline: 0;
++    background: transparent;
++    box-shadow: none;
++}
++.asset-card-body input:focus { box-shadow: inset 0 -1px 0 var(--accent); }
++.asset-name-input { font-size: 13px; font-weight: 700; color: var(--text-primary); }
++.asset-caption-input { font-size: 12px; color: var(--text-secondary); }
++.asset-card-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 8px; }
++.asset-card-actions .button { min-width: 0; justify-content: center; }
+ .assets-empty-state {
+     margin: 0;
+     padding: 16px 10px;

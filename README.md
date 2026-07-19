@@ -235,3 +235,10 @@ Le panneau Ressources permet d'importer, renommer, réutiliser et supprimer des 
 ### Alpha 5.2
 
 La gestion des images de chapitre est centralisée dans le panneau Enrichissements. Une ressource utilisée par le chapitre sélectionné est mise en évidence et peut être retirée directement depuis sa carte.
+
+### Alpha 5.3
+
+- Les cartes image sont désormais sélectionnées indépendamment de leur utilisation dans un chapitre.
+- Le titre et la légende restent statiques hors sélection, puis deviennent éditables sur la carte sélectionnée.
+- Les actions « Ajouter l’image » et « Supprimer » apparaissent uniquement sur la carte sélectionnée.
+- La coche indique exclusivement qu’une image est utilisée par le chapitre courant et permet de la retirer.
