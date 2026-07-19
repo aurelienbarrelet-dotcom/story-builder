@@ -1,9 +1,9 @@
 import { MAPBOX_TOKEN_KEY, STORAGE_KEY } from "./config.js";
-import { parseProjectDocument } from "./project-format.js";
 import { projectStorage } from "./storage-service.js";
 import { defaultLocation, defaultStory } from "./default-project.js";
+import { createProject, touchProject } from "./project-model.js";
 import { emit, EVENTS } from "./events.js";
-import { getStory, setStory } from "./store.js";
+import { getProject, getStory, setProject } from "./store.js";
 import { recordHistoryChange, resetHistory } from "./history.js";
 import {
     cloneObject,
@@ -177,30 +177,28 @@ function validateLocation(location) {
 }
 
 
-function syncLegacyMapboxToken(project) {
-    const token = String(project?.mapboxToken ?? "").trim();
-    if (token) localStorage.setItem(MAPBOX_TOKEN_KEY, token);
-    else localStorage.removeItem(MAPBOX_TOKEN_KEY);
-}
-
 export function loadInitialProject() {
     const savedProject = localStorage.getItem(STORAGE_KEY);
 
     if (!savedProject) {
-        return cloneObject(defaultStory);
+        return createProject(cloneObject(defaultStory));
     }
 
     try {
-        return validateProject(projectStorage.loadFromBrowser(STORAGE_KEY));
+        const project = projectStorage.load(STORAGE_KEY);
+        project.story = validateProject(project.story);
+        return project;
     } catch (error) {
         console.error("Impossible de charger le projet local :", error);
-        return cloneObject(defaultStory);
+        return createProject(cloneObject(defaultStory));
     }
 }
 
 export function saveProjectLocally() {
     try {
-        projectStorage.saveToBrowser(getStory(), STORAGE_KEY);
+        const project = touchProject(getProject());
+        validateProject(project.story);
+        projectStorage.save(project, STORAGE_KEY);
 
         emit(EVENTS.SAVE_STATUS_CHANGED, {
             isSaved: true,
@@ -231,15 +229,10 @@ export function commitProjectChange() {
 }
 
 export function downloadProjectFile() {
-    const story = getStory();
+    const project = touchProject(getProject());
+    validateProject(project.story);
 
-    // Migre automatiquement le token des anciennes versions vers le projet
-    // afin que le fichier enregistré soit autonome et partageable.
-    if (story && !String(story.mapboxToken ?? "").trim()) {
-        story.mapboxToken = localStorage.getItem(MAPBOX_TOKEN_KEY) ?? "";
-    }
-
-    const filename = projectStorage.downloadProject(story);
+    const filename = projectStorage.download(project);
     saveProjectLocally();
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: false });
     emit(EVENTS.SAVE_STATUS_CHANGED, {
@@ -249,39 +242,22 @@ export function downloadProjectFile() {
 }
 
 export async function importProjectFile(file) {
-    const content = await readFileAsText(file);
-    let jsonText = content.trim();
-
-    if (jsonText.startsWith("window.storyProject")) {
-        const equalsPosition = jsonText.indexOf("=");
-        const lastSemicolonPosition = jsonText.lastIndexOf(";");
-
-        jsonText = jsonText
-            .slice(
-                equalsPosition + 1,
-                lastSemicolonPosition > equalsPosition
-                    ? lastSemicolonPosition
-                    : undefined
-            )
-            .trim();
+    if (!file.name.toLowerCase().endsWith(".story.json")) {
+        throw new Error("Seuls les fichiers .story.json sont acceptés.");
     }
 
-    const parsedValue = JSON.parse(jsonText);
-    const { project, sourceFormat } = parseProjectDocument(parsedValue);
-    const importedProject = validateProject(project);
+    const content = await readFileAsText(file);
+    const importedProject = projectStorage.openText(content);
+    importedProject.story = validateProject(importedProject.story);
 
-    // Évite qu’un token du projet précédent soit réutilisé par erreur.
-    syncLegacyMapboxToken(importedProject);
-    setStory(importedProject);
+    setProject(importedProject);
     resetHistory();
     saveProjectLocally();
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: false });
-    return { sourceFormat };
 }
 
 export function createNewProject() {
-    // Un nouveau projet ne doit conserver aucune donnée du projet précédent,
-    // y compris les anciennes informations Mapbox migrées dans LocalStorage.
+    // Un nouveau projet repart d’un état vierge.
     localStorage.removeItem(MAPBOX_TOKEN_KEY);
 
     const project = cloneObject(defaultStory);
@@ -304,7 +280,7 @@ export function createNewProject() {
     };
     project.chapters = [];
 
-    setStory(project);
+    setProject(createProject(project));
     resetHistory();
     saveProjectLocally();
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: false });

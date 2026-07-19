@@ -7,7 +7,7 @@ import {
     loadInitialProject,
     saveProjectLocally
 } from "./core/project-service.js";
-import { getSelectedChapterIndices, getSelectedSection, setStory } from "./core/store.js";
+import { getSelectedChapterIndices, getSelectedSection, setProject } from "./core/store.js";
 import { redo, resetHistory, undo } from "./core/history.js";
 import {
     addChapter
@@ -35,7 +35,7 @@ import { setupReaderMode } from "./features/reader/reader-mode.js";
 import { setupRightPanels } from "./features/layout/right-panels.js";
 import { renderLegendPanel, setupLegendPanel } from "./features/legend/legend-panel.js";
 import { setupChapterStyleClipboard } from "./features/chapters/chapter-style-clipboard.js";
-import { downloadScrollytellingArchive } from "./features/export/scrollytelling-archive-export.js";
+import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
 
 function renderApplication(options = {}) {
@@ -145,7 +145,7 @@ function setupToolbarEvents() {
     exportArchiveButton?.addEventListener("click", async () => {
         exportArchiveButton.disabled = true;
         try {
-            await downloadScrollytellingArchive();
+            await exportPublication();
         } catch (error) {
             console.error("Erreur pendant l’export du site :", error);
             alert(error.message || "Impossible d’exporter le site scrollytelling.");
@@ -166,12 +166,9 @@ function setupToolbarEvents() {
         }
 
         try {
-            const result = await importProjectFile(file);
+            await importProjectFile(file);
             initializeMap();
-            const converted = result?.sourceFormat !== "story-json";
-            alert(converted
-                ? "Le projet a été ouvert et converti vers le format Story Builder 2.0."
-                : "Le projet a été ouvert.");
+            alert("Le projet a été ouvert.");
         } catch (error) {
             console.error("Erreur pendant l’ouverture :", error);
             alert("Impossible d’ouvrir ce projet.");
@@ -215,7 +212,7 @@ function startApplication() {
     setupProductivityShortcuts();
     setupReaderMode();
 
-    setStory(loadInitialProject());
+    setProject(loadInitialProject());
     resetHistory();
     document.body.dataset.projectDirty = "false";
 

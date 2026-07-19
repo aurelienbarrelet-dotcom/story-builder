@@ -195,16 +195,16 @@ Consolidation des états Desktop/Mobile, synchronisation sûre du token Mapbox, 
 - Le numéro du chapitre sélectionné reste noir et gagne légèrement en taille.
 - Les chapitres sans image utilisent un aplat gris uni dans la prévisualisation, sans trame ni texte.
 
-## Story Builder 2.0 — Alpha 1
+## Story Builder 2.0 — Alpha 3
 
-Premiers éléments de la nouvelle architecture projet :
+Architecture projet simplifiée et stricte :
 
-- le bouton **Sauvegarder** télécharge désormais un fichier `nom-du-projet.story.json` ;
-- le fichier utilise une enveloppe versionnée (`story-builder-project`, format 1) ;
-- les anciens fichiers `.js` et les anciens JSON directs restent importables ;
-- un ancien projet est converti automatiquement à l'ouverture ;
-- la sauvegarde navigateur et le téléchargement passent par une première couche `storage-service` ;
-- l'export ZIP Scrolly reste séparé et conserve son fonctionnement actuel.
+- le bouton **Sauvegarder** télécharge un fichier `nom-du-projet.story.json` ;
+- seul le format `story-builder-project`, version 1, est accepté ;
+- les anciens fichiers `.js`, les JSON directs et les autres versions ne sont plus importables ;
+- la sauvegarde navigateur utilise la même enveloppe versionnée que le fichier téléchargé ;
+- la sérialisation, la validation et l’ouverture passent par `storage-service` ;
+- l’export ZIP Scrolly reste indépendant et conserve son fonctionnement actuel.
 
 Le format de travail et le package de publication sont désormais deux concepts distincts :
 
@@ -212,3 +212,8 @@ Le format de travail et le package de publication sont désormais deux concepts 
 projet.story.json  → fichier de travail
 projet-scrolly.zip → package de publication
 ```
+
+
+## Architecture v2
+
+Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCHITECTURE.md`.

@@ -1,7 +1,7 @@
 import { emit, EVENTS } from "./events.js";
 
 const state = {
-    story: null,
+    project: null,
     selectedChapterIndex: 0,
     draggedChapterIndex: null,
     selectedChapterIndices: new Set([0]),
@@ -9,12 +9,17 @@ const state = {
     selectedSection: "chapter"
 };
 
-export function getStory() {
-    return state.story;
+export function getProject() {
+    return state.project;
 }
 
-export function setStory(story) {
-    state.story = story;
+export function getStory() {
+    return state.project?.story ?? null;
+}
+
+export function setProject(project) {
+    state.project = project;
+    const story = project.story;
     state.selectedChapterIndex = 0;
     state.draggedChapterIndex = null;
     state.selectedChapterIndices = new Set(story?.chapters?.length ? [0] : []);
@@ -25,8 +30,14 @@ export function setStory(story) {
     emit(EVENTS.RENDER_REQUESTED);
 }
 
+export function setStory(story) {
+    if (!state.project) throw new Error("Aucun projet actif.");
+    state.project.story = story;
+    setProject(state.project);
+}
+
 export function getChapters() {
-    return state.story?.chapters ?? [];
+    return getStory()?.chapters ?? [];
 }
 
 export function getSelectedChapterIndex() {
@@ -181,7 +192,7 @@ export function getEditorStateSnapshot() {
 }
 
 export function restoreEditorState(story, editor = {}) {
-    state.story = story;
+    state.project.story = story;
     state.draggedChapterIndex = null;
     state.selectedSection = editor.selectedSection === "meta" ? "meta" : "chapter";
     const max = Math.max(0, (story?.chapters?.length ?? 1) - 1);
