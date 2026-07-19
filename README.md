@@ -232,6 +232,6 @@ Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCH
 Le panneau Ressources permet d'importer, renommer, réutiliser et supprimer des images enregistrées dans le projet.
 
 
-### Alpha 5.1
+### Alpha 5.2
 
 La gestion des images de chapitre est centralisée dans le panneau Enrichissements. Une ressource utilisée par le chapitre sélectionné est mise en évidence et peut être retirée directement depuis sa carte.

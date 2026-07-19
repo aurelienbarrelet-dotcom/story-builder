@@ -64,7 +64,7 @@ export function renderChapterList() {
     if (!chapters.length) {
         const empty = document.createElement("p");
         empty.className = "empty-message";
-        empty.innerHTML = "Aucun chapitre.<br>Utilise le bouton ci-dessous pour commencer.";
+        empty.innerHTML = "Aucun chapitre.<br>Clique sur « Ajouter un chapitre » ci-dessous.";
         container.appendChild(empty);
         return;
     }

@@ -19,7 +19,7 @@ const panelConfig = {
         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 9 9-5.8 5.8a2.8 2.8 0 0 1-4 0l-1-1a2.8 2.8 0 0 1 0-4L9 8"/><path d="M7.5 10.5h8.8"/><path d="M18.5 13.5s2.5 2.7 2.5 4.5a2.5 2.5 0 0 1-5 0c0-1.8 2.5-4.5 2.5-4.5Z"/></svg>`
     },
     assetsPanel: {
-        label: "Enrichissements",
+        label: "Images",
         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>`
     }
 };

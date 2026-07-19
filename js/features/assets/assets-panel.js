@@ -1,6 +1,6 @@
 import { MAX_IMAGE_SIZE } from "../../core/config.js";
 import { commitProjectChange } from "../../core/project-service.js";
-import { getProject, getSelectedChapter, getStory } from "../../core/store.js";
+import { getProject, getSelectedChapter } from "../../core/store.js";
 import { readFileAsDataUrl } from "../../core/utils.js";
 
 function getImages() {
@@ -14,8 +14,20 @@ function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>\"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
 }
 
-function usageCount(asset) {
-    return (getStory()?.chapters ?? []).filter(chapter => chapter.image === asset.data).length;
+function toggleAsset(asset) {
+    const chapter = getSelectedChapter();
+    if (!chapter) return alert("Sélectionne d’abord un chapitre.");
+
+    if (chapter.image === asset.data) {
+        chapter.image = null;
+        chapter.imageName = "";
+        chapter.imageCaption = "";
+    } else {
+        chapter.image = asset.data;
+        chapter.imageName = asset.name;
+        chapter.imageCaption = asset.caption ?? "";
+    }
+    commitProjectChange();
 }
 
 export function renderAssetsPanel() {
@@ -25,49 +37,50 @@ export function renderAssetsPanel() {
     container.innerHTML = images.length ? `
         <div class="assets-grid">
             ${images.map(asset => {
-                const isUsedBySelectedChapter = getSelectedChapter()?.image === asset.data;
+                const isSelected = getSelectedChapter()?.image === asset.data;
                 return `
-                <article class="asset-card ${isUsedBySelectedChapter ? "selected" : ""}" data-asset-id="${asset.id}">
-                    <img src="${asset.data}" alt="">
+                <article class="asset-card ${isSelected ? "selected" : ""}" data-asset-id="${asset.id}">
+                    <button type="button" class="asset-preview" data-toggle-asset="${asset.id}" aria-pressed="${isSelected}" aria-label="${isSelected ? "Retirer" : "Utiliser"} cette image">
+                        <img src="${asset.data}" alt="">
+                        <span class="asset-selection-check" aria-hidden="true">✓</span>
+                    </button>
                     <div class="asset-card-body">
-                        <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de la ressource">
-                        <span>${usageCount(asset)} utilisation(s)</span>
-                    </div>
-                    <div class="asset-card-actions">
-                        <button type="button" class="button ${isUsedBySelectedChapter ? "button-danger" : "button-light"}" data-toggle-asset="${asset.id}">${isUsedBySelectedChapter ? "Retirer" : "Utiliser"}</button>
+                        <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de l’image">
+                        <input class="asset-caption-input" data-asset-caption="${asset.id}" value="${escapeHtml(asset.caption ?? "")}" placeholder="Ajouter une légende…" aria-label="Légende de l’image">
                     </div>
                 </article>`;
             }).join("")}
         </div>` : `
-        <div class="assets-empty-state">
-            <strong>Aucune ressource</strong>
-            <p>Importe des images pour les réutiliser dans plusieurs chapitres.</p>
-        </div>`;
+        <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
 
     container.querySelectorAll("[data-asset-name]").forEach(input => {
         input.addEventListener("change", () => {
             const asset = getImages().find(item => item.id === input.dataset.assetName);
             if (!asset) return;
             asset.name = input.value.trim() || asset.originalName || "Image";
-            commitProjectChange();
-        });
-    });
-    container.querySelectorAll("[data-toggle-asset]").forEach(button => {
-        button.addEventListener("click", () => {
             const chapter = getSelectedChapter();
-            const asset = getImages().find(item => item.id === button.dataset.toggleAsset);
-            if (!chapter || !asset) return alert("Sélectionne d’abord un chapitre.");
-            if (chapter.image === asset.data) {
-                chapter.image = null;
-                chapter.imageName = "";
-            } else {
-                chapter.image = asset.data;
-                chapter.imageName = asset.name;
-            }
+            if (chapter?.image === asset.data) chapter.imageName = asset.name;
             commitProjectChange();
         });
     });
 
+    container.querySelectorAll("[data-asset-caption]").forEach(input => {
+        input.addEventListener("change", () => {
+            const asset = getImages().find(item => item.id === input.dataset.assetCaption);
+            if (!asset) return;
+            asset.caption = input.value.trim();
+            const chapter = getSelectedChapter();
+            if (chapter?.image === asset.data) chapter.imageCaption = asset.caption;
+            commitProjectChange();
+        });
+    });
+
+    container.querySelectorAll("[data-toggle-asset]").forEach(button => {
+        button.addEventListener("click", () => {
+            const asset = getImages().find(item => item.id === button.dataset.toggleAsset);
+            if (asset) toggleAsset(asset);
+        });
+    });
 }
 
 async function importImages(files) {
@@ -75,7 +88,16 @@ async function importImages(files) {
         if (!file.type.startsWith("image/")) continue;
         if (file.size > MAX_IMAGE_SIZE) throw new Error(`${file.name} dépasse la limite de 2,5 Mo.`);
         const data = await readFileAsDataUrl(file);
-        getImages().push({ id: crypto.randomUUID(), name: file.name, originalName: file.name, type: file.type, size: file.size, data, createdAt: new Date().toISOString() });
+        getImages().push({
+            id: crypto.randomUUID(),
+            name: file.name,
+            caption: "",
+            originalName: file.name,
+            type: file.type,
+            size: file.size,
+            data,
+            createdAt: new Date().toISOString()
+        });
     }
     commitProjectChange();
 }

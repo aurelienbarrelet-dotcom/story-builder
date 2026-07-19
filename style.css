@@ -3975,20 +3975,88 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
 }
 
 /* Alpha 5 — Asset Manager */
-.assets-panel { min-width: 0; background: #fff; border-left: 1px solid #ddd; overflow: hidden; }
-.assets-panel-header { display: grid; gap: 10px; padding: 16px; border-bottom: 1px solid #e6e6e6; }
+.assets-panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 0;
+    background: var(--right-panel-bg);
+}
+.assets-panel-header {
+    flex: 0 0 var(--right-panel-header-height);
+    min-height: var(--right-panel-header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--right-panel-bg);
+}
 .assets-panel-header h2 { margin: 0; font-size: 16px; }
-.assets-panel-header .button { width: 100%; }
-.assets-panel-content { height: calc(100vh - 112px); overflow: auto; padding: 14px; }
+.assets-panel-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--right-panel-padding);
+    background: var(--right-panel-bg);
+}
+.assets-panel-footer {
+    flex: 0 0 auto;
+    padding: 12px var(--right-panel-padding) var(--right-panel-padding);
+    border-top: 1px solid var(--panel-border);
+    background: var(--right-panel-bg);
+}
+.assets-panel-footer .button { width: 100%; justify-content: center; }
 .assets-grid { display: grid; gap: 12px; }
-.asset-card { overflow: hidden; border: 1px solid #ddd; border-radius: 10px; background: #fff; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
-.asset-card.selected { background: var(--accent-soft); border-color: rgba(130, 11, 28, .35); box-shadow: 0 0 0 2px rgba(130, 11, 28, .14); }
-.asset-card > img { display: block; width: 100%; height: 130px; object-fit: cover; background: #f2f2f2; }
-.asset-card-body { display: grid; gap: 5px; padding: 10px; }
-.asset-card-body span { color: #777; font-size: 11px; }
-.asset-name-input { width: 100%; min-width: 0; border: 0; border-bottom: 1px solid transparent; padding: 2px 0; font: inherit; font-weight: 600; }
-.asset-name-input:focus { outline: none; border-bottom-color: #820b1c; }
-.asset-card-actions { display: flex; justify-content: space-between; align-items: center; padding: 0 10px 10px; }
-.assets-empty-state { padding: 28px 12px; text-align: center; color: #666; border: 1px dashed #ccc; border-radius: 10px; }
-.assets-empty-state strong { color: #222; }
-.assets-empty-state p { margin: 8px 0 0; font-size: 13px; line-height: 1.45; }
+.asset-card {
+    overflow: hidden;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--right-panel-radius);
+    background: #fff;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.asset-card.selected {
+    background: var(--accent-soft);
+    border-color: rgba(130, 11, 28, .35);
+    box-shadow: 0 0 0 2px rgba(130, 11, 28, .14);
+}
+.asset-preview {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: #f2f2f2;
+    cursor: pointer;
+}
+.asset-preview img { display: block; width: 100%; height: 130px; object-fit: cover; }
+.asset-selection-check {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    color: transparent;
+    background: rgba(255, 255, 255, .86);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .22);
+    font-size: 14px;
+    font-weight: 800;
+}
+.asset-card.selected .asset-selection-check { color: #fff; background: var(--accent); }
+.asset-card-body { display: grid; gap: 8px; padding: 10px; }
+.asset-card-body input { width: 100%; min-width: 0; box-sizing: border-box; }
+.asset-caption-input { font-size: 12px; }
+.assets-empty-state {
+    margin: 0;
+    padding: 16px 10px;
+    border: 1px dashed #ccd1d6;
+    border-radius: var(--right-panel-radius);
+    color: #7a828b;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+}
