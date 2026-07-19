@@ -217,3 +217,12 @@ projet-scrolly.zip → package de publication
 ## Architecture v2
 
 Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCHITECTURE.md`.
+
+
+## Story Builder 2.0 — Alpha 4
+
+- version visible dans l’onglet du navigateur ;
+- version interne mise à jour vers `2.0.0-alpha.4` ;
+- adaptateur local déplacé dans `js/core/storage-adapters/` ;
+- registre d’adaptateurs avec `register`, `use` et `listProviders` ;
+- préparation de l’intégration future de Supabase sans changement de comportement pour l’utilisateur.

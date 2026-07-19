@@ -1,0 +1,211 @@
+diff --git a/README.md b/README.md
+index 8e578c9..5f8cc14 100644
+--- a/README.md
++++ b/README.md
+@@ -217,3 +217,12 @@ projet-scrolly.zip → package de publication
+ ## Architecture v2
+ 
+ Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCHITECTURE.md`.
++
++
++## Story Builder 2.0 — Alpha 4
++
++- version visible dans l’onglet du navigateur ;
++- version interne mise à jour vers `2.0.0-alpha.4` ;
++- adaptateur local déplacé dans `js/core/storage-adapters/` ;
++- registre d’adaptateurs avec `register`, `use` et `listProviders` ;
++- préparation de l’intégration future de Supabase sans changement de comportement pour l’utilisateur.
+diff --git a/V2-ARCHITECTURE.md b/V2-ARCHITECTURE.md
+index 0b954ff..f0d261f 100644
+--- a/V2-ARCHITECTURE.md
++++ b/V2-ARCHITECTURE.md
+@@ -1,6 +1,6 @@
+-# Story Builder 2.0 — Architecture Alpha 3
++# Story Builder 2.0 — Architecture Alpha 4
+ 
+-Le projet complet est désormais l’unité centrale de l’application.
++Le projet complet reste l’unité centrale de l’application.
+ 
+ ```text
+ Project
+@@ -14,18 +14,24 @@ Project
+ 
+ - `project-model.js` crée et met à jour l’objet Project.
+ - `validation-service.js` contrôle le document avant ouverture, sauvegarde et export.
+-- `storage-service.js` délègue les opérations à un adaptateur actif.
++- `storage-service.js` gère désormais un registre d’adaptateurs nommés.
++- `storage-adapters/local-storage-adapter.js` contient l’implémentation navigateur.
+ - `export-service.js` constitue le point d’entrée unique de publication.
+ - `store.js` conserve le Project complet. `getStory()` reste disponible pour les panneaux existants.
+ 
+-## Prochaine étape
+-
+-Ajouter un second adaptateur de stockage sans modifier l’éditeur :
++## Registre de stockage
+ 
+ ```text
+ Storage service
+-├── local adapter (actuel)
+-└── remote adapter (prochain)
++├── register(adapter)
++├── use(adapterId)
++├── listProviders()
++└── active adapter
++    └── local
+ ```
+ 
+-Le registre `assets` est volontairement vide. Il prépare la future gestion centralisée des images, icônes et polices.
++Cette séparation permet d’ajouter ensuite un adaptateur Supabase sans modifier les composants de l’éditeur.
++
++## Prochaine étape
++
++Créer l’adaptateur distant et l’interface de connexion au stockage partagé.
+diff --git a/index.html b/index.html
+index 05003dd..afe59b7 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder 2.0 — Alpha 1</title>
++    <title>Story Builder — 2.0 Alpha 4</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 84910c3..3db0876 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.3";
++export const APP_VERSION = "2.0.0-alpha.4";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/core/storage-adapters/local-storage-adapter.js b/js/core/storage-adapters/local-storage-adapter.js
+new file mode 100644
+index 0000000..328698f
+--- /dev/null
++++ b/js/core/storage-adapters/local-storage-adapter.js
+@@ -0,0 +1,19 @@
++import { parseProjectDocument, serializeProjectDocument } from "../project-format.js";
++
++export const localStorageAdapter = Object.freeze({
++    id: "local",
++    label: "Navigateur local",
++    isAvailable() {
++        return typeof window !== "undefined" && Boolean(window.localStorage);
++    },
++    save(project, storageKey) {
++        localStorage.setItem(storageKey, serializeProjectDocument(project));
++    },
++    load(storageKey) {
++        const value = localStorage.getItem(storageKey);
++        return value ? parseProjectDocument(value) : null;
++    },
++    remove(storageKey) {
++        localStorage.removeItem(storageKey);
++    }
++});
+diff --git a/js/core/storage-service.js b/js/core/storage-service.js
+index eedaa21..05cb30e 100644
+--- a/js/core/storage-service.js
++++ b/js/core/storage-service.js
+@@ -1,35 +1,75 @@
+ import { createSlug, downloadTextFile } from "./utils.js";
+ import { parseProjectDocument, serializeProjectDocument } from "./project-format.js";
++import { localStorageAdapter } from "./storage-adapters/local-storage-adapter.js";
+ 
+-const localAdapter = Object.freeze({
+-    id: "local",
++const adapters = new Map();
++let activeAdapterId = null;
++
++function assertAdapter(adapter) {
++    if (!adapter || typeof adapter !== "object") {
++        throw new Error("Adaptateur de stockage invalide.");
++    }
++    if (!adapter.id || typeof adapter.id !== "string") {
++        throw new Error("Chaque adaptateur de stockage doit posséder un identifiant.");
++    }
++    if (typeof adapter.save !== "function" || typeof adapter.load !== "function") {
++        throw new Error("Un adaptateur de stockage doit fournir save() et load().");
++    }
++}
++
++function getActiveAdapter() {
++    const adapter = adapters.get(activeAdapterId);
++    if (!adapter) throw new Error("Aucun adaptateur de stockage actif.");
++    if (typeof adapter.isAvailable === "function" && !adapter.isAvailable()) {
++        throw new Error(`Le stockage « ${adapter.id} » n’est pas disponible.`);
++    }
++    return adapter;
++}
++
++export const projectStorage = Object.freeze({
++    register(adapter) {
++        assertAdapter(adapter);
++        adapters.set(adapter.id, adapter);
++        if (!activeAdapterId) activeAdapterId = adapter.id;
++        return adapter.id;
++    },
++    use(adapterOrId) {
++        if (typeof adapterOrId === "object") this.register(adapterOrId);
++        const adapterId = typeof adapterOrId === "string" ? adapterOrId : adapterOrId.id;
++        if (!adapters.has(adapterId)) {
++            throw new Error(`Adaptateur de stockage inconnu : ${adapterId}`);
++        }
++        activeAdapterId = adapterId;
++        return this.getProvider();
++    },
++    listProviders() {
++        return [...adapters.values()].map(adapter => ({
++            id: adapter.id,
++            label: adapter.label ?? adapter.id,
++            available: typeof adapter.isAvailable !== "function" || adapter.isAvailable()
++        }));
++    },
++    getProvider() {
++        return activeAdapterId;
++    },
+     save(project, storageKey) {
+-        localStorage.setItem(storageKey, serializeProjectDocument(project));
++        return getActiveAdapter().save(project, storageKey);
+     },
+     load(storageKey) {
+-        const value = localStorage.getItem(storageKey);
+-        return value ? parseProjectDocument(value) : null;
++        return getActiveAdapter().load(storageKey);
+     },
+     remove(storageKey) {
+-        localStorage.removeItem(storageKey);
+-    }
+-});
+-
+-let activeAdapter = localAdapter;
+-
+-export const projectStorage = Object.freeze({
+-    use(adapter) {
+-        if (!adapter?.save || !adapter?.load) throw new Error("Adaptateur de stockage invalide.");
+-        activeAdapter = adapter;
+-    },
+-    getProvider() { return activeAdapter.id ?? "custom"; },
+-    save(project, storageKey) { return activeAdapter.save(project, storageKey); },
+-    load(storageKey) { return activeAdapter.load(storageKey); },
+-    remove(storageKey) { return activeAdapter.remove?.(storageKey); },
++        return getActiveAdapter().remove?.(storageKey);
++    },
+     download(project) {
+         const filename = `${createSlug(project.metadata?.name || project.story?.projectName) || "story-project"}.story.json`;
+         downloadTextFile(filename, serializeProjectDocument(project, true), "application/json;charset=utf-8");
+         return filename;
+     },
+-    openText(text) { return parseProjectDocument(text); }
++    openText(text) {
++        return parseProjectDocument(text);
++    }
+ });
++
++projectStorage.register(localStorageAdapter);
++projectStorage.use("local");

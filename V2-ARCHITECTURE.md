@@ -1,6 +1,6 @@
-# Story Builder 2.0 — Architecture Alpha 3
+# Story Builder 2.0 — Architecture Alpha 4
 
-Le projet complet est désormais l’unité centrale de l’application.
+Le projet complet reste l’unité centrale de l’application.
 
 ```text
 Project
@@ -14,18 +14,24 @@ Project
 
 - `project-model.js` crée et met à jour l’objet Project.
 - `validation-service.js` contrôle le document avant ouverture, sauvegarde et export.
-- `storage-service.js` délègue les opérations à un adaptateur actif.
+- `storage-service.js` gère désormais un registre d’adaptateurs nommés.
+- `storage-adapters/local-storage-adapter.js` contient l’implémentation navigateur.
 - `export-service.js` constitue le point d’entrée unique de publication.
 - `store.js` conserve le Project complet. `getStory()` reste disponible pour les panneaux existants.
 
-## Prochaine étape
-
-Ajouter un second adaptateur de stockage sans modifier l’éditeur :
+## Registre de stockage
 
 ```text
 Storage service
-├── local adapter (actuel)
-└── remote adapter (prochain)
+├── register(adapter)
+├── use(adapterId)
+├── listProviders()
+└── active adapter
+    └── local
 ```
 
-Le registre `assets` est volontairement vide. Il prépare la future gestion centralisée des images, icônes et polices.
+Cette séparation permet d’ajouter ensuite un adaptateur Supabase sans modifier les composants de l’éditeur.
+
+## Prochaine étape
+
+Créer l’adaptateur distant et l’interface de connexion au stockage partagé.
