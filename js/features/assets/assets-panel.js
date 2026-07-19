@@ -24,18 +24,20 @@ export function renderAssetsPanel() {
     const images = getImages();
     container.innerHTML = images.length ? `
         <div class="assets-grid">
-            ${images.map(asset => `
-                <article class="asset-card" data-asset-id="${asset.id}">
+            ${images.map(asset => {
+                const isUsedBySelectedChapter = getSelectedChapter()?.image === asset.data;
+                return `
+                <article class="asset-card ${isUsedBySelectedChapter ? "selected" : ""}" data-asset-id="${asset.id}">
                     <img src="${asset.data}" alt="">
                     <div class="asset-card-body">
                         <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de la ressource">
                         <span>${usageCount(asset)} utilisation(s)</span>
                     </div>
                     <div class="asset-card-actions">
-                        <button type="button" class="button button-light" data-use-asset="${asset.id}">Utiliser</button>
-                        <button type="button" class="text-danger" data-delete-asset="${asset.id}">Supprimer</button>
+                        <button type="button" class="button ${isUsedBySelectedChapter ? "button-danger" : "button-light"}" data-toggle-asset="${asset.id}">${isUsedBySelectedChapter ? "Retirer" : "Utiliser"}</button>
                     </div>
-                </article>`).join("")}
+                </article>`;
+            }).join("")}
         </div>` : `
         <div class="assets-empty-state">
             <strong>Aucune ressource</strong>
@@ -50,34 +52,22 @@ export function renderAssetsPanel() {
             commitProjectChange();
         });
     });
-    container.querySelectorAll("[data-use-asset]").forEach(button => {
+    container.querySelectorAll("[data-toggle-asset]").forEach(button => {
         button.addEventListener("click", () => {
             const chapter = getSelectedChapter();
-            const asset = getImages().find(item => item.id === button.dataset.useAsset);
+            const asset = getImages().find(item => item.id === button.dataset.toggleAsset);
             if (!chapter || !asset) return alert("Sélectionne d’abord un chapitre.");
-            chapter.image = asset.data;
-            chapter.imageName = asset.name;
+            if (chapter.image === asset.data) {
+                chapter.image = null;
+                chapter.imageName = "";
+            } else {
+                chapter.image = asset.data;
+                chapter.imageName = asset.name;
+            }
             commitProjectChange();
         });
     });
-    container.querySelectorAll("[data-delete-asset]").forEach(button => {
-        button.addEventListener("click", () => {
-            const images = getImages();
-            const index = images.findIndex(item => item.id === button.dataset.deleteAsset);
-            if (index < 0) return;
-            const asset = images[index];
-            const used = usageCount(asset);
-            if (!confirm(used ? `Cette image est utilisée ${used} fois. La supprimer et la retirer des chapitres ?` : "Supprimer cette ressource ?")) return;
-            (getStory()?.chapters ?? []).forEach(chapter => {
-                if (chapter.image === asset.data) {
-                    chapter.image = null;
-                    chapter.imageName = "";
-                }
-            });
-            images.splice(index, 1);
-            commitProjectChange();
-        });
-    });
+
 }
 
 async function importImages(files) {

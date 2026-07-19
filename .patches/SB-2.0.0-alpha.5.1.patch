@@ -1,0 +1,273 @@
+diff --git a/README.md b/README.md
+index b44253e..edd61a8 100644
+--- a/README.md
++++ b/README.md
+@@ -230,3 +230,8 @@ Le store contient maintenant un objet `Project` de premier niveau. Voir `V2-ARCH
+ ## Alpha 5 — Asset Manager
+ 
+ Le panneau Ressources permet d'importer, renommer, réutiliser et supprimer des images enregistrées dans le projet.
++
++
++### Alpha 5.1
++
++La gestion des images de chapitre est centralisée dans le panneau Enrichissements. Une ressource utilisée par le chapitre sélectionné est mise en évidence et peut être retirée directement depuis sa carte.
+diff --git a/index.html b/index.html
+index a55e0b5..23ab958 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0 Alpha 5</title>
++    <title>Story Builder — 2.0 Alpha 5.1</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -116,7 +116,7 @@
+             <button type="button" class="right-panel-rail-button" data-panel="layersPanel" aria-label="Ouvrir Calques" title="Calques"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
+-            <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Ressources" title="Ressources"></button>
++            <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Enrichissements" title="Enrichissements"></button>
+         </nav>
+         <aside id="viewPanel" class="view-panel">
+             <header class="view-panel-header">
+@@ -207,7 +207,7 @@
+ 
+         <aside id="assetsPanel" class="assets-panel">
+             <header class="assets-panel-header">
+-                <div><h2>Ressources</h2><p>Images intégrées au projet</p></div>
++                <h2>Ressources</h2>
+                 <button id="importAssetsButton" class="button button-primary" type="button">Importer</button>
+                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
+             </header>
+diff --git a/js/core/config.js b/js/core/config.js
+index aeebfaf..119d273 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.5";
++export const APP_VERSION = "2.0.0-alpha.5.1";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index f7ecc43..539a1c8 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -24,18 +24,20 @@ export function renderAssetsPanel() {
+     const images = getImages();
+     container.innerHTML = images.length ? `
+         <div class="assets-grid">
+-            ${images.map(asset => `
+-                <article class="asset-card" data-asset-id="${asset.id}">
++            ${images.map(asset => {
++                const isUsedBySelectedChapter = getSelectedChapter()?.image === asset.data;
++                return `
++                <article class="asset-card ${isUsedBySelectedChapter ? "selected" : ""}" data-asset-id="${asset.id}">
+                     <img src="${asset.data}" alt="">
+                     <div class="asset-card-body">
+                         <input class="asset-name-input" data-asset-name="${asset.id}" value="${escapeHtml(asset.name)}" aria-label="Nom de la ressource">
+                         <span>${usageCount(asset)} utilisation(s)</span>
+                     </div>
+                     <div class="asset-card-actions">
+-                        <button type="button" class="button button-light" data-use-asset="${asset.id}">Utiliser</button>
+-                        <button type="button" class="text-danger" data-delete-asset="${asset.id}">Supprimer</button>
++                        <button type="button" class="button ${isUsedBySelectedChapter ? "button-danger" : "button-light"}" data-toggle-asset="${asset.id}">${isUsedBySelectedChapter ? "Retirer" : "Utiliser"}</button>
+                     </div>
+-                </article>`).join("")}
++                </article>`;
++            }).join("")}
+         </div>` : `
+         <div class="assets-empty-state">
+             <strong>Aucune ressource</strong>
+@@ -50,34 +52,22 @@ export function renderAssetsPanel() {
+             commitProjectChange();
+         });
+     });
+-    container.querySelectorAll("[data-use-asset]").forEach(button => {
++    container.querySelectorAll("[data-toggle-asset]").forEach(button => {
+         button.addEventListener("click", () => {
+             const chapter = getSelectedChapter();
+-            const asset = getImages().find(item => item.id === button.dataset.useAsset);
++            const asset = getImages().find(item => item.id === button.dataset.toggleAsset);
+             if (!chapter || !asset) return alert("Sélectionne d’abord un chapitre.");
+-            chapter.image = asset.data;
+-            chapter.imageName = asset.name;
+-            commitProjectChange();
+-        });
+-    });
+-    container.querySelectorAll("[data-delete-asset]").forEach(button => {
+-        button.addEventListener("click", () => {
+-            const images = getImages();
+-            const index = images.findIndex(item => item.id === button.dataset.deleteAsset);
+-            if (index < 0) return;
+-            const asset = images[index];
+-            const used = usageCount(asset);
+-            if (!confirm(used ? `Cette image est utilisée ${used} fois. La supprimer et la retirer des chapitres ?` : "Supprimer cette ressource ?")) return;
+-            (getStory()?.chapters ?? []).forEach(chapter => {
+-                if (chapter.image === asset.data) {
+-                    chapter.image = null;
+-                    chapter.imageName = "";
+-                }
+-            });
+-            images.splice(index, 1);
++            if (chapter.image === asset.data) {
++                chapter.image = null;
++                chapter.imageName = "";
++            } else {
++                chapter.image = asset.data;
++                chapter.imageName = asset.name;
++            }
+             commitProjectChange();
+         });
+     });
++
+ }
+ 
+ async function importImages(files) {
+diff --git a/js/features/layout/right-panels.js b/js/features/layout/right-panels.js
+index 346a78a..9bdbc36 100644
+--- a/js/features/layout/right-panels.js
++++ b/js/features/layout/right-panels.js
+@@ -19,7 +19,7 @@ const panelConfig = {
+         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 9 9-5.8 5.8a2.8 2.8 0 0 1-4 0l-1-1a2.8 2.8 0 0 1 0-4L9 8"/><path d="M7.5 10.5h8.8"/><path d="M18.5 13.5s2.5 2.7 2.5 4.5a2.5 2.5 0 0 1-5 0c0-1.8 2.5-4.5 2.5-4.5Z"/></svg>`
+     },
+     assetsPanel: {
+-        label: "Ressources",
++        label: "Enrichissements",
+         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>`
+     }
+ };
+diff --git a/js/features/properties/properties.js b/js/features/properties/properties.js
+index bd80f55..a940f8d 100644
+--- a/js/features/properties/properties.js
++++ b/js/features/properties/properties.js
+@@ -6,7 +6,6 @@ import {
+     escapeHtmlContent
+ } from "../../core/utils.js";
+ import {
+-    updateChapterCaption,
+     updateChapterDescription,
+     updateChapterId,
+     updateChapterTitle,
+@@ -14,10 +13,6 @@ import {
+     updateChapterLayerMode,
+     updateChapterLayerTransition
+ } from "../chapters/chapter-service.js";
+-import {
+-    importSelectedChapterImage,
+-    removeSelectedChapterImage
+-} from "../media/media-service.js";
+ 
+ export function renderProperties() {
+     const container = document.getElementById("propertiesContent");
+@@ -72,35 +67,6 @@ export function renderProperties() {
+             <span id="descriptionFormatHelp" class="property-help">Sélectionne un mot ou une phrase, puis choisis une mise en forme.</span>
+         </div>
+ 
+-        <details class="property-module" data-module-key="media" open>
+-            <summary>
+-                <span>Image</span>
+-                <small>Média</small>
+-            </summary>
+-            <div class="property-module-content">
+-                <div class="property">
+-                    <div class="media-box">
+-                        ${mediaPreview}
+-                        <div class="media-actions">
+-                            <button id="chooseImageButton" type="button" class="button button-light">
+-                                ${chapter.image ? "Remplacer l’image" : "Choisir une image"}
+-                            </button>
+-                            <button id="removeImageButton" type="button" class="button button-danger" ${chapter.image ? "" : "disabled"}>
+-                                Supprimer l’image
+-                            </button>
+-                            <input id="chapterImageInput" type="file" accept="image/*" hidden>
+-                        </div>
+-                        ${chapter.imageName ? `<p class="media-file-name">${escapeHtmlContent(chapter.imageName)}</p>` : ""}
+-                    </div>
+-                    <span class="property-help">L’image est intégrée au projet. Taille maximale : 2,5 Mo.</span>
+-                </div>
+-                <div class="property">
+-                    <label class="compact-label" for="imageCaptionInput">Légende et crédit</label>
+-                    <input id="imageCaptionInput" type="text" value="${escapeHtmlAttribute(chapter.imageCaption)}" placeholder="Source, crédit ou courte légende">
+-                </div>
+-            </div>
+-        </details>
+-
+         <details class="property-module" data-module-key="transition" open>
+             <summary>
+                 <span>Transitions</span>
+@@ -146,8 +112,6 @@ export function renderProperties() {
+ function bindPropertyEvents() {
+     const titleInput = document.getElementById("titleInput");
+     const descriptionInput = document.getElementById("descriptionInput");
+-    const captionInput = document.getElementById("imageCaptionInput");
+-    const imageInput = document.getElementById("chapterImageInput");
+     const transitionMethodInput = document.getElementById("transitionMethodInput");
+     const transitionDurationInput = document.getElementById("transitionDurationInput");
+     const layerModeInput = document.getElementById("layerModeInput");
+@@ -166,40 +130,6 @@ function bindPropertyEvents() {
+ 
+     bindDescriptionFormatting(descriptionInput);
+ 
+-    captionInput.addEventListener("input", () => {
+-        updateChapterCaption(captionInput.value);
+-        emit(EVENTS.RENDER_REQUESTED, { preserveProperties: true });
+-    });
+-
+-    document
+-        .getElementById("chooseImageButton")
+-        .addEventListener("click", () => imageInput.click());
+-
+-    imageInput.addEventListener("change", async () => {
+-        const file = imageInput.files[0];
+-
+-        if (!file) {
+-            return;
+-        }
+-
+-        try {
+-            await importSelectedChapterImage(file);
+-            emit(EVENTS.RENDER_REQUESTED);
+-        } catch (error) {
+-            console.error("Erreur d’import d’image :", error);
+-            alert(error.message || "Impossible de lire cette image.");
+-        } finally {
+-            imageInput.value = "";
+-        }
+-    });
+-
+-    document
+-        .getElementById("removeImageButton")
+-        .addEventListener("click", () => {
+-            removeSelectedChapterImage();
+-            emit(EVENTS.RENDER_REQUESTED);
+-        });
+-
+     transitionMethodInput?.addEventListener("change", () => updateChapterTransition("method", transitionMethodInput.value));
+     transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
+     layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
+diff --git a/style.css b/style.css
+index bfa5e66..9807c8e 100644
+--- a/style.css
++++ b/style.css
+@@ -3976,13 +3976,13 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+ 
+ /* Alpha 5 — Asset Manager */
+ .assets-panel { min-width: 0; background: #fff; border-left: 1px solid #ddd; overflow: hidden; }
+-.assets-panel-header { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 16px; border-bottom: 1px solid #e6e6e6; }
++.assets-panel-header { display: grid; gap: 10px; padding: 16px; border-bottom: 1px solid #e6e6e6; }
+ .assets-panel-header h2 { margin: 0; font-size: 16px; }
+-.assets-panel-header p { grid-column: 1; margin: 0; color: #777; font-size: 12px; }
+-.assets-panel-header .button { grid-column: 2; grid-row: 1 / span 2; }
++.assets-panel-header .button { width: 100%; }
+ .assets-panel-content { height: calc(100vh - 112px); overflow: auto; padding: 14px; }
+ .assets-grid { display: grid; gap: 12px; }
+-.asset-card { overflow: hidden; border: 1px solid #ddd; border-radius: 10px; background: #fff; }
++.asset-card { overflow: hidden; border: 1px solid #ddd; border-radius: 10px; background: #fff; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
++.asset-card.selected { background: var(--accent-soft); border-color: rgba(130, 11, 28, .35); box-shadow: 0 0 0 2px rgba(130, 11, 28, .14); }
+ .asset-card > img { display: block; width: 100%; height: 130px; object-fit: cover; background: #f2f2f2; }
+ .asset-card-body { display: grid; gap: 5px; padding: 10px; }
+ .asset-card-body span { color: #777; font-size: 11px; }

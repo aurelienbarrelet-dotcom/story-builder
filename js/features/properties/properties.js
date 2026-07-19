@@ -6,7 +6,6 @@ import {
     escapeHtmlContent
 } from "../../core/utils.js";
 import {
-    updateChapterCaption,
     updateChapterDescription,
     updateChapterId,
     updateChapterTitle,
@@ -14,10 +13,6 @@ import {
     updateChapterLayerMode,
     updateChapterLayerTransition
 } from "../chapters/chapter-service.js";
-import {
-    importSelectedChapterImage,
-    removeSelectedChapterImage
-} from "../media/media-service.js";
 
 export function renderProperties() {
     const container = document.getElementById("propertiesContent");
@@ -72,35 +67,6 @@ export function renderProperties() {
             <span id="descriptionFormatHelp" class="property-help">Sélectionne un mot ou une phrase, puis choisis une mise en forme.</span>
         </div>
 
-        <details class="property-module" data-module-key="media" open>
-            <summary>
-                <span>Image</span>
-                <small>Média</small>
-            </summary>
-            <div class="property-module-content">
-                <div class="property">
-                    <div class="media-box">
-                        ${mediaPreview}
-                        <div class="media-actions">
-                            <button id="chooseImageButton" type="button" class="button button-light">
-                                ${chapter.image ? "Remplacer l’image" : "Choisir une image"}
-                            </button>
-                            <button id="removeImageButton" type="button" class="button button-danger" ${chapter.image ? "" : "disabled"}>
-                                Supprimer l’image
-                            </button>
-                            <input id="chapterImageInput" type="file" accept="image/*" hidden>
-                        </div>
-                        ${chapter.imageName ? `<p class="media-file-name">${escapeHtmlContent(chapter.imageName)}</p>` : ""}
-                    </div>
-                    <span class="property-help">L’image est intégrée au projet. Taille maximale : 2,5 Mo.</span>
-                </div>
-                <div class="property">
-                    <label class="compact-label" for="imageCaptionInput">Légende et crédit</label>
-                    <input id="imageCaptionInput" type="text" value="${escapeHtmlAttribute(chapter.imageCaption)}" placeholder="Source, crédit ou courte légende">
-                </div>
-            </div>
-        </details>
-
         <details class="property-module" data-module-key="transition" open>
             <summary>
                 <span>Transitions</span>
@@ -146,8 +112,6 @@ export function renderProperties() {
 function bindPropertyEvents() {
     const titleInput = document.getElementById("titleInput");
     const descriptionInput = document.getElementById("descriptionInput");
-    const captionInput = document.getElementById("imageCaptionInput");
-    const imageInput = document.getElementById("chapterImageInput");
     const transitionMethodInput = document.getElementById("transitionMethodInput");
     const transitionDurationInput = document.getElementById("transitionDurationInput");
     const layerModeInput = document.getElementById("layerModeInput");
@@ -165,40 +129,6 @@ function bindPropertyEvents() {
     });
 
     bindDescriptionFormatting(descriptionInput);
-
-    captionInput.addEventListener("input", () => {
-        updateChapterCaption(captionInput.value);
-        emit(EVENTS.RENDER_REQUESTED, { preserveProperties: true });
-    });
-
-    document
-        .getElementById("chooseImageButton")
-        .addEventListener("click", () => imageInput.click());
-
-    imageInput.addEventListener("change", async () => {
-        const file = imageInput.files[0];
-
-        if (!file) {
-            return;
-        }
-
-        try {
-            await importSelectedChapterImage(file);
-            emit(EVENTS.RENDER_REQUESTED);
-        } catch (error) {
-            console.error("Erreur d’import d’image :", error);
-            alert(error.message || "Impossible de lire cette image.");
-        } finally {
-            imageInput.value = "";
-        }
-    });
-
-    document
-        .getElementById("removeImageButton")
-        .addEventListener("click", () => {
-            removeSelectedChapterImage();
-            emit(EVENTS.RENDER_REQUESTED);
-        });
 
     transitionMethodInput?.addEventListener("change", () => updateChapterTransition("method", transitionMethodInput.value));
     transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
