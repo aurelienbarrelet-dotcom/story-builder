@@ -181,7 +181,7 @@ export function previewSelectedChapterTransition() {
     const source = selectedIndex > 0 ? chapters[selectedIndex - 1] : getProjectConfig();
     const sourceCamera = getStoredCamera(source, "desktop");
     if (sourceCamera) map.jumpTo(sourceCamera);
-    applyLayerState(source, { instant: true });
+    applyLayerState(source, { instant: true, silent: true });
 
     runAfterMapRender(() => {
         const targetCamera = getStoredCamera(chapter, "desktop");
@@ -196,7 +196,7 @@ export function previewSelectedChapterTransition() {
             if (typeof map[method] === "function") map[method](cameraOptions);
             else map.flyTo(cameraOptions);
         }
-        applyLayerState(chapter);
+        applyPreviewLayerOpacityState(chapter);
     });
 
     return true;
@@ -404,7 +404,42 @@ function applyLayerState(chapter, options = {}) {
         if (legacyOpacity !== undefined && !chapter.layerStyles?.[id]) applyOpacity(layer, legacyOpacity);
         applyLayerStyle(layer, chapter.layerStyles?.[id]);
     });
-    emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
+    if (!options.silent) emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
+}
+
+function applyPreviewLayerOpacityState(chapter) {
+    if (!chapter || !map || !map.isStyleLoaded()) return;
+    getEditableLayers().forEach(({ id }) => {
+        const layer = map.getLayer(id);
+        if (!layer) return;
+        applyLayerTransition(layer, chapter);
+        (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
+            const value = resolveLayerPaintValue(chapter, layer, property);
+            applyProperty(layer.id, "paint", property, value === undefined ? null : cloneStyleValue(value));
+        });
+    });
+}
+
+function resolveLayerPaintValue(chapter, layer, property) {
+    const projectConfig = getProjectConfig();
+    const chapterStyle = chapter?.layerStyles?.[layer.id];
+    const chapterValue = chapterStyle?.paint?.[property];
+    if (chapterValue !== undefined) return chapterValue;
+
+    if (!chapterStyle && Object.hasOwn(chapter?.layerOpacity ?? {}, layer.id)) {
+        return chapter.layerOpacity[layer.id];
+    }
+
+    if (chapter !== projectConfig) {
+        const projectStyle = projectConfig?.layerStyles?.[layer.id];
+        const projectValue = projectStyle?.paint?.[property];
+        if (projectValue !== undefined) return projectValue;
+        if (!projectStyle && Object.hasOwn(projectConfig?.layerOpacity ?? {}, layer.id)) {
+            return projectConfig.layerOpacity[layer.id];
+        }
+    }
+
+    return baseLayerStyles.get(layer.id)?.paint?.[property];
 }
 
 function applyLayerStyle(layer, style) {

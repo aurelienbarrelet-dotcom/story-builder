@@ -1,0 +1,89 @@
+diff --git a/index.html b/index.html
+index 3ba71e1..8240a70 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.28.3.2</title>
++    <title>Story Builder — 2.0.0-alpha.28.3.3</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index b1c20ab..47d0bbf 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.28.3.2";
++export const APP_VERSION = "2.0.0-alpha.28.3.3";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/map/map-service.js b/js/features/map/map-service.js
+index de08a71..ba5a34c 100644
+--- a/js/features/map/map-service.js
++++ b/js/features/map/map-service.js
+@@ -181,7 +181,7 @@ export function previewSelectedChapterTransition() {
+     const source = selectedIndex > 0 ? chapters[selectedIndex - 1] : getProjectConfig();
+     const sourceCamera = getStoredCamera(source, "desktop");
+     if (sourceCamera) map.jumpTo(sourceCamera);
+-    applyLayerState(source, { instant: true });
++    applyLayerState(source, { instant: true, silent: true });
+ 
+     runAfterMapRender(() => {
+         const targetCamera = getStoredCamera(chapter, "desktop");
+@@ -196,7 +196,7 @@ export function previewSelectedChapterTransition() {
+             if (typeof map[method] === "function") map[method](cameraOptions);
+             else map.flyTo(cameraOptions);
+         }
+-        applyLayerState(chapter);
++        applyPreviewLayerOpacityState(chapter);
+     });
+ 
+     return true;
+@@ -404,7 +404,42 @@ function applyLayerState(chapter, options = {}) {
+         if (legacyOpacity !== undefined && !chapter.layerStyles?.[id]) applyOpacity(layer, legacyOpacity);
+         applyLayerStyle(layer, chapter.layerStyles?.[id]);
+     });
+-    emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
++    if (!options.silent) emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
++}
++
++function applyPreviewLayerOpacityState(chapter) {
++    if (!chapter || !map || !map.isStyleLoaded()) return;
++    getEditableLayers().forEach(({ id }) => {
++        const layer = map.getLayer(id);
++        if (!layer) return;
++        applyLayerTransition(layer, chapter);
++        (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
++            const value = resolveLayerPaintValue(chapter, layer, property);
++            applyProperty(layer.id, "paint", property, value === undefined ? null : cloneStyleValue(value));
++        });
++    });
++}
++
++function resolveLayerPaintValue(chapter, layer, property) {
++    const projectConfig = getProjectConfig();
++    const chapterStyle = chapter?.layerStyles?.[layer.id];
++    const chapterValue = chapterStyle?.paint?.[property];
++    if (chapterValue !== undefined) return chapterValue;
++
++    if (!chapterStyle && Object.hasOwn(chapter?.layerOpacity ?? {}, layer.id)) {
++        return chapter.layerOpacity[layer.id];
++    }
++
++    if (chapter !== projectConfig) {
++        const projectStyle = projectConfig?.layerStyles?.[layer.id];
++        const projectValue = projectStyle?.paint?.[property];
++        if (projectValue !== undefined) return projectValue;
++        if (!projectStyle && Object.hasOwn(projectConfig?.layerOpacity ?? {}, layer.id)) {
++            return projectConfig.layerOpacity[layer.id];
++        }
++    }
++
++    return baseLayerStyles.get(layer.id)?.paint?.[property];
+ }
+ 
+ function applyLayerStyle(layer, style) {
