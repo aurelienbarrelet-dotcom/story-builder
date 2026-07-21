@@ -4654,3 +4654,78 @@ body:not(.reader-mode) .chapter.multi-selected:hover {
 .chapters-delete-selected:hover {
     background: var(--danger-soft);
 }
+
+
+/* Alpha 16 — refonte visuelle des panneaux et collections */
+:root {
+    --panel-divider: #e5e7ea;
+    --panel-hover: #f6f7f8;
+    --panel-selected: #fff;
+    --collection-row-radius: 4px;
+}
+.right-panel,
+.assets-panel,
+.chapters-panel {
+    box-shadow: none;
+}
+.panel-header,
+.assets-panel-header,
+.collection-panel-header {
+    min-height: 44px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border-bottom-color: var(--panel-divider);
+}
+.panel-header h2,
+.assets-panel-header h2,
+.collection-panel-header h2 {
+    font-size: 14px;
+    font-weight: 750;
+    letter-spacing: -.01em;
+}
+.asset-card,
+body:not(.reader-mode) .chapter {
+    position: relative;
+    border-color: transparent;
+    border-radius: var(--collection-row-radius);
+    box-shadow: none;
+    transition: background-color .14s ease, border-color .14s ease;
+}
+.asset-card::before,
+body:not(.reader-mode) .chapter::before {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    left: -1px;
+    width: 3px;
+    border-radius: 2px;
+    background: transparent;
+    content: "";
+}
+.asset-card:hover,
+body:not(.reader-mode) .chapter:hover {
+    border-color: transparent;
+    background: var(--panel-hover);
+    box-shadow: none;
+}
+.asset-card.selected,
+body:not(.reader-mode) .chapter.selected,
+body:not(.reader-mode) .chapter.multi-selected,
+body:not(.reader-mode) .chapter.selected:hover,
+body:not(.reader-mode) .chapter.multi-selected:hover {
+    border-color: transparent;
+    background: var(--panel-selected);
+    box-shadow: none;
+}
+.asset-card.selected::before,
+body:not(.reader-mode) .chapter.selected::before,
+body:not(.reader-mode) .chapter.multi-selected::before {
+    background: var(--accent);
+}
+.assets-selection-bar,
+.chapters-selection-bar {
+    min-height: 40px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-top-color: var(--panel-divider);
+}

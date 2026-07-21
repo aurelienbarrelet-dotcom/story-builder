@@ -1,0 +1,116 @@
+diff --git a/README.md b/README.md
+index 122b201..9404016 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,15 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.16 — 2026-07-21
++
++- Les panneaux gagnent une structure plus plate, des en-têtes plus nets et des séparateurs plus discrets.
++- Les cartes Images et Chapitres abandonnent les ombres au profit d’un fond de survol stable et d’un repère d’accent latéral.
++- Les espacements verticaux sont resserrés pour afficher davantage de contenu sans modifier les interactions.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.16`.
++
++---
++
+ ### SB-2.0.0-alpha.15 — 2026-07-21
+ 
+ - Un socle commun de boutons (`ui-button` et `ui-icon-button`) formalise les actions principales, secondaires, iconographiques et destructives.
+diff --git a/index.html b/index.html
+index e23f2e1..dc3473f 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.15</title>
++    <title>Story Builder — 2.0.0-alpha.16</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/style.css b/style.css
+index 5d9e53d..8173dad 100644
+--- a/style.css
++++ b/style.css
+@@ -4654,3 +4654,78 @@ body:not(.reader-mode) .chapter.multi-selected:hover {
+ .chapters-delete-selected:hover {
+     background: var(--danger-soft);
+ }
++
++
++/* Alpha 16 — refonte visuelle des panneaux et collections */
++:root {
++    --panel-divider: #e5e7ea;
++    --panel-hover: #f6f7f8;
++    --panel-selected: #fff;
++    --collection-row-radius: 4px;
++}
++.right-panel,
++.assets-panel,
++.chapters-panel {
++    box-shadow: none;
++}
++.panel-header,
++.assets-panel-header,
++.collection-panel-header {
++    min-height: 44px;
++    padding-top: 8px;
++    padding-bottom: 8px;
++    border-bottom-color: var(--panel-divider);
++}
++.panel-header h2,
++.assets-panel-header h2,
++.collection-panel-header h2 {
++    font-size: 14px;
++    font-weight: 750;
++    letter-spacing: -.01em;
++}
++.asset-card,
++body:not(.reader-mode) .chapter {
++    position: relative;
++    border-color: transparent;
++    border-radius: var(--collection-row-radius);
++    box-shadow: none;
++    transition: background-color .14s ease, border-color .14s ease;
++}
++.asset-card::before,
++body:not(.reader-mode) .chapter::before {
++    position: absolute;
++    top: 5px;
++    bottom: 5px;
++    left: -1px;
++    width: 3px;
++    border-radius: 2px;
++    background: transparent;
++    content: "";
++}
++.asset-card:hover,
++body:not(.reader-mode) .chapter:hover {
++    border-color: transparent;
++    background: var(--panel-hover);
++    box-shadow: none;
++}
++.asset-card.selected,
++body:not(.reader-mode) .chapter.selected,
++body:not(.reader-mode) .chapter.multi-selected,
++body:not(.reader-mode) .chapter.selected:hover,
++body:not(.reader-mode) .chapter.multi-selected:hover {
++    border-color: transparent;
++    background: var(--panel-selected);
++    box-shadow: none;
++}
++.asset-card.selected::before,
++body:not(.reader-mode) .chapter.selected::before,
++body:not(.reader-mode) .chapter.multi-selected::before {
++    background: var(--accent);
++}
++.assets-selection-bar,
++.chapters-selection-bar {
++    min-height: 40px;
++    padding-top: 5px;
++    padding-bottom: 5px;
++    border-top-color: var(--panel-divider);
++}

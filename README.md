@@ -2,6 +2,15 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.16 — 2026-07-21
+
+- Les panneaux gagnent une structure plus plate, des en-têtes plus nets et des séparateurs plus discrets.
+- Les cartes Images et Chapitres abandonnent les ombres au profit d’un fond de survol stable et d’un repère d’accent latéral.
+- Les espacements verticaux sont resserrés pour afficher davantage de contenu sans modifier les interactions.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.16`.
+
+---
+
 ### SB-2.0.0-alpha.15 — 2026-07-21
 
 - Un socle commun de boutons (`ui-button` et `ui-icon-button`) formalise les actions principales, secondaires, iconographiques et destructives.
