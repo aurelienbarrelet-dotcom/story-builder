@@ -5300,14 +5300,3 @@ body:not(.reader-mode) .chapter:hover {
 .legend-selection-bar { margin-top: 6px; }
 .legend-add-selected,
 .legend-icon-button { display: none !important; }
-
-/* Alpha 24 — édition directe */
-.inline-editable { cursor: text; border-radius: 5px; outline: none; min-width: 0; }
-.inline-editable:hover { background: color-mix(in srgb, var(--accent, #ef4444) 8%, transparent); }
-.inline-editable:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #ef4444) 45%, transparent); }
-.inline-editable.is-editing { width: 100%; background: transparent; }
-.inline-editor-input { width: 100%; min-width: 0; height: 28px; padding: 3px 7px; font: inherit; }
-.asset-name-static.inline-editable { display: block; position: relative; z-index: 2; }
-.legend-item-copy > strong.inline-editable,
-.layer-summary-copy > strong.inline-editable,
-.chapter-title.inline-editable { display: block; }

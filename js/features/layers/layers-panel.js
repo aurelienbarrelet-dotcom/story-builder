@@ -1,7 +1,5 @@
 import { on, EVENTS } from "../../core/events.js";
-import { getProject, getSelectedMapTargets, getSelectedSection } from "../../core/store.js";
-import { commitProjectChange } from "../../core/project-service.js";
-import { bindInlineEditor } from "../../ui/inline-editor.js";
+import { getSelectedMapTargets, getSelectedSection } from "../../core/store.js";
 import {
     getBaseLayerProperty,
     getEditableLayers,
@@ -69,10 +67,7 @@ function renderLayerControls() {
 
     const selectedCount = getSelectedMapTargets().length;
     summary.textContent = getSelectedSection() === "meta" ? "Valeurs de référence du projet" : `${selectedCount} chapitre${selectedCount > 1 ? "s" : ""} sélectionné${selectedCount > 1 ? "s" : ""}`;
-    const project = getProject();
-    project.map ??= {};
-    project.map.layerLabels ??= {};
-    const allLayers = getEditableLayers().map(layer => ({ ...layer, label: project.map.layerLabels[layer.id] || layer.label }));
+    const allLayers = getEditableLayers();
     const availableLayerIds = new Set(allLayers.map(layer => layer.id));
     [...selectedLayerIds].forEach(layerId => {
         if (!availableLayerIds.has(layerId)) selectedLayerIds.delete(layerId);
@@ -122,23 +117,7 @@ function createLayerModule(layer, isOpen = false) {
 
     const copy = document.createElement("span");
     copy.className = "layer-summary-copy";
-    copy.innerHTML = `<strong></strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small>`;
-    const layerTitle = copy.querySelector("strong");
-    layerTitle.textContent = layer.label;
-    bindInlineEditor({
-        element: layerTitle,
-        value: layer.label,
-        emptyValue: layer.id,
-        ariaLabel: `Renommer le calque ${layer.id}`,
-        onCommit(nextLabel) {
-            const project = getProject();
-            project.map ??= {};
-            project.map.layerLabels ??= {};
-            project.map.layerLabels[layer.id] = nextLabel;
-            commitProjectChange();
-            renderLayerControls();
-        }
-    });
+    copy.innerHTML = `<strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small>`;
 
     const modified = document.createElement("span");
     modified.className = "layer-modified-label";
