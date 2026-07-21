@@ -2,6 +2,13 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.26 — 2026-07-21
+
+- Premier patch de refactoring JavaScript sans changement fonctionnel.
+- Centralisation dans `js/app.js` des identifiants DOM utilisés par l’orchestration principale.
+- Remplacement des sélecteurs `getElementById` dispersés par un accès unique et nommé.
+- Synchronisation de la constante interne `APP_VERSION` et du titre du navigateur avec `2.0.0-alpha.26`.
+
 ### SB-2.0.0-alpha.25 — 2026-07-21
 
 - Consolidation du Design System CSS sans modification fonctionnelle ni structurelle.
@@ -434,8 +441,8 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 
 ### À venir
 
-- alpha.25 : Design System
-- alpha.26 : refactoring JavaScript
+- ✔ alpha.25 : Design System
+- ✔ alpha.26 : refactoring JavaScript
 - alpha.27 : bibliothèque d’assets
 - alpha.28 : système de widgets
 - alpha.29 : architecture des exports

@@ -39,6 +39,23 @@ import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
 import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
 
+const ELEMENT_IDS = Object.freeze({
+    addChapterButton: "addChapterButton",
+    copyChapterButton: "copyChapterButton",
+    duplicateChapterButton: "duplicateChapterButton",
+    exportArchiveButton: "exportScrollytellingArchiveButton",
+    newProjectButton: "newProjectButton",
+    openProjectButton: "openProjectButton",
+    pasteChapterButton: "pasteChapterButton",
+    projectFileInput: "projectFileInput",
+    saveProjectButton: "saveProjectButton",
+    saveStatus: "saveStatus"
+});
+
+function getElement(elementName) {
+    return document.getElementById(ELEMENT_IDS[elementName]);
+}
+
 function renderApplication(options = {}) {
     renderChapterList();
     renderPreview();
@@ -69,7 +86,7 @@ function setupApplicationEvents() {
 
     on(EVENTS.PROJECT_REPLACED, ({ reason } = {}) => {
         document.body.dataset.projectDirty = "false";
-        const status = document.getElementById("saveStatus");
+        const status = getElement("saveStatus");
         if (reason === "history") {
             saveProjectLocally();
             initializeMap();
@@ -91,7 +108,7 @@ function setupApplicationEvents() {
     on(EVENTS.SELECTION_CHANGED, () => updateProductivityButtons());
 
     on(EVENTS.SAVE_STATUS_CHANGED, ({ isSaved, message }) => {
-        const status = document.getElementById("saveStatus");
+        const status = getElement("saveStatus");
 
         if (!status) return;
         status.textContent = message;
@@ -101,9 +118,9 @@ function setupApplicationEvents() {
 
 function updateProductivityButtons() {
     const hasChapterSelection = getSelectedSection() === "chapter" && getSelectedChapterIndices().length > 0;
-    document.getElementById("copyChapterButton")?.toggleAttribute("disabled", !hasChapterSelection);
-    document.getElementById("duplicateChapterButton")?.toggleAttribute("disabled", !hasChapterSelection);
-    document.getElementById("pasteChapterButton")?.toggleAttribute("disabled", !hasChapterClipboard());
+    getElement("copyChapterButton")?.toggleAttribute("disabled", !hasChapterSelection);
+    getElement("duplicateChapterButton")?.toggleAttribute("disabled", !hasChapterSelection);
+    getElement("pasteChapterButton")?.toggleAttribute("disabled", !hasChapterClipboard());
 }
 
 function isTypingTarget(target) {
@@ -111,9 +128,9 @@ function isTypingTarget(target) {
 }
 
 function setupProductivityShortcuts() {
-    const copyButton = document.getElementById("copyChapterButton");
-    const pasteButton = document.getElementById("pasteChapterButton");
-    const duplicateButton = document.getElementById("duplicateChapterButton");
+    const copyButton = getElement("copyChapterButton");
+    const pasteButton = getElement("pasteChapterButton");
+    const duplicateButton = getElement("duplicateChapterButton");
     copyButton?.addEventListener("click", copySelectedChapters);
     pasteButton?.addEventListener("click", pasteChapters);
     duplicateButton?.addEventListener("click", duplicateSelectedChapters);
@@ -136,12 +153,12 @@ function setupProductivityShortcuts() {
 }
 
 function setupToolbarEvents() {
-    const saveButton = document.getElementById("saveProjectButton");
-    const openButton = document.getElementById("openProjectButton");
-    const newButton = document.getElementById("newProjectButton");
-    const addButton = document.getElementById("addChapterButton");
-    const fileInput = document.getElementById("projectFileInput");
-    const exportArchiveButton = document.getElementById("exportScrollytellingArchiveButton");
+    const saveButton = getElement("saveProjectButton");
+    const openButton = getElement("openProjectButton");
+    const newButton = getElement("newProjectButton");
+    const addButton = getElement("addChapterButton");
+    const fileInput = getElement("projectFileInput");
+    const exportArchiveButton = getElement("exportArchiveButton");
 
     saveButton.addEventListener("click", downloadProjectFile);
 
