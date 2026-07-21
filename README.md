@@ -2,6 +2,12 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.24.1 — 2026-07-21
+
+- Corrige le chargement de l’application en ajoutant le module `js/ui/inline-editor.js` absent du patch alpha.24.
+- Rétablit l’édition directe des chapitres, images, légendes actives et calques.
+- Met à jour le titre du navigateur vers `Story Builder — 2.0.0-alpha.24.1`.
+
 ### SB-2.0.0-alpha.24 — 2026-07-21
 
 - Ajoute un composant partagé d’édition directe pour les titres affichés sur les cartes.
