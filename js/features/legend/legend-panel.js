@@ -7,6 +7,7 @@ import { createCollectionSelection, renderCollectionSelectionBar, bindCollection
 const availableSelection = createCollectionSelection();
 const activeSelection = createCollectionSelection();
 let searchQuery = "";
+let typeFilter = "all";
 let draggedLegendIndex = null;
 
 const SYMBOL_PROPERTIES = {
@@ -21,6 +22,10 @@ const SYMBOL_PROPERTIES = {
 export function setupLegendPanel() {
     document.getElementById("legendLayerSearchInput")?.addEventListener("input", event => {
         searchQuery = event.target.value.trim().toLowerCase();
+        renderLegendPanel();
+    });
+    document.getElementById("legendLayerTypeFilter")?.addEventListener("change", event => {
+        typeFilter = event.target.value;
         renderLegendPanel();
     });
     document.getElementById("addSelectedLegendItemsButton")?.addEventListener("click", addSelectedLayers);
@@ -59,9 +64,10 @@ export function renderLegendPanel() {
         .map(layer => ({ layer, symbol: createSymbolFromLayer(layer, false) }))
         .filter(entry => entry.symbol);
     const existingIds = new Set(chapter.legend.map(item => item.layerId));
+    updateTypeFilter(candidateLayers.map(entry => entry.layer));
     const filtered = candidateLayers.filter(({ layer }) => {
         const haystack = `${layer.label} ${layer.id} ${layer.type}`.toLowerCase();
-        return !searchQuery || haystack.includes(searchQuery);
+        return (typeFilter === "all" || layer.type === typeFilter) && (!searchQuery || haystack.includes(searchQuery));
     });
 
     availableSelection.prune(candidateLayers.filter(entry => !existingIds.has(entry.layer.id)).map(entry => entry.layer.id));
@@ -80,6 +86,16 @@ export function renderLegendPanel() {
 
     updateAddButton();
     renderActiveSelectionBar();
+}
+
+function updateTypeFilter(layers) {
+    const select = document.getElementById("legendLayerTypeFilter");
+    if (!select) return;
+    const types = [...new Set(layers.map(layer => layer.type))].sort();
+    const current = typeFilter;
+    select.innerHTML = '<option value="all">Tous les types</option>' + types.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join("");
+    select.value = types.includes(current) ? current : "all";
+    typeFilter = select.value;
 }
 
 function createAvailableLayerCard(layer, symbolData, alreadyAdded, orderedIds) {
@@ -125,12 +141,12 @@ function createLegendItemCard(item, index, orderedIds) {
     actions.className = "collection-card-actions";
     const trigger = document.createElement("button");
     trigger.type = "button";
-    trigger.className = "ui-icon-button collection-menu-trigger";
+    trigger.className = "chapter-menu-button collection-menu-button";
     trigger.textContent = "…";
     trigger.setAttribute("aria-label", "Actions de la légende");
     trigger.setAttribute("aria-expanded", "false");
     const menu = document.createElement("div");
-    menu.className = "collection-card-menu";
+    menu.className = "chapter-menu collection-menu";
     menu.dataset.collectionMenu = "";
     menu.hidden = true;
     menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';

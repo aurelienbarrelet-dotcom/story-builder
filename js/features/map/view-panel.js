@@ -55,18 +55,14 @@ export function renderViewPanel() {
         : (getSelectedSection() === "meta" ? "Revenir à la vue du projet" : "Revenir à la vue du chapitre");
 
     container.innerHTML = `
-        <div class="view-device-switch">
-            <button
-                id="editorDeviceToggle"
-                class="editor-device-toggle"
-                type="button"
-                role="switch"
-                aria-checked="${String(activeViewMode === "mobile")}"
-                aria-label="Basculer entre la prévisualisation desktop et mobile"
-                data-mode="${activeViewMode}"
-            >
-                <span class="editor-device-option editor-device-option-desktop" title="Desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg><span class="sr-only">Desktop</span></span>
-                <span class="editor-device-option editor-device-option-mobile" title="Mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M10 5h4M11 18.5h2"></path></svg><span class="sr-only">Mobile</span></span>
+        <div class="view-device-switch" role="group" aria-label="Vue d’édition">
+            <button class="view-device-button${activeViewMode === "desktop" ? " active" : ""}" type="button" data-view-mode="desktop" aria-pressed="${String(activeViewMode === "desktop")}" title="Vue desktop">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg>
+                <span>Desktop</span>
+            </button>
+            <button class="view-device-button${activeViewMode === "mobile" ? " active" : ""}" type="button" data-view-mode="mobile" aria-pressed="${String(activeViewMode === "mobile")}" title="Vue mobile">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M10 5h4M11 18.5h2"></path></svg>
+                <span>Mobile</span>
             </button>
         </div>
         <p class="view-device-status ${activeViewMode === "mobile" && !hasMobileView ? "is-inherited" : ""}">${activeViewMode === "desktop" ? "Vue de référence" : mobileStatus}</p>
@@ -85,9 +81,6 @@ export function renderViewPanel() {
         <p class="property-help view-help">${activeViewMode === "mobile" ? "La vue mobile suit la vue desktop tant qu’aucun cadrage mobile n’est enregistré." : "La vue desktop est toujours la vue de référence."}</p>`;
 
     bindMapEditorPanelEvents();
-    document.getElementById("editorDeviceToggle")?.addEventListener("click", () => {
-        switchViewMode(activeViewMode === "desktop" ? "mobile" : "desktop");
-    });
     container.querySelectorAll("[data-view-mode]").forEach(button => {
         button.addEventListener("click", () => switchViewMode(button.dataset.viewMode));
     });

@@ -2,6 +2,13 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.27.1 — 2026-07-21
+
+- Remplacement du sélecteur Desktop/Mobile du panneau Vue par un contrôle segmenté plus compact.
+- Harmonisation du menu d’actions des légendes actives avec celui des chapitres.
+- Extension de la liste des légendes disponibles jusqu’en bas du panneau.
+- Ajout d’un filtre par type de calque, en complément de la recherche.
+
 ### SB-2.0.0-alpha.27 — 2026-07-21
 
 - Correction des contours de sélection afin qu’ils restent entièrement visibles dans les listes et galeries.

@@ -5369,3 +5369,56 @@ body:not(.reader-mode) .chapter:hover {
     box-sizing: border-box;
     padding: var(--space-2) var(--space-3) 0;
 }
+
+
+/* SB-2.0.0-alpha.27.1 — finitions du panneau Vue et des légendes */
+.view-device-switch {
+    display: inline-flex;
+    align-self: flex-start;
+    justify-content: flex-start;
+    width: auto;
+    margin-bottom: var(--space-4);
+    padding: 2px;
+    border: var(--border-width) solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+}
+
+.view-device-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 28px;
+    padding: 4px var(--space-3);
+    border: 0;
+    border-radius: calc(var(--ui-radius) - 2px);
+    color: var(--ui-text-muted);
+    background: transparent;
+    font: inherit;
+    font-size: var(--space-4);
+    cursor: pointer;
+    transition: var(--ui-transition);
+}
+.view-device-button svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.view-device-button:hover { color: var(--ui-text); background: var(--ui-surface-hover); }
+.view-device-button.active { color: var(--ui-accent); background: var(--ui-surface-hover); }
+.view-device-button:focus-visible { outline: 0; box-shadow: var(--ui-focus-ring); }
+
+.legend-panel-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.legend-section[data-collection="active-legends"] { flex: 0 1 auto; max-height: 46%; overflow: hidden; }
+.legend-section[data-collection="available-legends"] { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+.legend-current-list { overflow-y: auto; }
+.legend-available-list { flex: 1 1 0; max-height: none; overflow-y: auto; }
+.legend-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 126px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+.legend-search { margin-bottom: 0; }
+.legend-type-filter { width: 100%; min-width: 0; }
+.legend-item-card .chapter-menu { top: 32px; right: 0; }
