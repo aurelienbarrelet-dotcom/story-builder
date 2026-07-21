@@ -5417,3 +5417,75 @@ body:not(.reader-mode) .chapter:hover {
     padding-bottom: var(--space-4);
 }
 body > .collection-menu { z-index: 1000; }
+
+/* SB-2.0.0-alpha.27.3 — filtres fixes et action de réinitialisation des calques */
+.layers-panel-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.layers-selection-summary,
+.layers-tools {
+    flex: 0 0 auto;
+}
+
+.layers-tools .ui-input,
+.legend-tools .ui-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--field-height);
+    padding: var(--space-2) 9px;
+    border: var(--border-width) solid var(--panel-border);
+    border-radius: var(--control-radius);
+    color: var(--text-primary);
+    background-color: var(--color-white);
+    font: inherit;
+    line-height: 1.35;
+}
+
+.layers-tools select.ui-input,
+.legend-tools select.ui-input {
+    appearance: auto;
+}
+
+.layer-opacity-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.layers-selection-bar {
+    flex: 0 0 auto;
+    margin-top: var(--space-3);
+}
+
+.layers-reset-icon {
+    flex: 0 0 auto;
+    color: var(--accent);
+}
+
+.layers-reset-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.legend-section[data-collection="available-legends"] {
+    overflow: hidden;
+}
+
+.legend-section[data-collection="available-legends"] > .collection-panel-header,
+.legend-section[data-collection="available-legends"] > .legend-tools {
+    flex: 0 0 auto;
+}
+
+.legend-available-list {
+    scrollbar-gutter: stable;
+}
