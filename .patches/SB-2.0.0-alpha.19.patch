@@ -1,0 +1,103 @@
+diff --git a/README.md b/README.md
+index 3a392ad..cc6c0fe 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,15 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.19 — 2026-07-21
++
++- La hiérarchie des boutons est appliquée plus largement aux fenêtres de dialogue et aux groupes d’actions.
++- Une seule action principale est visuellement dominante par zone, les actions secondaires restent neutres et les suppressions deviennent rouges uniquement au moment approprié.
++- Les pieds de modale, boutons textuels et boutons iconographiques utilisent des espacements et alignements communs.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.19`.
++
++---
++
+ ### SB-2.0.0-alpha.18 — 2026-07-21
+ 
+ - Images et Chapitres partagent désormais des règles génériques de collection pour les en-têtes, listes, cartes et barres de sélection.
+diff --git a/index.html b/index.html
+index 74f2bd1..ae6cec4 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.18</title>
++    <title>Story Builder — 2.0.0-alpha.19</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/style.css b/style.css
+index 3f87d1a..b35682d 100644
+--- a/style.css
++++ b/style.css
+@@ -4839,3 +4839,65 @@ body:not(.reader-mode) .chapter {
+ .collection-add-button {
+     align-self: center;
+ }
++
++
++/* Alpha 19 — hiérarchie globale des actions et dialogues */
++.modal-content,
++.dialog-content {
++    border: 1px solid var(--panel-divider);
++    border-radius: 10px;
++    box-shadow: 0 18px 50px rgba(20, 24, 28, .18);
++}
++.modal-header,
++.dialog-header {
++    min-height: 48px;
++    padding: 12px 16px;
++    border-bottom: 1px solid var(--panel-divider);
++}
++.modal-footer,
++.dialog-footer {
++    display: flex;
++    align-items: center;
++    justify-content: flex-end;
++    gap: 8px;
++    padding: 12px 16px;
++    border-top: 1px solid var(--panel-divider);
++    background: #fafafa;
++}
++.modal-footer .button,
++.dialog-footer .button,
++.panel-actions .button {
++    min-height: var(--control-size-md);
++    border-radius: var(--control-radius);
++}
++.button-primary:not(.ui-button),
++.modal-footer .button-primary {
++    border-color: var(--accent);
++    color: #fff;
++    background: var(--accent);
++}
++.button-secondary:not(.ui-button),
++.modal-footer .button-secondary {
++    border-color: var(--panel-border);
++    color: var(--text-primary);
++    background: #fff;
++}
++.button-danger:not(.ui-button),
++.modal-footer .button-danger {
++    border-color: var(--danger);
++    color: #fff;
++    background: var(--danger);
++}
++.icon-button,
++.chapter-menu-button,
++.properties-toggle-button,
++.layer-reset-button {
++    transition: var(--control-transition);
++}
++.icon-button:focus-visible,
++.chapter-menu-button:focus-visible,
++.properties-toggle-button:focus-visible,
++.layer-reset-button:focus-visible {
++    outline: 0;
++    box-shadow: var(--focus-ring);
++}

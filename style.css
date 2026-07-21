@@ -4839,3 +4839,65 @@ body:not(.reader-mode) .chapter {
 .collection-add-button {
     align-self: center;
 }
+
+
+/* Alpha 19 — hiérarchie globale des actions et dialogues */
+.modal-content,
+.dialog-content {
+    border: 1px solid var(--panel-divider);
+    border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(20, 24, 28, .18);
+}
+.modal-header,
+.dialog-header {
+    min-height: 48px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--panel-divider);
+}
+.modal-footer,
+.dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--panel-divider);
+    background: #fafafa;
+}
+.modal-footer .button,
+.dialog-footer .button,
+.panel-actions .button {
+    min-height: var(--control-size-md);
+    border-radius: var(--control-radius);
+}
+.button-primary:not(.ui-button),
+.modal-footer .button-primary {
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+}
+.button-secondary:not(.ui-button),
+.modal-footer .button-secondary {
+    border-color: var(--panel-border);
+    color: var(--text-primary);
+    background: #fff;
+}
+.button-danger:not(.ui-button),
+.modal-footer .button-danger {
+    border-color: var(--danger);
+    color: #fff;
+    background: var(--danger);
+}
+.icon-button,
+.chapter-menu-button,
+.properties-toggle-button,
+.layer-reset-button {
+    transition: var(--control-transition);
+}
+.icon-button:focus-visible,
+.chapter-menu-button:focus-visible,
+.properties-toggle-button:focus-visible,
+.layer-reset-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--focus-ring);
+}

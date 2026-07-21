@@ -2,6 +2,15 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.19 — 2026-07-21
+
+- La hiérarchie des boutons est appliquée plus largement aux fenêtres de dialogue et aux groupes d’actions.
+- Une seule action principale est visuellement dominante par zone, les actions secondaires restent neutres et les suppressions deviennent rouges uniquement au moment approprié.
+- Les pieds de modale, boutons textuels et boutons iconographiques utilisent des espacements et alignements communs.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.19`.
+
+---
+
 ### SB-2.0.0-alpha.18 — 2026-07-21
 
 - Images et Chapitres partagent désormais des règles génériques de collection pour les en-têtes, listes, cartes et barres de sélection.
