@@ -56,7 +56,9 @@ export function renderChapterList() {
         selectionBar.className = `chapters-selection-bar ${count ? "visible" : ""}`;
         selectionBar.innerHTML = count ? `
             <span>${count} chapitre${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}</span>
-            <button type="button" class="chapters-delete-selected">Supprimer</button>` : "";
+            <button type="button" class="collection-delete-button chapters-delete-selected" aria-label="Supprimer les chapitres sélectionnés" title="Supprimer les chapitres sélectionnés">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
+            </button>` : "";
         selectionBar.querySelector(".chapters-delete-selected")?.addEventListener("click", deleteSelectedChapters);
     }
 

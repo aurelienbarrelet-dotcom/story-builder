@@ -2,6 +2,13 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.14 — 2026-07-21
+
+- Les actions de suppression groupée utilisent désormais une icône poubelle compacte avec infobulle et libellé accessible.
+- Les boutons « + » des panneaux Images et Chapitres deviennent les actions principales, avec une hiérarchie visuelle plus nette.
+- Les actions destructives restent neutres au repos et deviennent rouges uniquement au survol.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.14`.
+
 ### SB-2.0.0-alpha.13 — 2026-07-21
 
 - La coche superposée aux images sélectionnées a été supprimée : le contour rouge devient l’unique indicateur de sélection.

@@ -1,0 +1,115 @@
+diff --git a/README.md b/README.md
+index 1784e87..6ebc69e 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,13 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.14 — 2026-07-21
++
++- Les actions de suppression groupée utilisent désormais une icône poubelle compacte avec infobulle et libellé accessible.
++- Les boutons « + » des panneaux Images et Chapitres deviennent les actions principales, avec une hiérarchie visuelle plus nette.
++- Les actions destructives restent neutres au repos et deviennent rouges uniquement au survol.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.14`.
++
+ ### SB-2.0.0-alpha.13 — 2026-07-21
+ 
+ - La coche superposée aux images sélectionnées a été supprimée : le contour rouge devient l’unique indicateur de sélection.
+diff --git a/index.html b/index.html
+index e9165bd..2603ad5 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.13</title>
++    <title>Story Builder — 2.0.0-alpha.14</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index 74ff07a..0596d84 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -144,7 +144,9 @@ export function renderAssetsPanel() {
+                 </div>
+                 <div class="assets-selection-bar ${selectedCount ? "visible" : ""}" aria-live="polite">
+                     <span>${selectedCount} image${selectedCount > 1 ? "s" : ""} sélectionnée${selectedCount > 1 ? "s" : ""}</span>
+-                    <button type="button" class="assets-delete-selected" data-delete-selected>Supprimer</button>
++                    <button type="button" class="collection-delete-button assets-delete-selected" data-delete-selected aria-label="Supprimer les images sélectionnées" title="Supprimer les images sélectionnées">
++                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
++                    </button>
+                 </div>
+             </div>
+             <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
+diff --git a/js/features/chapters/chapter-list.js b/js/features/chapters/chapter-list.js
+index 0afec44..0541ae7 100644
+--- a/js/features/chapters/chapter-list.js
++++ b/js/features/chapters/chapter-list.js
+@@ -56,7 +56,9 @@ export function renderChapterList() {
+         selectionBar.className = `chapters-selection-bar ${count ? "visible" : ""}`;
+         selectionBar.innerHTML = count ? `
+             <span>${count} chapitre${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}</span>
+-            <button type="button" class="chapters-delete-selected">Supprimer</button>` : "";
++            <button type="button" class="collection-delete-button chapters-delete-selected" aria-label="Supprimer les chapitres sélectionnés" title="Supprimer les chapitres sélectionnés">
++                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
++            </button>` : "";
+         selectionBar.querySelector(".chapters-delete-selected")?.addEventListener("click", deleteSelectedChapters);
+     }
+ 
+diff --git a/style.css b/style.css
+index 558aa2e..5a5e457 100644
+--- a/style.css
++++ b/style.css
+@@ -4465,3 +4465,49 @@ body:not(.reader-mode) .chapter.multi-selected:hover {
+ .chapters-delete-selected:hover {
+     background: rgba(176, 42, 55, .08);
+ }
++
++
++/* Alpha 14 — hiérarchie des actions de collection */
++.collection-add-button {
++    border-color: var(--accent);
++    color: #fff;
++    background: var(--accent);
++    box-shadow: 0 2px 6px rgba(130, 11, 28, .18);
++}
++
++.collection-add-button:hover {
++    border-color: var(--accent-dark);
++    color: #fff;
++    background: var(--accent-dark);
++    box-shadow: 0 3px 9px rgba(130, 11, 28, .24);
++    transform: translateY(-1px);
++}
++
++.collection-add-button:active { transform: translateY(0); }
++
++.collection-delete-button {
++    display: inline-grid;
++    width: 30px;
++    height: 30px;
++    flex: 0 0 30px;
++    place-items: center;
++    padding: 0;
++    border: 1px solid transparent;
++    border-radius: 6px;
++    color: var(--text-secondary);
++    background: transparent;
++    cursor: pointer;
++    transition: color .15s ease, border-color .15s ease, background-color .15s ease, transform .15s ease;
++}
++
++.collection-delete-button svg { width: 16px; height: 16px; fill: currentColor; }
++.collection-delete-button:hover {
++    border-color: rgba(176, 42, 55, .18);
++    color: var(--danger);
++    background: rgba(176, 42, 55, .08);
++    transform: translateY(-1px);
++}
++.collection-delete-button:active { transform: translateY(0); }
++.collection-delete-button:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--accent-ring); }
++.assets-delete-selected, .chapters-delete-selected { padding: 0; color: var(--text-secondary); background: transparent; }
++.assets-delete-selected:hover, .chapters-delete-selected:hover { color: var(--danger); background: rgba(176, 42, 55, .08); }

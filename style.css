@@ -4465,3 +4465,49 @@ body:not(.reader-mode) .chapter.multi-selected:hover {
 .chapters-delete-selected:hover {
     background: rgba(176, 42, 55, .08);
 }
+
+
+/* Alpha 14 — hiérarchie des actions de collection */
+.collection-add-button {
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 2px 6px rgba(130, 11, 28, .18);
+}
+
+.collection-add-button:hover {
+    border-color: var(--accent-dark);
+    color: #fff;
+    background: var(--accent-dark);
+    box-shadow: 0 3px 9px rgba(130, 11, 28, .24);
+    transform: translateY(-1px);
+}
+
+.collection-add-button:active { transform: translateY(0); }
+
+.collection-delete-button {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+.collection-delete-button svg { width: 16px; height: 16px; fill: currentColor; }
+.collection-delete-button:hover {
+    border-color: rgba(176, 42, 55, .18);
+    color: var(--danger);
+    background: rgba(176, 42, 55, .08);
+    transform: translateY(-1px);
+}
+.collection-delete-button:active { transform: translateY(0); }
+.collection-delete-button:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--accent-ring); }
+.assets-delete-selected, .chapters-delete-selected { padding: 0; color: var(--text-secondary); background: transparent; }
+.assets-delete-selected:hover, .chapters-delete-selected:hover { color: var(--danger); background: rgba(176, 42, 55, .08); }
