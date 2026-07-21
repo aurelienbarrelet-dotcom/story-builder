@@ -4787,3 +4787,55 @@ body:not(.reader-mode) .chapter.multi-selected::before {
 .panel-actions {
     padding-top: 10px;
 }
+
+
+/* Alpha 18 — contrat visuel commun des collections */
+.collection-panel-header,
+.assets-panel-header,
+.chapters-list-section > .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.collection-list,
+.assets-grid,
+#chapters {
+    scrollbar-gutter: stable;
+}
+.collection-card,
+.asset-card,
+body:not(.reader-mode) .chapter {
+    min-width: 0;
+    cursor: default;
+    user-select: none;
+}
+.collection-card-title,
+.asset-name-static,
+.chapter-title {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.collection-card-meta,
+.asset-meta,
+.chapter-number {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+.collection-selection-bar,
+.assets-selection-bar,
+.chapters-selection-bar {
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+}
+.collection-selection-bar[hidden] { display: none !important; }
+.collection-add-button {
+    align-self: center;
+}

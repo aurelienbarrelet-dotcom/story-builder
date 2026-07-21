@@ -2,6 +2,15 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.18 — 2026-07-21
+
+- Images et Chapitres partagent désormais des règles génériques de collection pour les en-têtes, listes, cartes et barres de sélection.
+- Les styles spécifiques deviennent de simples adaptations du contenu de chaque carte.
+- Cette base prépare l’extension future aux auteurs, légendes et autres listes sans changer le comportement JavaScript.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.18`.
+
+---
+
 ### SB-2.0.0-alpha.17 — 2026-07-21
 
 - Les inspecteurs et formulaires utilisent une densité plus adaptée à un outil d’édition de bureau.
