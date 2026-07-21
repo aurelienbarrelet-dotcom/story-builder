@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.9 — 2026-07-21
+
+- Le panneau **Images** sépare désormais la galerie et l’inspecteur de propriétés.
+- La galerie possède son propre défilement, afin que l’inspecteur reste toujours visible.
+- Les propriétés de l’image sélectionnée s’affichent dans une colonne fixe à droite.
+- Un état vide explique comment sélectionner une image lorsque l’inspecteur n’a aucun contenu.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.9`.
+
+---
+
 ### SB-2.0.0-alpha.8 — 2026-07-21
 
 - Refonte du panneau **Images** sous forme de grille minimale à deux colonnes.

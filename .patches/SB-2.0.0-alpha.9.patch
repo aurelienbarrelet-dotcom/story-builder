@@ -1,0 +1,166 @@
+diff --git a/README.md b/README.md
+index a6627db..9769ac6 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,16 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.9 — 2026-07-21
++
++- Le panneau **Images** sépare désormais la galerie et l’inspecteur de propriétés.
++- La galerie possède son propre défilement, afin que l’inspecteur reste toujours visible.
++- Les propriétés de l’image sélectionnée s’affichent dans une colonne fixe à droite.
++- Un état vide explique comment sélectionner une image lorsque l’inspecteur n’a aucun contenu.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.9`.
++
++---
++
+ ### SB-2.0.0-alpha.8 — 2026-07-21
+ 
+ - Refonte du panneau **Images** sous forme de grille minimale à deux colonnes.
+diff --git a/index.html b/index.html
+index 0bf1ddd..252e8cb 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.8</title>
++    <title>Story Builder — 2.0.0-alpha.9</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index 387098c..3884b64 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -98,7 +98,7 @@ export function renderAssetsPanel() {
+ 
+     const selectedAsset = images.find(asset => asset.id === selectedAssetId) ?? null;
+ 
+-    container.innerHTML = images.length ? `
++    const galleryMarkup = images.length ? `
+         <div class="assets-grid" role="list" aria-label="Images du projet">
+             ${images.map(asset => {
+                 const isActive = getSelectedChapter()?.image === asset.data;
+@@ -116,10 +116,26 @@ export function renderAssetsPanel() {
+                     <span class="asset-name-static">${escapeHtml(asset.name)}</span>
+                 </button>`;
+             }).join("")}
+-        </div>
+-        ${renderSelectedAssetEditor(selectedAsset)}` : `
++        </div>` : `
+         <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
+ 
++    const inspectorMarkup = selectedAsset ? renderSelectedAssetEditor(selectedAsset) : `
++        <section class="asset-inspector-empty" aria-live="polite">
++            <p class="asset-editor-eyebrow">Inspecteur</p>
++            <h3>Aucune image sélectionnée</h3>
++            <p>Sélectionne une miniature pour modifier son nom, sa légende ou son utilisation dans le chapitre.</p>
++        </section>`;
++
++    container.innerHTML = `
++        <div class="assets-workspace">
++            <div class="assets-gallery" aria-label="Galerie d’images">
++                ${galleryMarkup}
++            </div>
++            <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
++                ${inspectorMarkup}
++            </aside>
++        </div>`;
++
+     container.querySelectorAll("[data-select-asset]").forEach(card => {
+         card.addEventListener("click", () => {
+             selectedAssetId = card.dataset.selectAsset;
+diff --git a/style.css b/style.css
+index d68725c..00ea217 100644
+--- a/style.css
++++ b/style.css
+@@ -3974,7 +3974,7 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+     background-image: none;
+ }
+ 
+-/* Alpha 8 — Images : grille minimale */
++/* Alpha 9 — Images : galerie défilante et inspecteur fixe */
+ .assets-panel {
+     min-width: 0;
+     display: flex;
+@@ -3996,9 +3996,29 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+ .assets-panel-content {
+     flex: 1;
+     min-height: 0;
++    overflow: hidden;
++    padding: 0;
++    background: var(--right-panel-bg);
++}
++.assets-workspace {
++    display: grid;
++    grid-template-columns: minmax(0, 1.25fr) minmax(190px, .75fr);
++    height: 100%;
++    min-height: 0;
++}
++.assets-gallery {
++    min-width: 0;
++    min-height: 0;
+     overflow-y: auto;
+     padding: var(--right-panel-padding);
+-    background: var(--right-panel-bg);
++}
++.asset-inspector {
++    min-width: 0;
++    min-height: 0;
++    overflow-y: auto;
++    padding: var(--right-panel-padding);
++    border-left: 1px solid var(--panel-border);
++    background: #fafafa;
+ }
+ .assets-panel-footer {
+     flex: 0 0 auto;
+@@ -4073,9 +4093,8 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+ .asset-editor {
+     display: grid;
+     gap: 12px;
+-    margin-top: 18px;
+-    padding-top: 16px;
+-    border-top: 1px solid var(--panel-border);
++    margin: 0;
++    padding: 0;
+ }
+ .asset-editor-heading {
+     display: flex;
+@@ -4140,6 +4159,33 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+     cursor: pointer;
+ }
+ .asset-delete-button:hover { color: var(--danger); text-decoration: underline; }
++
++.asset-inspector-empty {
++    display: grid;
++    align-content: start;
++    gap: 8px;
++    min-height: 100%;
++    color: var(--text-secondary);
++}
++.asset-inspector-empty h3 {
++    margin: 0;
++    color: var(--text-primary);
++    font-size: 14px;
++    line-height: 1.35;
++}
++.asset-inspector-empty p:last-child {
++    margin: 0;
++    font-size: 12px;
++    line-height: 1.55;
++}
++@media (max-width: 1180px) {
++    .assets-workspace {
++        grid-template-columns: minmax(0, 1fr) minmax(170px, .7fr);
++    }
++    .assets-grid {
++        grid-template-columns: 1fr;
++    }
++}
+ .assets-empty-state {
+     margin: 0;
+     padding: 16px 10px;

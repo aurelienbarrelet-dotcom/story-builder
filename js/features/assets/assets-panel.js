@@ -98,7 +98,7 @@ export function renderAssetsPanel() {
 
     const selectedAsset = images.find(asset => asset.id === selectedAssetId) ?? null;
 
-    container.innerHTML = images.length ? `
+    const galleryMarkup = images.length ? `
         <div class="assets-grid" role="list" aria-label="Images du projet">
             ${images.map(asset => {
                 const isActive = getSelectedChapter()?.image === asset.data;
@@ -116,9 +116,25 @@ export function renderAssetsPanel() {
                     <span class="asset-name-static">${escapeHtml(asset.name)}</span>
                 </button>`;
             }).join("")}
-        </div>
-        ${renderSelectedAssetEditor(selectedAsset)}` : `
+        </div>` : `
         <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
+
+    const inspectorMarkup = selectedAsset ? renderSelectedAssetEditor(selectedAsset) : `
+        <section class="asset-inspector-empty" aria-live="polite">
+            <p class="asset-editor-eyebrow">Inspecteur</p>
+            <h3>Aucune image sélectionnée</h3>
+            <p>Sélectionne une miniature pour modifier son nom, sa légende ou son utilisation dans le chapitre.</p>
+        </section>`;
+
+    container.innerHTML = `
+        <div class="assets-workspace">
+            <div class="assets-gallery" aria-label="Galerie d’images">
+                ${galleryMarkup}
+            </div>
+            <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
+                ${inspectorMarkup}
+            </aside>
+        </div>`;
 
     container.querySelectorAll("[data-select-asset]").forEach(card => {
         card.addEventListener("click", () => {
