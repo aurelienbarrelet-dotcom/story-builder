@@ -30,7 +30,7 @@ export function renderLegendPanel() {
 
     const chapter = getSelectedMapTarget();
     if (!chapter) {
-        current.innerHTML = '<p class="legend-empty">Sélectionnez le projet ou un chapitre pour composer sa légende.</p>';
+        current.innerHTML = '<p class="legend-empty panel-empty-state panel-empty-state--compact">Sélectionnez le projet ou un chapitre pour composer sa légende.</p>';
         currentCount.textContent = "";
         addButton.disabled = true;
         renderActiveSelectionBar();
@@ -40,7 +40,7 @@ export function renderLegendPanel() {
     chapter.legend ??= [];
     activeSelection.prune(chapter.legend.map(item => item.id));
     currentCount.textContent = `${chapter.legend.length} élément${chapter.legend.length > 1 ? "s" : ""}`;
-    current.innerHTML = chapter.legend.length ? "" : '<p class="legend-empty">La légende est vide. Utilisez + pour ajouter des calques.</p>';
+    current.innerHTML = chapter.legend.length ? "" : '<p class="legend-empty panel-empty-state panel-empty-state--compact">La légende est vide. Utilisez + pour ajouter des calques.</p>';
     chapter.legend.forEach((item, index) => current.append(createLegendItemCard(item, index, chapter.legend.map(entry => entry.id))));
     addButton.disabled = !getEditableLayers().some(layer => createSymbolFromLayer(layer, false));
     renderActiveSelectionBar();

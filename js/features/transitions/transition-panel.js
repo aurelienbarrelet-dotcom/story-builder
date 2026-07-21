@@ -351,7 +351,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
                         <input type="checkbox" data-transition-layer-id="${escapeHtml(layer.id)}" ${selected.has(layer.id) ? "checked" : ""}>
                         <span><strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
                         <button type="button" class="transition-layer-remove" data-remove-transition-layer="${escapeHtml(layer.id)}" aria-label="Retirer la transition de ${escapeHtml(layer.label)}" title="Retirer cette transition">×</button>
-                    </label>`).join("") : '<p class="property-help">Aucune exception configurée. Tous les calques utilisent la transition par défaut.</p>'}
+                    </label>`).join("") : '<p class="property-help panel-empty-state panel-empty-state--compact">Aucune exception configurée. Tous les calques utilisent la transition par défaut.</p>'}
             </div>
             ${selectedCount ? `
                 <div class="transition-layer-editor">

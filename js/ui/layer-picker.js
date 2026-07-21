@@ -12,14 +12,14 @@ export function openLayerPicker({ title = "Ajouter des calques", description = "
     const backdrop = document.createElement("div");
     backdrop.className = "layer-picker-backdrop";
     backdrop.innerHTML = `
-        <section class="layer-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="layerPickerTitle">
+        <section class="layer-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="layerPickerTitle" aria-describedby="layerPickerDescription">
             <header class="layer-picker-header">
-                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div>
+                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p id="layerPickerDescription">${escapeHtml(description)}</p></div>
                 <button class="ui-icon-button layer-picker-close" type="button" aria-label="Fermer">×</button>
             </header>
             <label class="layer-picker-search"><span class="visually-hidden">Rechercher un calque</span><input class="ui-input" type="search" placeholder="Rechercher un calque…"></label>
             <div class="layer-picker-list" role="listbox" aria-multiselectable="${multiple ? "true" : "false"}"></div>
-            <footer class="layer-picker-footer"><span class="layer-picker-count"></span><div><button class="button layer-picker-cancel" type="button">Annuler</button><button class="button button-primary layer-picker-confirm" type="button">${escapeHtml(confirmLabel)}</button></div></footer>
+            <footer class="layer-picker-footer"><span class="layer-picker-count" aria-live="polite"></span><div class="layer-picker-actions"><button class="button button-secondary layer-picker-cancel" type="button">Annuler</button><button class="button button-primary layer-picker-confirm" type="button">${escapeHtml(confirmLabel)}</button></div></footer>
         </section>`;
     document.body.append(backdrop);
     activeDialog = backdrop;
@@ -33,6 +33,7 @@ export function openLayerPicker({ title = "Ajouter des calques", description = "
         const query = search.value.trim().toLowerCase();
         const layers = getEditableLayers().filter(layer => !filter || filter(layer));
         const filtered = layers.filter(layer => `${layer.label} ${layer.id} ${layer.type}`.toLowerCase().includes(query));
+        list.setAttribute("aria-busy", "false");
         list.innerHTML = filtered.length ? filtered.map(layer => {
             const isDisabled = disabled.has(layer.id);
             const isChecked = selected.has(layer.id) || isDisabled;
@@ -43,7 +44,7 @@ export function openLayerPicker({ title = "Ajouter des calques", description = "
                 <span class="layer-picker-copy"><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
                 ${isDisabled ? '<em>Déjà ajouté</em>' : ""}
             </label>`;
-        }).join("") : `<p class="layer-picker-empty">${escapeHtml(emptyMessage)}</p>`;
+        }).join("") : `<p class="layer-picker-empty panel-empty-state panel-empty-state--compact">${escapeHtml(emptyMessage)}</p>`;
         count.textContent = `${selected.size} sélectionné${selected.size > 1 ? "s" : ""}`;
         confirm.disabled = selected.size === 0;
         list.querySelectorAll('input:not(:disabled)').forEach(input => input.addEventListener("change", () => {
