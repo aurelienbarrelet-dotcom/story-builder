@@ -2,6 +2,15 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.20 — 2026-07-21
+
+- Les transitions, contrastes, zones de focus et détails de survol sont finalisés pour une interface plus stable.
+- Les animations respectent la préférence système de réduction des mouvements.
+- Les barres de défilement, séparateurs et états vides reçoivent une finition cohérente avec la nouvelle interface.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.20`.
+
+---
+
 ### SB-2.0.0-alpha.19 — 2026-07-21
 
 - La hiérarchie des boutons est appliquée plus largement aux fenêtres de dialogue et aux groupes d’actions.

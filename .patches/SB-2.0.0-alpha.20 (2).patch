@@ -1,0 +1,94 @@
+diff --git a/README.md b/README.md
+index cc6c0fe..52ae2ff 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,15 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.20 — 2026-07-21
++
++- Les transitions, contrastes, zones de focus et détails de survol sont finalisés pour une interface plus stable.
++- Les animations respectent la préférence système de réduction des mouvements.
++- Les barres de défilement, séparateurs et états vides reçoivent une finition cohérente avec la nouvelle interface.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.20`.
++
++---
++
+ ### SB-2.0.0-alpha.19 — 2026-07-21
+ 
+ - La hiérarchie des boutons est appliquée plus largement aux fenêtres de dialogue et aux groupes d’actions.
+diff --git a/index.html b/index.html
+index ae6cec4..a01c8d4 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.19</title>
++    <title>Story Builder — 2.0.0-alpha.20</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/style.css b/style.css
+index b35682d..8396746 100644
+--- a/style.css
++++ b/style.css
+@@ -4901,3 +4901,56 @@ body:not(.reader-mode) .chapter {
+     outline: 0;
+     box-shadow: var(--focus-ring);
+ }
++
++
++/* Alpha 20 — finitions et accessibilité visuelle */
++:root {
++    --surface-subtle: #f7f8f9;
++    --surface-hover: #f1f3f5;
++}
++* {
++    scrollbar-width: thin;
++    scrollbar-color: #c7ccd1 transparent;
++}
++*::-webkit-scrollbar { width: 9px; height: 9px; }
++*::-webkit-scrollbar-thumb {
++    border: 2px solid transparent;
++    border-radius: 999px;
++    background: #c7ccd1;
++    background-clip: padding-box;
++}
++*::-webkit-scrollbar-thumb:hover { background-color: #aeb5bc; }
++.empty-state,
++.asset-inspector-empty,
++.panel-empty-state {
++    padding: 28px 18px;
++    color: var(--text-secondary);
++    text-align: center;
++}
++.empty-state svg,
++.asset-inspector-empty svg,
++.panel-empty-state svg {
++    opacity: .55;
++}
++.ui-button,
++.ui-icon-button,
++.button,
++.icon-button {
++    -webkit-tap-highlight-color: transparent;
++}
++.ui-button:hover:not(:disabled),
++.button:hover:not(:disabled) {
++    text-decoration: none;
++}
++:where(button, input, select, textarea, [tabindex]):focus-visible {
++    outline: 0;
++    box-shadow: var(--focus-ring);
++}
++@media (prefers-reduced-motion: reduce) {
++    *, *::before, *::after {
++        scroll-behavior: auto !important;
++        transition-duration: .01ms !important;
++        animation-duration: .01ms !important;
++        animation-iteration-count: 1 !important;
++    }
++}
