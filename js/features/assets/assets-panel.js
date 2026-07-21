@@ -121,14 +121,13 @@ export function renderAssetsPanel() {
                     title="Cliquer pour sélectionner. Double-cliquer pour ${isActive ? "retirer du" : "utiliser dans le"} chapitre.">
                     <span class="asset-preview">
                         <img src="${asset.data}" alt="">
-                        <span class="asset-selection-check" aria-hidden="true">✓</span>
                         <span class="asset-use-dot" aria-hidden="true"></span>
                     </span>
                     <span class="asset-name-static">${escapeHtml(asset.name)}</span>
                 </button>`;
             }).join("")}
         </div>` : `
-        <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
+        <p class="assets-empty-state">Aucune image.<br>Clique sur le bouton « + » dans l’en-tête.</p>`;
 
     const inspectorMarkup = selectedAsset ? renderSelectedAssetEditor(selectedAsset) : `
         <section class="asset-inspector-empty" aria-live="polite">

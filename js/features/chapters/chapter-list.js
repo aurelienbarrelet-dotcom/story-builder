@@ -3,6 +3,7 @@ import {
     getChapters,
     getDraggedChapterIndex,
     getSelectedChapterIndex,
+    getSelectedChapterIndices,
     getStory,
     isChapterMultiSelected,
     selectChapter,
@@ -47,6 +48,17 @@ export function renderChapterList() {
     const generalContainer = document.getElementById("generalInformationCard");
     const chapters = getChapters();
     const selectedIndex = getSelectedChapterIndex();
+    const selectedIndices = getSelectedChapterIndices();
+    const selectionBar = document.getElementById("chaptersSelectionBar");
+
+    if (selectionBar) {
+        const count = selectedIndices.length;
+        selectionBar.className = `chapters-selection-bar ${count ? "visible" : ""}`;
+        selectionBar.innerHTML = count ? `
+            <span>${count} chapitre${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}</span>
+            <button type="button" class="chapters-delete-selected">Supprimer</button>` : "";
+        selectionBar.querySelector(".chapters-delete-selected")?.addEventListener("click", deleteSelectedChapters);
+    }
 
     container.innerHTML = "";
     generalContainer.innerHTML = "";
@@ -64,7 +76,7 @@ export function renderChapterList() {
     if (!chapters.length) {
         const empty = document.createElement("p");
         empty.className = "empty-message";
-        empty.innerHTML = "Aucun chapitre.<br>Clique sur « Ajouter un chapitre » ci-dessous.";
+        empty.innerHTML = "Aucun chapitre.<br>Clique sur le bouton « + » dans l’en-tête.";
         container.appendChild(empty);
         return;
     }

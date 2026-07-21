@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.12</title>
+    <title>Story Builder — 2.0.0-alpha.13</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -46,14 +46,13 @@
             </section>
 
             <section class="chapters-list-section" aria-labelledby="chaptersHeading">
-                <div class="panel-header panel-header-compact">
+                <div class="panel-header panel-header-compact collection-panel-header">
                     <h2 id="chaptersHeading">Chapitres</h2>
+                    <button id="addChapterButton" class="collection-add-button" type="button" aria-label="Ajouter un chapitre" title="Ajouter un chapitre">+</button>
                 </div>
                 <div id="chapters"></div>
+                <div id="chaptersSelectionBar" class="chapters-selection-bar" aria-live="polite"></div>
             </section>
-            <div class="chapters-panel-footer">
-                <button id="addChapterButton" class="button button-primary chapter-add-button" type="button">Ajouter un chapitre</button>
-            </div>
         </aside>
 
         <section id="workspace">
@@ -208,7 +207,7 @@
         <aside id="assetsPanel" class="assets-panel">
             <header class="assets-panel-header">
                 <h2>Images</h2>
-                <button id="importAssetsButton" class="button button-primary assets-import-button" type="button">+ Importer</button>
+                <button id="importAssetsButton" class="collection-add-button assets-import-button" type="button" aria-label="Importer des images" title="Importer des images">+</button>
                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
             </header>
             <div id="assetsPanelContent" class="assets-panel-content"></div>

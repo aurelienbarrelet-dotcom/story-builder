@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.13 — 2026-07-21
+
+- La coche superposée aux images sélectionnées a été supprimée : le contour rouge devient l’unique indicateur de sélection.
+- Le bouton d’import du panneau **Images** est désormais réduit à un simple bouton « + ».
+- Le panneau **Chapitres** adopte le même langage d’interface : bouton « + » dans l’en-tête, survol discret, sélection multiple et barre de suppression contextuelle.
+- Les chapitres sélectionnés utilisent désormais un contour rouge sans fond coloré, afin de rester cohérents avec les cartes Images.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.13`.
+
+---
+
 ### SB-2.0.0-alpha.12 — 2026-07-21
 
 - Le bouton d’import est désormais compact et placé directement dans l’en-tête du panneau **Images**.

@@ -4343,3 +4343,125 @@ main.assets-panel-open .asset-inspector {
 .assets-delete-selected:hover {
     background: rgba(176, 42, 55, .08);
 }
+
+
+/* Alpha 13 — langage commun pour les collections Images et Chapitres */
+.collection-panel-header {
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.collection-add-button {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    background: #fff;
+    font: inherit;
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+
+.collection-add-button:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.collection-add-button:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.assets-import-button {
+    min-height: 30px;
+    padding: 0;
+    font-size: 19px;
+}
+
+.asset-selection-check {
+    display: none !important;
+}
+
+.chapters-list-section {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+}
+
+#chapters {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+body:not(.reader-mode) .chapter.selected,
+body:not(.reader-mode) .chapter.multi-selected {
+    color: var(--text-primary);
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+body:not(.reader-mode) .chapter.selected .chapter-title,
+body:not(.reader-mode) .chapter.multi-selected .chapter-title,
+body:not(.reader-mode) .chapter.selected .chapter-number,
+body:not(.reader-mode) .chapter.multi-selected .chapter-number,
+body:not(.reader-mode) .chapter.selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.multi-selected .chapter-menu-button,
+body:not(.reader-mode) .chapter.selected .chapter-drag-handle,
+body:not(.reader-mode) .chapter.multi-selected .chapter-drag-handle {
+    color: inherit;
+}
+
+body:not(.reader-mode) .chapter:hover {
+    border-color: #b8bec5;
+    background: #fafafa;
+    box-shadow: 0 4px 12px rgba(32, 38, 44, .08);
+}
+
+body:not(.reader-mode) .chapter.selected:hover,
+body:not(.reader-mode) .chapter.multi-selected:hover {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 2px var(--accent-ring);
+}
+
+.chapters-selection-bar {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 46px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    background: var(--right-panel-bg);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.chapters-selection-bar.visible {
+    display: flex;
+}
+
+.chapters-delete-selected {
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 5px;
+    color: var(--danger);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.chapters-delete-selected:hover {
+    background: rgba(176, 42, 55, .08);
+}

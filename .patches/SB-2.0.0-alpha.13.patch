@@ -1,0 +1,250 @@
+diff --git a/README.md b/README.md
+index 9d09597..1784e87 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,16 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.13 — 2026-07-21
++
++- La coche superposée aux images sélectionnées a été supprimée : le contour rouge devient l’unique indicateur de sélection.
++- Le bouton d’import du panneau **Images** est désormais réduit à un simple bouton « + ».
++- Le panneau **Chapitres** adopte le même langage d’interface : bouton « + » dans l’en-tête, survol discret, sélection multiple et barre de suppression contextuelle.
++- Les chapitres sélectionnés utilisent désormais un contour rouge sans fond coloré, afin de rester cohérents avec les cartes Images.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.13`.
++
++---
++
+ ### SB-2.0.0-alpha.12 — 2026-07-21
+ 
+ - Le bouton d’import est désormais compact et placé directement dans l’en-tête du panneau **Images**.
+diff --git a/index.html b/index.html
+index 33db918..e9165bd 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.12</title>
++    <title>Story Builder — 2.0.0-alpha.13</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -46,14 +46,13 @@
+             </section>
+ 
+             <section class="chapters-list-section" aria-labelledby="chaptersHeading">
+-                <div class="panel-header panel-header-compact">
++                <div class="panel-header panel-header-compact collection-panel-header">
+                     <h2 id="chaptersHeading">Chapitres</h2>
++                    <button id="addChapterButton" class="collection-add-button" type="button" aria-label="Ajouter un chapitre" title="Ajouter un chapitre">+</button>
+                 </div>
+                 <div id="chapters"></div>
++                <div id="chaptersSelectionBar" class="chapters-selection-bar" aria-live="polite"></div>
+             </section>
+-            <div class="chapters-panel-footer">
+-                <button id="addChapterButton" class="button button-primary chapter-add-button" type="button">Ajouter un chapitre</button>
+-            </div>
+         </aside>
+ 
+         <section id="workspace">
+@@ -208,7 +207,7 @@
+         <aside id="assetsPanel" class="assets-panel">
+             <header class="assets-panel-header">
+                 <h2>Images</h2>
+-                <button id="importAssetsButton" class="button button-primary assets-import-button" type="button">+ Importer</button>
++                <button id="importAssetsButton" class="collection-add-button assets-import-button" type="button" aria-label="Importer des images" title="Importer des images">+</button>
+                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
+             </header>
+             <div id="assetsPanelContent" class="assets-panel-content"></div>
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index 05d0468..74ff07a 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -121,14 +121,13 @@ export function renderAssetsPanel() {
+                     title="Cliquer pour sélectionner. Double-cliquer pour ${isActive ? "retirer du" : "utiliser dans le"} chapitre.">
+                     <span class="asset-preview">
+                         <img src="${asset.data}" alt="">
+-                        <span class="asset-selection-check" aria-hidden="true">✓</span>
+                         <span class="asset-use-dot" aria-hidden="true"></span>
+                     </span>
+                     <span class="asset-name-static">${escapeHtml(asset.name)}</span>
+                 </button>`;
+             }).join("")}
+         </div>` : `
+-        <p class="assets-empty-state">Aucune image.<br>Clique sur « Importer des images » ci-dessous.</p>`;
++        <p class="assets-empty-state">Aucune image.<br>Clique sur le bouton « + » dans l’en-tête.</p>`;
+ 
+     const inspectorMarkup = selectedAsset ? renderSelectedAssetEditor(selectedAsset) : `
+         <section class="asset-inspector-empty" aria-live="polite">
+diff --git a/js/features/chapters/chapter-list.js b/js/features/chapters/chapter-list.js
+index 410dd59..0afec44 100644
+--- a/js/features/chapters/chapter-list.js
++++ b/js/features/chapters/chapter-list.js
+@@ -3,6 +3,7 @@ import {
+     getChapters,
+     getDraggedChapterIndex,
+     getSelectedChapterIndex,
++    getSelectedChapterIndices,
+     getStory,
+     isChapterMultiSelected,
+     selectChapter,
+@@ -47,6 +48,17 @@ export function renderChapterList() {
+     const generalContainer = document.getElementById("generalInformationCard");
+     const chapters = getChapters();
+     const selectedIndex = getSelectedChapterIndex();
++    const selectedIndices = getSelectedChapterIndices();
++    const selectionBar = document.getElementById("chaptersSelectionBar");
++
++    if (selectionBar) {
++        const count = selectedIndices.length;
++        selectionBar.className = `chapters-selection-bar ${count ? "visible" : ""}`;
++        selectionBar.innerHTML = count ? `
++            <span>${count} chapitre${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}</span>
++            <button type="button" class="chapters-delete-selected">Supprimer</button>` : "";
++        selectionBar.querySelector(".chapters-delete-selected")?.addEventListener("click", deleteSelectedChapters);
++    }
+ 
+     container.innerHTML = "";
+     generalContainer.innerHTML = "";
+@@ -64,7 +76,7 @@ export function renderChapterList() {
+     if (!chapters.length) {
+         const empty = document.createElement("p");
+         empty.className = "empty-message";
+-        empty.innerHTML = "Aucun chapitre.<br>Clique sur « Ajouter un chapitre » ci-dessous.";
++        empty.innerHTML = "Aucun chapitre.<br>Clique sur le bouton « + » dans l’en-tête.";
+         container.appendChild(empty);
+         return;
+     }
+diff --git a/style.css b/style.css
+index 4defc59..558aa2e 100644
+--- a/style.css
++++ b/style.css
+@@ -4343,3 +4343,125 @@ main.assets-panel-open .asset-inspector {
+ .assets-delete-selected:hover {
+     background: rgba(176, 42, 55, .08);
+ }
++
++
++/* Alpha 13 — langage commun pour les collections Images et Chapitres */
++.collection-panel-header {
++    justify-content: space-between;
++    gap: 10px;
++}
++
++.collection-add-button {
++    display: inline-grid;
++    width: 30px;
++    height: 30px;
++    flex: 0 0 30px;
++    place-items: center;
++    padding: 0;
++    border: 1px solid var(--panel-border);
++    border-radius: 6px;
++    color: var(--text-primary);
++    background: #fff;
++    font: inherit;
++    font-size: 19px;
++    line-height: 1;
++    cursor: pointer;
++    transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
++}
++
++.collection-add-button:hover {
++    border-color: var(--accent);
++    background: var(--accent-soft);
++}
++
++.collection-add-button:focus-visible {
++    outline: 0;
++    box-shadow: 0 0 0 2px var(--accent-ring);
++}
++
++.assets-import-button {
++    min-height: 30px;
++    padding: 0;
++    font-size: 19px;
++}
++
++.asset-selection-check {
++    display: none !important;
++}
++
++.chapters-list-section {
++    display: flex;
++    min-height: 0;
++    flex: 1;
++    flex-direction: column;
++}
++
++#chapters {
++    min-height: 0;
++    overflow-y: auto;
++}
++
++body:not(.reader-mode) .chapter.selected,
++body:not(.reader-mode) .chapter.multi-selected {
++    color: var(--text-primary);
++    background: #fff;
++    border-color: var(--accent);
++    box-shadow: 0 0 0 2px var(--accent-ring);
++}
++
++body:not(.reader-mode) .chapter.selected .chapter-title,
++body:not(.reader-mode) .chapter.multi-selected .chapter-title,
++body:not(.reader-mode) .chapter.selected .chapter-number,
++body:not(.reader-mode) .chapter.multi-selected .chapter-number,
++body:not(.reader-mode) .chapter.selected .chapter-menu-button,
++body:not(.reader-mode) .chapter.multi-selected .chapter-menu-button,
++body:not(.reader-mode) .chapter.selected .chapter-drag-handle,
++body:not(.reader-mode) .chapter.multi-selected .chapter-drag-handle {
++    color: inherit;
++}
++
++body:not(.reader-mode) .chapter:hover {
++    border-color: #b8bec5;
++    background: #fafafa;
++    box-shadow: 0 4px 12px rgba(32, 38, 44, .08);
++}
++
++body:not(.reader-mode) .chapter.selected:hover,
++body:not(.reader-mode) .chapter.multi-selected:hover {
++    border-color: var(--accent);
++    background: #fff;
++    box-shadow: 0 0 0 2px var(--accent-ring);
++}
++
++.chapters-selection-bar {
++    display: none;
++    flex: 0 0 auto;
++    align-items: center;
++    justify-content: space-between;
++    gap: 10px;
++    min-height: 46px;
++    padding: 8px 12px;
++    border-top: 1px solid var(--panel-border);
++    color: var(--text-secondary);
++    background: var(--right-panel-bg);
++    font-size: 11px;
++    font-weight: 700;
++}
++
++.chapters-selection-bar.visible {
++    display: flex;
++}
++
++.chapters-delete-selected {
++    padding: 5px 8px;
++    border: 0;
++    border-radius: 5px;
++    color: var(--danger);
++    background: transparent;
++    font: inherit;
++    cursor: pointer;
++}
++
++.chapters-delete-selected:hover {
++    background: rgba(176, 42, 55, .08);
++}
