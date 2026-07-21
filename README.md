@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.33.2
+## SB-2.0.0-alpha.33.3
 
 ### Transitions individuelles, séquençage et timeline
 
@@ -589,3 +589,10 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Suppression de la liste « Légendes disponibles » au profit du bouton + des légendes actives.
 - Gestion autonome des transitions individuelles dans le panneau Transitions, sans dépendre de la sélection du panneau Calques.
 - Ajout, sélection multiple, modification groupée, séquençage et retrait des pistes de calques.
+
+
+## Alpha 33.3 — héritage et aperçus de calques
+
+- La transition globale devient explicitement la transition par défaut des calques.
+- Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
+- Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.

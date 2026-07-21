@@ -1,4 +1,4 @@
-import { getEditableLayers } from "../features/map/map-service.js";
+import { getBaseLayerProperty, getEditableLayers } from "../features/map/map-service.js";
 
 let activeDialog = null;
 
@@ -36,7 +36,8 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
             const isChecked = selected.has(layer.id) || isDisabled;
             return `<label class="layer-picker-row${isDisabled ? " is-disabled" : ""}">
                 <input type="checkbox" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
-                <span><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
+                ${renderLayerPreview(layer)}
+                <span class="layer-picker-copy"><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
                 ${isDisabled ? '<em>Déjà ajouté</em>' : ""}
             </label>`;
         }).join("") : '<p class="layer-picker-empty">Aucun calque ne correspond à la recherche.</p>';
@@ -66,6 +67,49 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
 export function closeLayerPicker() {
     activeDialog?.remove();
     activeDialog = null;
+}
+
+function renderLayerPreview(layer) {
+    const type = layer.type;
+    const color = resolveLayerColor(layer.id, type);
+    const secondary = resolveSecondaryColor(layer.id, type);
+    const width = clampNumber(getBaseLayerProperty(layer.id, "paint", type === "line" ? "line-width" : "circle-radius"), 1, 12, type === "line" ? 3 : 6);
+    const style = `--layer-preview-color:${escapeHtml(color)};--layer-preview-secondary:${escapeHtml(secondary)};--layer-preview-size:${width}px`;
+    const glyph = type === "symbol" ? "A" : "";
+    return `<span class="layer-picker-preview layer-picker-preview--${escapeHtml(type)}" style="${style}" aria-hidden="true"><i>${glyph}</i></span>`;
+}
+
+function resolveLayerColor(layerId, type) {
+    const properties = {
+        fill: ["fill-color"],
+        line: ["line-color"],
+        circle: ["circle-color"],
+        symbol: ["text-color", "icon-color"],
+        "fill-extrusion": ["fill-extrusion-color"],
+        heatmap: ["heatmap-color"],
+        hillshade: ["hillshade-accent-color", "hillshade-shadow-color"],
+        background: ["background-color"]
+    }[type] || [];
+    for (const property of properties) {
+        const value = getBaseLayerProperty(layerId, "paint", property);
+        if (typeof value === "string" && isCssColor(value)) return value;
+    }
+    return "#65758b";
+}
+
+function resolveSecondaryColor(layerId, type) {
+    const property = type === "fill" ? "fill-outline-color" : type === "circle" ? "circle-stroke-color" : null;
+    const value = property ? getBaseLayerProperty(layerId, "paint", property) : null;
+    return typeof value === "string" && isCssColor(value) ? value : "#ffffff";
+}
+
+function isCssColor(value) {
+    return /^(#|rgb|hsl|[a-z])/i.test(value) && !value.includes("[");
+}
+
+function clampNumber(value, min, max, fallback) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
 }
 
 function escapeHtml(value) {

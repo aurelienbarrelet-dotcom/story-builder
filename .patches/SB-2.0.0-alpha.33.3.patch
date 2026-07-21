@@ -1,0 +1,180 @@
+diff --git a/README.md b/README.md
+index c64a08f..9b692aa 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-## SB-2.0.0-alpha.33.2
++## SB-2.0.0-alpha.33.3
+ 
+ ### Transitions individuelles, séquençage et timeline
+ 
+@@ -589,3 +589,10 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
+ - Suppression de la liste « Légendes disponibles » au profit du bouton + des légendes actives.
+ - Gestion autonome des transitions individuelles dans le panneau Transitions, sans dépendre de la sélection du panneau Calques.
+ - Ajout, sélection multiple, modification groupée, séquençage et retrait des pistes de calques.
++
++
++## Alpha 33.3 — héritage et aperçus de calques
++
++- La transition globale devient explicitement la transition par défaut des calques.
++- Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
++- Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
+diff --git a/index.html b/index.html
+index 7f1d482..b492d03 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.33.2</title>
++    <title>Story Builder — 2.0.0-alpha.33.3</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 80eb748..3bac3b8 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.33.2";
++export const APP_VERSION = "2.0.0-alpha.33.3";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/transitions/transition-panel.js b/js/features/transitions/transition-panel.js
+index 5cbcfa6..acc0264 100644
+--- a/js/features/transitions/transition-panel.js
++++ b/js/features/transitions/transition-panel.js
+@@ -123,7 +123,7 @@ export function renderTransitionPanel() {
+ 
+         <section class="transition-panel-section" aria-labelledby="layerTransitionTitle">
+             <header class="transition-panel-section-header">
+-                <h3 id="layerTransitionTitle">Calques</h3>
++                <h3 id="layerTransitionTitle">Transition par défaut</h3>
+                 <span>État et fondu</span>
+             </header>
+             <div class="property transition-toggle-property">
+@@ -340,7 +340,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
+         <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
+             <header class="transition-panel-section-header">
+                 <div>
+-                    <h3 id="selectedLayerTransitionTitle">Transitions des calques</h3>
++                    <h3 id="selectedLayerTransitionTitle">Transitions spécifiques</h3>
+                     <span>${layers.length} configurée${layers.length > 1 ? "s" : ""}</span>
+                 </div>
+                 <button id="addLayerTransitionsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter des calques aux transitions" title="Ajouter des calques aux transitions">+</button>
+@@ -351,7 +351,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
+                         <input type="checkbox" data-transition-layer-id="${escapeHtml(layer.id)}" ${selected.has(layer.id) ? "checked" : ""}>
+                         <span><strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
+                         <button type="button" class="transition-layer-remove" data-remove-transition-layer="${escapeHtml(layer.id)}" aria-label="Retirer la transition de ${escapeHtml(layer.label)}" title="Retirer cette transition">×</button>
+-                    </label>`).join("") : '<p class="property-help">Aucun calque configuré. Utilise + pour ajouter des transitions individuelles.</p>'}
++                    </label>`).join("") : '<p class="property-help">Aucune exception configurée. Tous les calques utilisent la transition par défaut.</p>'}
+             </div>
+             ${selectedCount ? `
+                 <div class="transition-layer-editor">
+@@ -381,7 +381,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
+                         <button id="sequenceLayerTransitionsButton" type="button" class="button">Séquencer</button>
+                     </div>
+                     <button id="removeSelectedLayerTransitionsButton" type="button" class="button button-danger">Retirer les transitions sélectionnées</button>
+-                </div>` : '<p class="property-help">Coche un ou plusieurs calques de cette liste pour modifier leurs réglages ensemble.</p>'}
++                </div>` : '<p class="property-help">Coche une ou plusieurs exceptions pour modifier leurs réglages ensemble. Retirer une exception rétablit la transition par défaut.</p>'}
+         </section>`;
+ }
+ 
+diff --git a/js/ui/layer-picker.js b/js/ui/layer-picker.js
+index 0b65bc6..d9eee06 100644
+--- a/js/ui/layer-picker.js
++++ b/js/ui/layer-picker.js
+@@ -1,4 +1,4 @@
+-import { getEditableLayers } from "../features/map/map-service.js";
++import { getBaseLayerProperty, getEditableLayers } from "../features/map/map-service.js";
+ 
+ let activeDialog = null;
+ 
+@@ -36,7 +36,8 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel =
+             const isChecked = selected.has(layer.id) || isDisabled;
+             return `<label class="layer-picker-row${isDisabled ? " is-disabled" : ""}">
+                 <input type="checkbox" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
+-                <span><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
++                ${renderLayerPreview(layer)}
++                <span class="layer-picker-copy"><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
+                 ${isDisabled ? '<em>Déjà ajouté</em>' : ""}
+             </label>`;
+         }).join("") : '<p class="layer-picker-empty">Aucun calque ne correspond à la recherche.</p>';
+@@ -68,6 +69,49 @@ export function closeLayerPicker() {
+     activeDialog = null;
+ }
+ 
++function renderLayerPreview(layer) {
++    const type = layer.type;
++    const color = resolveLayerColor(layer.id, type);
++    const secondary = resolveSecondaryColor(layer.id, type);
++    const width = clampNumber(getBaseLayerProperty(layer.id, "paint", type === "line" ? "line-width" : "circle-radius"), 1, 12, type === "line" ? 3 : 6);
++    const style = `--layer-preview-color:${escapeHtml(color)};--layer-preview-secondary:${escapeHtml(secondary)};--layer-preview-size:${width}px`;
++    const glyph = type === "symbol" ? "A" : "";
++    return `<span class="layer-picker-preview layer-picker-preview--${escapeHtml(type)}" style="${style}" aria-hidden="true"><i>${glyph}</i></span>`;
++}
++
++function resolveLayerColor(layerId, type) {
++    const properties = {
++        fill: ["fill-color"],
++        line: ["line-color"],
++        circle: ["circle-color"],
++        symbol: ["text-color", "icon-color"],
++        "fill-extrusion": ["fill-extrusion-color"],
++        heatmap: ["heatmap-color"],
++        hillshade: ["hillshade-accent-color", "hillshade-shadow-color"],
++        background: ["background-color"]
++    }[type] || [];
++    for (const property of properties) {
++        const value = getBaseLayerProperty(layerId, "paint", property);
++        if (typeof value === "string" && isCssColor(value)) return value;
++    }
++    return "#65758b";
++}
++
++function resolveSecondaryColor(layerId, type) {
++    const property = type === "fill" ? "fill-outline-color" : type === "circle" ? "circle-stroke-color" : null;
++    const value = property ? getBaseLayerProperty(layerId, "paint", property) : null;
++    return typeof value === "string" && isCssColor(value) ? value : "#ffffff";
++}
++
++function isCssColor(value) {
++    return /^(#|rgb|hsl|[a-z])/i.test(value) && !value.includes("[");
++}
++
++function clampNumber(value, min, max, fallback) {
++    const number = Number(value);
++    return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
++}
++
+ function escapeHtml(value) {
+     return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
+ }
+diff --git a/style.css b/style.css
+index 501bc01..50c79a5 100644
+--- a/style.css
++++ b/style.css
+@@ -5701,7 +5701,7 @@ body > .collection-menu { z-index: 1000; }
+ .layer-picker-close { flex: 0 0 auto; font-size: 20px; line-height: 1; }
+ .layer-picker-search input { width: 100%; }
+ .layer-picker-list { min-height: 0; overflow: auto; border: 1px solid #e2e5ea; border-radius: 9px; }
+-.layer-picker-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; min-height: 54px; padding: 9px 11px; border-bottom: 1px solid #eceef2; cursor: pointer; }
++.layer-picker-row { display: grid; grid-template-columns: auto 42px minmax(0, 1fr) auto; align-items: center; gap: 11px; min-height: 54px; padding: 9px 11px; border-bottom: 1px solid #eceef2; cursor: pointer; }
+ .layer-picker-row:last-child { border-bottom: 0; }
+ .layer-picker-row:hover { background: #f7f8fa; }
+ .layer-picker-row.is-disabled { color: #868c95; cursor: default; background: #fafafa; }
+@@ -5724,3 +5724,12 @@ body > .collection-menu { z-index: 1000; }
+ .transition-layer-remove:hover { background: #f8e9ec; }
+ .transition-layer-editor { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; }
+ .transition-layer-selection-summary { margin: 0; color: #5b616b; font-size: 11px; }
++
++.layer-picker-preview { --layer-preview-color: #65758b; --layer-preview-secondary: #fff; --layer-preview-size: 6px; display: grid; place-items: center; width: 38px; height: 38px; overflow: hidden; border: 1px solid #d9dde4; border-radius: 8px; background: #f5f7fa; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 55%); }
++.layer-picker-preview i { display: block; font-style: normal; }
++.layer-picker-preview--fill i, .layer-picker-preview--fill-extrusion i, .layer-picker-preview--background i { width: 26px; height: 22px; border: 2px solid var(--layer-preview-secondary); border-radius: 4px; background: var(--layer-preview-color); box-shadow: 0 1px 2px rgb(20 28 40 / 18%); }
++.layer-picker-preview--line i { width: 30px; height: var(--layer-preview-size); min-height: 2px; border-radius: 999px; background: var(--layer-preview-color); transform: rotate(-18deg); }
++.layer-picker-preview--circle i { width: calc(var(--layer-preview-size) * 2); height: calc(var(--layer-preview-size) * 2); max-width: 24px; max-height: 24px; border: 2px solid var(--layer-preview-secondary); border-radius: 50%; background: var(--layer-preview-color); box-shadow: 0 1px 2px rgb(20 28 40 / 18%); }
++.layer-picker-preview--symbol i { color: var(--layer-preview-color); font-size: 21px; font-weight: 800; line-height: 1; text-shadow: 0 1px 0 var(--layer-preview-secondary); }
++.layer-picker-preview--heatmap i, .layer-picker-preview--hillshade i, .layer-picker-preview--raster i { width: 28px; height: 24px; border-radius: 6px; background: radial-gradient(circle at 65% 35%, #fff 0 8%, transparent 9%), linear-gradient(135deg, var(--layer-preview-secondary), var(--layer-preview-color)); }
++.layer-picker-copy { min-width: 0; }

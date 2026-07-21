@@ -123,7 +123,7 @@ export function renderTransitionPanel() {
 
         <section class="transition-panel-section" aria-labelledby="layerTransitionTitle">
             <header class="transition-panel-section-header">
-                <h3 id="layerTransitionTitle">Calques</h3>
+                <h3 id="layerTransitionTitle">Transition par défaut</h3>
                 <span>État et fondu</span>
             </header>
             <div class="property transition-toggle-property">
@@ -340,7 +340,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
         <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
             <header class="transition-panel-section-header">
                 <div>
-                    <h3 id="selectedLayerTransitionTitle">Transitions des calques</h3>
+                    <h3 id="selectedLayerTransitionTitle">Transitions spécifiques</h3>
                     <span>${layers.length} configurée${layers.length > 1 ? "s" : ""}</span>
                 </div>
                 <button id="addLayerTransitionsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter des calques aux transitions" title="Ajouter des calques aux transitions">+</button>
@@ -351,7 +351,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
                         <input type="checkbox" data-transition-layer-id="${escapeHtml(layer.id)}" ${selected.has(layer.id) ? "checked" : ""}>
                         <span><strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
                         <button type="button" class="transition-layer-remove" data-remove-transition-layer="${escapeHtml(layer.id)}" aria-label="Retirer la transition de ${escapeHtml(layer.label)}" title="Retirer cette transition">×</button>
-                    </label>`).join("") : '<p class="property-help">Aucun calque configuré. Utilise + pour ajouter des transitions individuelles.</p>'}
+                    </label>`).join("") : '<p class="property-help">Aucune exception configurée. Tous les calques utilisent la transition par défaut.</p>'}
             </div>
             ${selectedCount ? `
                 <div class="transition-layer-editor">
@@ -381,7 +381,7 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
                         <button id="sequenceLayerTransitionsButton" type="button" class="button">Séquencer</button>
                     </div>
                     <button id="removeSelectedLayerTransitionsButton" type="button" class="button button-danger">Retirer les transitions sélectionnées</button>
-                </div>` : '<p class="property-help">Coche un ou plusieurs calques de cette liste pour modifier leurs réglages ensemble.</p>'}
+                </div>` : '<p class="property-help">Coche une ou plusieurs exceptions pour modifier leurs réglages ensemble. Retirer une exception rétablit la transition par défaut.</p>'}
         </section>`;
 }
 
