@@ -1,0 +1,170 @@
+diff --git a/README.md b/README.md
+index d271547..0cc0baa 100644
+--- a/README.md
++++ b/README.md
+@@ -1,15 +1,13 @@
++## SB-2.0.0-alpha.27.3.1
+ 
+-## SB-2.0.0-alpha.27.3
+-
+-- Harmonise les filtres des panneaux Calques et Légendes.
+-- Maintient les outils fixes pendant le défilement des listes.
+-- Déplace la réinitialisation des calques dans une barre de sélection basse.
++- Restaure intégralement la structure et le comportement du panneau Calques de l’alpha.27.2.
++- Conserve uniquement les ajustements sûrs du panneau Légendes disponibles.
+ 
+ # Story Builder
+ 
+ ## Dernières modifications
+ 
+-### SB-2.0.0-alpha.27.3 — 2026-07-21
++### SB-2.0.0-alpha.27.3.1 — 2026-07-21
+ 
+ - Corrige le menu des légendes actives afin qu’il s’ouvre hors du conteneur défilant, sans ajouter de barre de défilement ni être rogné.
+ - Harmonise la recherche et le filtre de type du panneau Légendes avec les contrôles du panneau Calques.
+diff --git a/index.html b/index.html
+index 8c2aea3..0882ca0 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.27.3</title>
++    <title>Story Builder — 2.0.0-alpha.27.3.1</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -146,6 +146,9 @@
+                     <select id="layerTypeFilter" class="ui-input layers-type-filter" aria-label="Filtrer les calques par type">
+                         <option value="all">Tous les types</option>
+                     </select>
++                    <button id="resetSelectedLayerStylesButton" class="ui-button ui-button--secondary layers-reset-selected" type="button" disabled>
++                        Réinitialiser les calques sélectionnés
++                    </button>
+                 </div>
+ 
+                 <div id="layerOpacityList" class="layer-opacity-list">
+@@ -153,13 +156,6 @@
+                         Connecte la carte pour afficher les calques disponibles.
+                     </p>
+                 </div>
+-
+-                <div id="layersSelectionBar" class="collection-selection-bar layers-selection-bar" aria-live="polite" hidden>
+-                    <span id="layersSelectedCount">0 calque sélectionné</span>
+-                    <button id="resetSelectedLayerStylesButton" class="ui-icon-button layers-reset-icon" type="button" aria-label="Réinitialiser les calques sélectionnés" title="Réinitialiser les calques sélectionnés" disabled>
+-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 .7-7.8L4 10"/></svg>
+-                    </button>
+-                </div>
+             </div>
+         </aside>
+ 
+diff --git a/js/core/config.js b/js/core/config.js
+index 42da299..221a9f5 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.27.3";
++export const APP_VERSION = "2.0.0-alpha.27.3.1";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/layers/layers-panel.js b/js/features/layers/layers-panel.js
+index 8be7eb7..7f13da2 100644
+--- a/js/features/layers/layers-panel.js
++++ b/js/features/layers/layers-panel.js
+@@ -291,20 +291,19 @@ function updateTypeFilter(layers) {
+ 
+ function updateResetSelectionButton() {
+     const projectSelected = getSelectedSection() === "meta";
+-    const bar = document.getElementById("layersSelectionBar");
+-    const countLabel = document.getElementById("layersSelectedCount");
+     const button = document.getElementById("resetSelectedLayerStylesButton");
+-    if (!bar || !countLabel || !button) return;
+-
++    if (!button) return;
+     const count = selectedLayerIds.size;
+-    bar.hidden = count === 0;
+-    bar.classList.toggle("visible", count > 0);
+-    countLabel.textContent = `${count} calque${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`;
++    button.hidden = false;
+     button.disabled = count === 0;
++    button.textContent = count
++        ? `Réinitialiser ${count} calque${count > 1 ? "s" : ""}`
++        : (projectSelected
++            ? "Réinitialiser selon Mapbox"
++            : "Réinitialiser selon le Projet");
+     button.title = projectSelected
+-        ? "Réinitialiser selon le style Mapbox"
+-        : "Réinitialiser selon les valeurs du Projet";
+-    button.setAttribute("aria-label", button.title);
++        ? "Restaurer les valeurs du style Mapbox"
++        : "Restaurer les valeurs définies dans le Projet";
+ }
+ 
+ function setCollapsedState(panel, button, isCollapsed) {
+diff --git a/style.css b/style.css
+index 95cfe41..b4d643d 100644
+--- a/style.css
++++ b/style.css
+@@ -5418,20 +5418,7 @@ body:not(.reader-mode) .chapter:hover {
+ }
+ body > .collection-menu { z-index: 1000; }
+ 
+-/* SB-2.0.0-alpha.27.3 — filtres fixes et action de réinitialisation des calques */
+-.layers-panel-content {
+-    display: flex;
+-    flex-direction: column;
+-    min-height: 0;
+-    overflow: hidden;
+-}
+-
+-.layers-selection-summary,
+-.layers-tools {
+-    flex: 0 0 auto;
+-}
+-
+-.layers-tools .ui-input,
++/* SB-2.0.0-alpha.27.3.1 — correctif du panneau Calques */
+ .legend-tools .ui-input {
+     box-sizing: border-box;
+     width: 100%;
+@@ -5445,38 +5432,10 @@ body > .collection-menu { z-index: 1000; }
+     line-height: 1.35;
+ }
+ 
+-.layers-tools select.ui-input,
+ .legend-tools select.ui-input {
+     appearance: auto;
+ }
+ 
+-.layer-opacity-list {
+-    flex: 1 1 0;
+-    min-height: 0;
+-    overflow-y: auto;
+-    scrollbar-gutter: stable;
+-}
+-
+-.layers-selection-bar {
+-    flex: 0 0 auto;
+-    margin-top: var(--space-3);
+-}
+-
+-.layers-reset-icon {
+-    flex: 0 0 auto;
+-    color: var(--accent);
+-}
+-
+-.layers-reset-icon svg {
+-    width: 18px;
+-    height: 18px;
+-    fill: none;
+-    stroke: currentColor;
+-    stroke-width: 2;
+-    stroke-linecap: round;
+-    stroke-linejoin: round;
+-}
+-
+ .legend-section[data-collection="available-legends"] {
+     overflow: hidden;
+ }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.27.3</title>
+    <title>Story Builder — 2.0.0-alpha.27.3.1</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -146,19 +146,15 @@
                     <select id="layerTypeFilter" class="ui-input layers-type-filter" aria-label="Filtrer les calques par type">
                         <option value="all">Tous les types</option>
                     </select>
+                    <button id="resetSelectedLayerStylesButton" class="ui-button ui-button--secondary layers-reset-selected" type="button" disabled>
+                        Réinitialiser les calques sélectionnés
+                    </button>
                 </div>
 
                 <div id="layerOpacityList" class="layer-opacity-list">
                     <p class="layer-empty">
                         Connecte la carte pour afficher les calques disponibles.
                     </p>
-                </div>
-
-                <div id="layersSelectionBar" class="collection-selection-bar layers-selection-bar" aria-live="polite" hidden>
-                    <span id="layersSelectedCount">0 calque sélectionné</span>
-                    <button id="resetSelectedLayerStylesButton" class="ui-icon-button layers-reset-icon" type="button" aria-label="Réinitialiser les calques sélectionnés" title="Réinitialiser les calques sélectionnés" disabled>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 .7-7.8L4 10"/></svg>
-                    </button>
                 </div>
             </div>
         </aside>

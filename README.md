@@ -1,15 +1,13 @@
+## SB-2.0.0-alpha.27.3.1
 
-## SB-2.0.0-alpha.27.3
-
-- Harmonise les filtres des panneaux Calques et Légendes.
-- Maintient les outils fixes pendant le défilement des listes.
-- Déplace la réinitialisation des calques dans une barre de sélection basse.
+- Restaure intégralement la structure et le comportement du panneau Calques de l’alpha.27.2.
+- Conserve uniquement les ajustements sûrs du panneau Légendes disponibles.
 
 # Story Builder
 
 ## Dernières modifications
 
-### SB-2.0.0-alpha.27.3 — 2026-07-21
+### SB-2.0.0-alpha.27.3.1 — 2026-07-21
 
 - Corrige le menu des légendes actives afin qu’il s’ouvre hors du conteneur défilant, sans ajouter de barre de défilement ni être rogné.
 - Harmonise la recherche et le filtre de type du panneau Légendes avec les contrôles du panneau Calques.

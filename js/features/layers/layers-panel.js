@@ -291,20 +291,19 @@ function updateTypeFilter(layers) {
 
 function updateResetSelectionButton() {
     const projectSelected = getSelectedSection() === "meta";
-    const bar = document.getElementById("layersSelectionBar");
-    const countLabel = document.getElementById("layersSelectedCount");
     const button = document.getElementById("resetSelectedLayerStylesButton");
-    if (!bar || !countLabel || !button) return;
-
+    if (!button) return;
     const count = selectedLayerIds.size;
-    bar.hidden = count === 0;
-    bar.classList.toggle("visible", count > 0);
-    countLabel.textContent = `${count} calque${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`;
+    button.hidden = false;
     button.disabled = count === 0;
+    button.textContent = count
+        ? `Réinitialiser ${count} calque${count > 1 ? "s" : ""}`
+        : (projectSelected
+            ? "Réinitialiser selon Mapbox"
+            : "Réinitialiser selon le Projet");
     button.title = projectSelected
-        ? "Réinitialiser selon le style Mapbox"
-        : "Réinitialiser selon les valeurs du Projet";
-    button.setAttribute("aria-label", button.title);
+        ? "Restaurer les valeurs du style Mapbox"
+        : "Restaurer les valeurs définies dans le Projet";
 }
 
 function setCollapsedState(panel, button, isCollapsed) {
