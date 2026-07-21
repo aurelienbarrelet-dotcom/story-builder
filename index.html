@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.27.3.1</title>
+    <title>Story Builder — 2.0.0-alpha.27.3.3</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -154,9 +154,12 @@
                     </p>
                 </div>
 
-                <button id="resetSelectedLayerStylesButton" class="ui-button ui-button--secondary layers-reset-selected" type="button" disabled>
-                    Réinitialiser les calques sélectionnés
-                </button>
+                <div id="layersSelectionBar" class="layers-selection-bar" aria-live="polite" hidden>
+                    <span id="selectedLayersCount">0 calque sélectionné</span>
+                    <button id="resetSelectedLayerStylesButton" class="ui-icon-button layers-reset-selected" type="button" disabled aria-label="Réinitialiser les calques sélectionnés" title="Réinitialiser les calques sélectionnés">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 1-6.65 9.2l1.9-.63A5 5 0 1 0 8.1 8.1L11 11H4V4l2.67 2.67A6.96 6.96 0 0 1 12 5Z"/></svg>
+                    </button>
+                </div>
             </div>
         </aside>
 

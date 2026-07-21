@@ -1,3 +1,9 @@
+## SB-2.0.0-alpha.27.3.3
+
+- Met en forme l’action de réinitialisation des calques comme la barre de sélection des chapitres.
+- Affiche le nombre de calques sélectionnés et un pictogramme de réinitialisation en bas du volet.
+- Ne modifie ni la structure, ni le défilement, ni les filtres du panneau Calques.
+
 ## SB-2.0.0-alpha.27.3.2
 
 - Déplace uniquement l’action de réinitialisation des calques en bas du panneau Calques.

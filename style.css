@@ -5449,10 +5449,48 @@ body > .collection-menu { z-index: 1000; }
     scrollbar-gutter: stable;
 }
 
-/* Alpha 27.3.2 — action de réinitialisation en bas du panneau Calques */
-.layers-panel-content > .layers-reset-selected {
+/* Alpha 27.3.3 — barre de réinitialisation des calques */
+.layers-selection-bar {
+    display: none;
     position: sticky;
     z-index: 2;
     bottom: 0;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 46px;
     margin-top: var(--space-5);
+    padding: var(--space-3) var(--space-5);
+    border-top: var(--border-width) solid var(--panel-border);
+    color: var(--text-secondary);
+    background: var(--right-panel-bg);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.layers-selection-bar.visible { display: flex; }
+
+.layers-selection-bar .layers-reset-selected {
+    display: inline-grid;
+    width: 30px !important;
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    color: var(--accent);
+    background: transparent;
+    place-items: center;
+}
+
+.layers-selection-bar .layers-reset-selected:hover {
+    color: var(--accent-dark);
+    background: var(--accent-soft);
+}
+
+.layers-selection-bar .layers-reset-selected svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
 }
