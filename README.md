@@ -2,6 +2,13 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.22.1 — 2026-07-21
+
+- Correction de la hauteur des cartes dans la collection Chapitres.
+- Les cartes conservent désormais leur hauteur naturelle, quel que soit leur nombre.
+- La liste s’aligne en haut et défile lorsque son contenu dépasse la hauteur disponible.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.22.1`.
+
 ### SB-2.0.0-alpha.22 — 2026-07-21
 
 - Un module `CollectionPanel` centralise désormais la sélection simple, multiple et par plage pour les collections.

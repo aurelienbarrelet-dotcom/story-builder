@@ -5146,8 +5146,17 @@ body:not(.reader-mode) .chapter:hover {
 .collection-panel-content,
 .assets-gallery {
     display: grid;
+    align-content: start;
+    grid-auto-rows: max-content;
     gap: var(--collection-gap);
     min-height: 0;
+}
+
+/* Alpha 22.1 — les cartes gardent leur hauteur naturelle ; la liste défile. */
+#chapters > .chapter,
+.collection-panel-content > .collection-card {
+    min-height: 0;
+    align-self: start;
 }
 
 .collection-panel .collection-card {
