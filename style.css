@@ -2690,6 +2690,16 @@ main {
     transform: rotate(45deg) scale(.72);
 }
 
+.legend-symbol-auto-contrast:not(.legend-symbol-line) {
+    box-shadow: 0 0 0 1px #7a828b;
+}
+.legend-symbol-symbol.legend-symbol-auto-contrast {
+    box-shadow: inset 0 0 0 2px var(--legend-outline), 0 0 0 1.4px #7a828b;
+}
+.legend-symbol-line.legend-symbol-auto-contrast {
+    filter: drop-shadow(0 1px 0 #7a828b) drop-shadow(0 -1px 0 #7a828b);
+}
+
 .reader-legend {
     display: grid;
     gap: 7px;

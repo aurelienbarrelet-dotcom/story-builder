@@ -1,4 +1,11 @@
-## SB-2.0.0-alpha.33.3.3
+## SB-2.0.0-alpha.33.4
+
+### Alpha 33.4 — contraste automatique des légendes
+
+- Ajout automatique d’un filet gris autour des symboles blancs ou très clairs lorsque leur contour est lui-même trop clair.
+- Le contraste est appliqué aux surfaces, cercles, symboles et lignes sans modifier la couleur cartographique enregistrée.
+- Même comportement dans l’éditeur, l’aperçu et l’export scrollytelling.
+
 
 - Correctif : les aperçus du sélecteur commun de calques utilisent désormais les styles du chapitre actif.
 - Le sélecteur se rafraîchit automatiquement lorsqu’un style, le chapitre sélectionné ou le projet change.

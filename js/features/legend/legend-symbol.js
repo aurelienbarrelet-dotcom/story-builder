@@ -42,7 +42,19 @@ export function createSymbolPreview(symbol = {}) {
     preview.style.setProperty("--legend-outline", symbol.outlineColor || symbol.color || "#4b78ff");
     preview.style.setProperty("--legend-opacity", String(symbol.opacity ?? 1));
     preview.style.setProperty("--legend-width", `${Math.max(1, Math.min(8, Number(symbol.width) || 2))}px`);
+    if (needsAutoContrast(symbol)) preview.classList.add("legend-symbol-auto-contrast");
     return preview;
+}
+
+export function needsAutoContrast(symbol = {}) {
+    const color = parseCssColor(symbol.color);
+    if (!color || relativeLuminance(color) < 0.82) return false;
+
+    const type = symbol.type ?? "fill";
+    if (type === "line") return true;
+
+    const outline = parseCssColor(symbol.outlineColor || symbol.color);
+    return !outline || relativeLuminance(outline) >= 0.72;
 }
 
 function resolveFirstProperty(layerId, properties) {
@@ -79,4 +91,26 @@ function createFallbackSymbol(type = "fill") {
         opacity: 1,
         width: type === "circle" ? 5 : 2
     };
+}
+
+function parseCssColor(value) {
+    if (typeof value !== "string" || typeof document === "undefined") return null;
+    const probe = document.createElement("span");
+    probe.style.color = "";
+    probe.style.color = value;
+    if (!probe.style.color) return null;
+    document.body.append(probe);
+    const computed = getComputedStyle(probe).color;
+    probe.remove();
+    const match = computed.match(/rgba?\(\s*([\d.]+)[, ]+\s*([\d.]+)[, ]+\s*([\d.]+)/i);
+    if (!match) return null;
+    return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function relativeLuminance([r, g, b]) {
+    const channels = [r, g, b].map(value => {
+        const normalized = Math.max(0, Math.min(255, value)) / 255;
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
 }

@@ -344,4 +344,7 @@ a:visited {
 .legend-symbol-line { height: 0; border-top: var(--legend-width) solid var(--legend-color); }
 .legend-symbol-circle { border-radius: 50%; background: var(--legend-color); border: 1px solid var(--legend-outline); }
 .legend-symbol-symbol { width: 12px; height: 12px; transform: rotate(45deg); background: var(--legend-color); border: 1px solid var(--legend-outline); border-radius: 2px; }
+.legend-symbol-auto-contrast:not(.legend-symbol-line) { box-shadow: 0 0 0 1px #7a828b; }
+.legend-symbol-symbol.legend-symbol-auto-contrast { box-shadow: 0 0 0 1.4px #7a828b; }
+.legend-symbol-line.legend-symbol-auto-contrast { filter: drop-shadow(0 1px 0 #7a828b) drop-shadow(0 -1px 0 #7a828b); }
 
