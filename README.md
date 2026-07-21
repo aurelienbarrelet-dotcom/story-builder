@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.33.1
+## SB-2.0.0-alpha.33.2
 
 ### Transitions individuelles, séquençage et timeline
 
@@ -581,3 +581,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - alpha.27 : bibliothèque d’assets
 - alpha.28 : système de widgets
 - alpha.29 : architecture des exports
+
+
+## Alpha 33.2 — sélecteur commun de calques
+
+- Sélecteur de calques partagé par les panneaux Légendes et Transitions.
+- Suppression de la liste « Légendes disponibles » au profit du bouton + des légendes actives.
+- Gestion autonome des transitions individuelles dans le panneau Transitions, sans dépendre de la sélection du panneau Calques.
+- Ajout, sélection multiple, modification groupée, séquençage et retrait des pistes de calques.

@@ -199,6 +199,34 @@ export function updateSelectedLayerTransitions(layerIds, field, value) {
     commitProjectChange();
 }
 
+export function addLayerTransitions(layerIds) {
+    const chapters = getSelectedChapters();
+    if (!chapters.length || !layerIds.length) return;
+    chapters.forEach(chapter => {
+        chapter.layerTransitions ??= {};
+        const fallback = chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+        layerIds.forEach(layerId => {
+            chapter.layerTransitions[layerId] ??= {
+                enabled: fallback.enabled !== false,
+                duration: Math.max(0, Number(fallback.duration) || 0),
+                delay: Math.max(0, Number(fallback.delay) || 0),
+                effect: "fade"
+            };
+        });
+    });
+    commitProjectChange();
+}
+
+export function removeLayerTransitions(layerIds) {
+    const chapters = getSelectedChapters();
+    if (!chapters.length || !layerIds.length) return;
+    chapters.forEach(chapter => {
+        if (!chapter.layerTransitions) return;
+        layerIds.forEach(layerId => delete chapter.layerTransitions[layerId]);
+    });
+    commitProjectChange();
+}
+
 export function sequenceSelectedLayerTransitions(layerIds, step = 200) {
     const chapters = getSelectedChapters();
     if (!chapters.length || !layerIds.length) return;

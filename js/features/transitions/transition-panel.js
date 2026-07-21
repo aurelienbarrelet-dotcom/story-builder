@@ -1,6 +1,8 @@
 import { getSelectedChapter, getSelectedChapters, getSelectedSection } from "../../core/store.js";
 import { createTransitionTimeline, getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
+    addLayerTransitions,
+    removeLayerTransitions,
     sequenceSelectedLayerTransitions,
     updateChapterLayerMode,
     updateChapterLayerTransition,
@@ -8,7 +10,9 @@ import {
     updateSelectedLayerTransitions
 } from "../chapters/chapter-service.js";
 import { flyToSelectedChapter, getEditableLayers, previewSelectedChapterTransition } from "../map/map-service.js";
-import { getSelectedLayerIds } from "../layers/layers-panel.js";
+import { openLayerPicker } from "../../ui/layer-picker.js";
+
+const selectedTransitionLayerIds = new Set();
 
 export function renderTransitionPanel() {
     const container = document.getElementById("transitionPanelContent");
@@ -39,15 +43,17 @@ export function renderTransitionPanel() {
     const layerDelay = getCommonValue(selectedChapters, item => Number(item.layerTransition?.delay ?? 0), 0);
     const isAutomatic = !transitionControl.mixed && transitionControl.value === "automatic";
     const isSmoothScroll = !transitionControl.mixed && transitionControl.value === "smooth-scroll";
-    const selectedLayerIds = getSelectedLayerIds();
-    const selectedLayerLabels = getEditableLayers()
-        .filter(layer => selectedLayerIds.includes(layer.id))
-        .map(layer => ({ id: layer.id, label: layer.label || layer.id }));
+    const editableLayers = getEditableLayers();
+    const layerById = new Map(editableLayers.map(layer => [layer.id, layer]));
+    const configuredLayerIds = [...new Set(selectedChapters.flatMap(item => Object.keys(item.layerTransitions ?? {})))].filter(id => layerById.has(id));
+    [...selectedTransitionLayerIds].forEach(id => { if (!configuredLayerIds.includes(id)) selectedTransitionLayerIds.delete(id); });
+    const selectedLayerIds = [...selectedTransitionLayerIds];
+    const configuredLayers = configuredLayerIds.map(id => ({ id, label: layerById.get(id)?.label || id, type: layerById.get(id)?.type || "calque" }));
     const selectedLayerTransition = getCommonLayerTransition(selectedChapters, selectedLayerIds);
 
     container.innerHTML = `
         ${selectionCount > 1 ? `<p class="transition-multi-selection"><strong>${selectionCount} chapitres sélectionnés.</strong> Toute modification ci-dessous sera appliquée à l’ensemble de la sélection.</p>` : ""}
-        ${renderTransitionTimeline(chapter, selectionCount > 1, selectedLayerLabels)}
+        ${renderTransitionTimeline(chapter, selectionCount > 1, configuredLayers)}
         <section class="transition-panel-section" aria-labelledby="transitionControlTitle">
             <header class="transition-panel-section-header">
                 <h3 id="transitionControlTitle">Déclenchement</h3>
@@ -147,7 +153,7 @@ export function renderTransitionPanel() {
             </div>
         </section>
 
-        ${renderSelectedLayerTransitionSection(selectedLayerLabels, selectedLayerTransition)}
+        ${renderLayerTransitionManager(configuredLayers, selectedLayerIds, selectedLayerTransition)}
 
         <div class="transition-preview-bar">
             <button id="previewTransitionButton" type="button" class="button button-primary">▶ Jouer la transition</button>
@@ -159,6 +165,8 @@ export function renderTransitionPanel() {
     const layerEnabledInput = document.getElementById("layerTransitionEnabledInput");
     if (essentialInput) essentialInput.indeterminate = transitionEssential.mixed;
     if (layerEnabledInput) layerEnabledInput.indeterminate = layerTransitionEnabled.mixed;
+    const selectedLayerEnabledInput = document.getElementById("selectedLayerTransitionEnabledInput");
+    if (selectedLayerEnabledInput) selectedLayerEnabledInput.indeterminate = selectedLayerTransition.enabled.mixed;
     bindTransitionEvents();
 }
 
@@ -176,6 +184,8 @@ function bindTransitionEvents() {
     const layerModeInput = document.getElementById("layerModeInput");
     const layerDurationInput = document.getElementById("layerDurationInput");
     const layerDelayInput = document.getElementById("layerDelayInput");
+    const addLayerTransitionsButton = document.getElementById("addLayerTransitionsButton");
+    const removeSelectedLayerTransitionsButton = document.getElementById("removeSelectedLayerTransitionsButton");
     const selectedLayerEnabledInput = document.getElementById("selectedLayerTransitionEnabledInput");
     const selectedLayerEffectInput = document.getElementById("selectedLayerEffectInput");
     const selectedLayerDurationInput = document.getElementById("selectedLayerDurationInput");
@@ -220,12 +230,42 @@ function bindTransitionEvents() {
     layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
     layerDurationInput?.addEventListener("change", () => updateChapterLayerTransition("duration", layerDurationInput.value));
     layerDelayInput?.addEventListener("change", () => updateChapterLayerTransition("delay", layerDelayInput.value));
-    selectedLayerEnabledInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "enabled", selectedLayerEnabledInput.checked));
-    selectedLayerEffectInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "effect", selectedLayerEffectInput.value));
-    selectedLayerDurationInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "duration", selectedLayerDurationInput.value));
-    selectedLayerDelayInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "delay", selectedLayerDelayInput.value));
+    document.querySelectorAll("[data-transition-layer-id]").forEach(input => input.addEventListener("change", () => {
+        if (input.checked) selectedTransitionLayerIds.add(input.dataset.transitionLayerId);
+        else selectedTransitionLayerIds.delete(input.dataset.transitionLayerId);
+        renderTransitionPanel();
+    }));
+    document.querySelectorAll("[data-remove-transition-layer]").forEach(button => button.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const layerId = button.dataset.removeTransitionLayer;
+        selectedTransitionLayerIds.delete(layerId);
+        removeLayerTransitions([layerId]);
+    }));
+    addLayerTransitionsButton?.addEventListener("click", () => {
+        const chapters = getSelectedChapters();
+        const configured = [...new Set(chapters.flatMap(chapter => Object.keys(chapter.layerTransitions ?? {})))];
+        openLayerPicker({
+            title: "Ajouter des transitions de calques",
+            confirmLabel: "Ajouter",
+            disabledLayerIds: configured,
+            onConfirm: layerIds => {
+                addLayerTransitions(layerIds);
+                layerIds.forEach(id => selectedTransitionLayerIds.add(id));
+            }
+        });
+    });
+    removeSelectedLayerTransitionsButton?.addEventListener("click", () => {
+        const ids = [...selectedTransitionLayerIds];
+        selectedTransitionLayerIds.clear();
+        removeLayerTransitions(ids);
+    });
+    selectedLayerEnabledInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "enabled", selectedLayerEnabledInput.checked));
+    selectedLayerEffectInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "effect", selectedLayerEffectInput.value));
+    selectedLayerDurationInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "duration", selectedLayerDurationInput.value));
+    selectedLayerDelayInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "delay", selectedLayerDelayInput.value));
     sequenceLayerTransitionsButton?.addEventListener("click", () => {
-        sequenceSelectedLayerTransitions(getSelectedLayerIds(), sequenceLayerStepInput?.value ?? 200);
+        sequenceSelectedLayerTransitions([...selectedTransitionLayerIds], sequenceLayerStepInput?.value ?? 200);
     });
     previewTransitionButton?.addEventListener("click", () => {
         const chapter = getSelectedChapter();
@@ -293,56 +333,55 @@ function formatDuration(duration) {
 }
 
 
-function renderSelectedLayerTransitionSection(layers, state) {
-    if (!layers.length) {
-        return `
-            <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
-                <header class="transition-panel-section-header">
-                    <h3 id="selectedLayerTransitionTitle">Calques sélectionnés</h3>
-                    <span>32.1 · 32.2</span>
-                </header>
-                <p class="property-help">Sélectionne un ou plusieurs calques dans le panneau Calques pour leur attribuer une transition individuelle.</p>
-            </section>`;
-    }
-    const label = layers.length === 1 ? layers[0].label : `${layers.length} calques`;
+function renderLayerTransitionManager(layers, selectedIds, state) {
+    const selected = new Set(selectedIds);
+    const selectedCount = selected.size;
     return `
         <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
             <header class="transition-panel-section-header">
-                <h3 id="selectedLayerTransitionTitle">Calques sélectionnés</h3>
-                <span>${escapeHtml(label)}</span>
+                <div>
+                    <h3 id="selectedLayerTransitionTitle">Transitions des calques</h3>
+                    <span>${layers.length} configurée${layers.length > 1 ? "s" : ""}</span>
+                </div>
+                <button id="addLayerTransitionsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter des calques aux transitions" title="Ajouter des calques aux transitions">+</button>
             </header>
-            <div class="property transition-toggle-property">
-                <label class="transition-toggle" for="selectedLayerTransitionEnabledInput">
-                    <input id="selectedLayerTransitionEnabledInput" type="checkbox" ${state.enabled.mixed || state.enabled.value ? "checked" : ""}>
-                    <span>Transition individuelle</span>
-                </label>
+            <div class="transition-layer-list">
+                ${layers.length ? layers.map(layer => `
+                    <label class="transition-layer-card${selected.has(layer.id) ? " selected" : ""}">
+                        <input type="checkbox" data-transition-layer-id="${escapeHtml(layer.id)}" ${selected.has(layer.id) ? "checked" : ""}>
+                        <span><strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
+                        <button type="button" class="transition-layer-remove" data-remove-transition-layer="${escapeHtml(layer.id)}" aria-label="Retirer la transition de ${escapeHtml(layer.label)}" title="Retirer cette transition">×</button>
+                    </label>`).join("") : '<p class="property-help">Aucun calque configuré. Utilise + pour ajouter des transitions individuelles.</p>'}
             </div>
-            <div class="property">
-                <label for="selectedLayerEffectInput">Type d’apparition</label>
-                <select id="selectedLayerEffectInput">
-                    ${state.effect.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
-                    <option value="fade" ${!state.effect.mixed && state.effect.value === "fade" ? "selected" : ""}>Fondu</option>
-                    <option value="grow" ${!state.effect.mixed && state.effect.value === "grow" ? "selected" : ""}>Croissance / interpolation</option>
-                    <option value="none" ${!state.effect.mixed && state.effect.value === "none" ? "selected" : ""}>Instantané</option>
-                </select>
-                <p class="property-help">Croissance anime aussi les propriétés numériques disponibles, comme le rayon, la largeur ou l’extrusion.</p>
-            </div>
-            <div class="camera-form">
-                <div class="camera-field">
-                    <label for="selectedLayerDurationInput">Durée (ms)</label>
-                    <input id="selectedLayerDurationInput" type="number" min="0" step="50" value="${state.duration.mixed ? "" : state.duration.value}" placeholder="${state.duration.mixed ? "Valeurs multiples" : ""}">
-                </div>
-                <div class="camera-field">
-                    <label for="selectedLayerDelayInput">Délai (ms)</label>
-                    <input id="selectedLayerDelayInput" type="number" min="0" step="50" value="${state.delay.mixed ? "" : state.delay.value}" placeholder="${state.delay.mixed ? "Valeurs multiples" : ""}">
-                </div>
-            </div>
-            <div class="transition-sequence-row">
-                <label for="sequenceLayerStepInput">Décalage automatique</label>
-                <input id="sequenceLayerStepInput" type="number" min="0" step="50" value="200" aria-label="Décalage entre les calques en millisecondes">
-                <button id="sequenceLayerTransitionsButton" type="button" class="button">Séquencer</button>
-            </div>
-            <p class="property-help">Séquencer répartit les délais dans l’ordre des calques sélectionnés.</p>
+            ${selectedCount ? `
+                <div class="transition-layer-editor">
+                    <p class="transition-layer-selection-summary"><strong>${selectedCount} calque${selectedCount > 1 ? "s" : ""} sélectionné${selectedCount > 1 ? "s" : ""}</strong></p>
+                    <div class="property transition-toggle-property">
+                        <label class="transition-toggle" for="selectedLayerTransitionEnabledInput">
+                            <input id="selectedLayerTransitionEnabledInput" type="checkbox" ${state.enabled.mixed || state.enabled.value ? "checked" : ""}>
+                            <span>Transition individuelle</span>
+                        </label>
+                    </div>
+                    <div class="property">
+                        <label for="selectedLayerEffectInput">Type d’apparition</label>
+                        <select id="selectedLayerEffectInput">
+                            ${state.effect.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
+                            <option value="fade" ${!state.effect.mixed && state.effect.value === "fade" ? "selected" : ""}>Fondu</option>
+                            <option value="grow" ${!state.effect.mixed && state.effect.value === "grow" ? "selected" : ""}>Croissance / interpolation</option>
+                            <option value="none" ${!state.effect.mixed && state.effect.value === "none" ? "selected" : ""}>Instantané</option>
+                        </select>
+                    </div>
+                    <div class="camera-form">
+                        <div class="camera-field"><label for="selectedLayerDurationInput">Durée (ms)</label><input id="selectedLayerDurationInput" type="number" min="0" step="50" value="${state.duration.mixed ? "" : state.duration.value}" placeholder="${state.duration.mixed ? "Valeurs multiples" : ""}"></div>
+                        <div class="camera-field"><label for="selectedLayerDelayInput">Délai (ms)</label><input id="selectedLayerDelayInput" type="number" min="0" step="50" value="${state.delay.mixed ? "" : state.delay.value}" placeholder="${state.delay.mixed ? "Valeurs multiples" : ""}"></div>
+                    </div>
+                    <div class="transition-sequence-row">
+                        <label for="sequenceLayerStepInput">Décalage automatique</label>
+                        <input id="sequenceLayerStepInput" type="number" min="0" step="50" value="200" aria-label="Décalage entre les calques en millisecondes">
+                        <button id="sequenceLayerTransitionsButton" type="button" class="button">Séquencer</button>
+                    </div>
+                    <button id="removeSelectedLayerTransitionsButton" type="button" class="button button-danger">Retirer les transitions sélectionnées</button>
+                </div>` : '<p class="property-help">Coche un ou plusieurs calques de cette liste pour modifier leurs réglages ensemble.</p>'}
         </section>`;
 }
 
