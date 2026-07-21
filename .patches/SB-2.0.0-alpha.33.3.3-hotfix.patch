@@ -1,0 +1,114 @@
+diff --git a/README.md b/README.md
+index 65d667e..5e0b05c 100644
+--- a/README.md
++++ b/README.md
+@@ -1,2 +1,2 @@
+-## SB-2.0.0-alpha.33.3.2
++## SB-2.0.0-alpha.33.3.3
+ 
+diff --git a/index.html b/index.html
+index 5329212..b80f2e1 100644
+--- a/index.html
++++ b/index.html
+@@ -1,2 +1,2 @@
+ <!doctype html>
+-<html><head><title>Story Builder — 2.0.0-alpha.33.3.2</title></head></html>
++<html><head><title>Story Builder — 2.0.0-alpha.33.3.3</title></head></html>
+diff --git a/js/core/config.js b/js/core/config.js
+index 609a090..a6a58e8 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.33.3.2";
++export const APP_VERSION = "2.0.0-alpha.33.3.3";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/legend/legend-symbol.js b/js/features/legend/legend-symbol.js
+new file mode 100644
+index 0000000..e419d95
+--- /dev/null
++++ b/js/features/legend/legend-symbol.js
+@@ -0,0 +1,82 @@
++import { getBaseLayerProperty, getEditableLayers, getSelectedLayerValue } from "../map/map-service.js";
++
++const SYMBOL_PROPERTIES = {
++    fill: { color: ["fill-color"], outline: ["fill-outline-color"], opacity: ["fill-opacity"] },
++    line: { color: ["line-color"], outline: ["line-color"], opacity: ["line-opacity"], width: ["line-width"] },
++    circle: { color: ["circle-color"], outline: ["circle-stroke-color"], opacity: ["circle-opacity"], width: ["circle-radius"] },
++    symbol: { color: ["icon-color", "text-color"], outline: ["icon-halo-color", "text-halo-color"], opacity: ["icon-opacity", "text-opacity"] },
++    "fill-extrusion": { color: ["fill-extrusion-color"], outline: [], opacity: ["fill-extrusion-opacity"] },
++    background: { color: ["background-color"], outline: [], opacity: ["background-opacity"] }
++};
++
++export function resolveLegendSymbol(item = {}) {
++    if (item.styleMode === "custom") return item.symbol ?? createFallbackSymbol();
++
++    const layer = getEditableLayers().find(candidate => candidate.id === item.layerId);
++    return (layer && createSymbolFromLayer(layer, false)) || item.symbol || createFallbackSymbol(layer?.type);
++}
++
++export function createSymbolFromLayer(layer, allowFallback = true) {
++    const config = SYMBOL_PROPERTIES[layer?.type];
++    if (!config) return allowFallback ? createFallbackSymbol(layer?.type) : null;
++
++    const color = resolveFirstProperty(layer.id, config.color);
++    const outlineColor = resolveFirstProperty(layer.id, config.outline);
++    if (!color && !outlineColor && !allowFallback) return null;
++
++    const resolvedColor = color || outlineColor || "#4b78ff";
++    return {
++        type: layer.type,
++        color: resolvedColor,
++        outlineColor: outlineColor || resolvedColor,
++        opacity: resolveNumberProperty(layer.id, config.opacity, 1),
++        width: resolveNumberProperty(layer.id, config.width, layer.type === "circle" ? 5 : 2)
++    };
++}
++
++export function createSymbolPreview(symbol = {}) {
++    const preview = document.createElement("span");
++    const type = symbol.type ?? "fill";
++    preview.className = `legend-symbol legend-symbol-${type}`;
++    preview.style.setProperty("--legend-color", symbol.color || "#4b78ff");
++    preview.style.setProperty("--legend-outline", symbol.outlineColor || symbol.color || "#4b78ff");
++    preview.style.setProperty("--legend-opacity", String(symbol.opacity ?? 1));
++    preview.style.setProperty("--legend-width", `${Math.max(1, Math.min(8, Number(symbol.width) || 2))}px`);
++    return preview;
++}
++
++function resolveFirstProperty(layerId, properties) {
++    for (const property of properties ?? []) {
++        const selected = getSelectedLayerValue(layerId, "paint", property);
++        const value = selected.mixed ? undefined : selected.value;
++        const resolved = normalizeColor(value ?? getBaseLayerProperty(layerId, "paint", property));
++        if (resolved) return resolved;
++    }
++    return null;
++}
++
++function resolveNumberProperty(layerId, properties, fallback) {
++    for (const property of properties ?? []) {
++        const selected = getSelectedLayerValue(layerId, "paint", property);
++        const value = selected.mixed ? undefined : selected.value;
++        const resolved = value ?? getBaseLayerProperty(layerId, "paint", property);
++        if (typeof resolved === "number" && Number.isFinite(resolved)) return resolved;
++    }
++    return fallback;
++}
++
++function normalizeColor(value) {
++    if (typeof value !== "string") return null;
++    if (/^#[0-9a-f]{3,8}$/i.test(value) || /^(rgb|hsl)a?\(/i.test(value) || /^[a-z]+$/i.test(value)) return value;
++    return null;
++}
++
++function createFallbackSymbol(type = "fill") {
++    return {
++        type: type || "fill",
++        color: "#4b78ff",
++        outlineColor: "#4b78ff",
++        opacity: 1,
++        width: type === "circle" ? 5 : 2
++    };
++}
