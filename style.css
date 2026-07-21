@@ -7,10 +7,10 @@
 :root {
     --toolbar-height: 70px;
     --panel-border: #dddddd;
-    --accent: #820b1c;
-    --accent-dark: #650816;
-    --accent-soft: #f6e9ec;
-    --accent-ring: rgba(130, 11, 28, .16);
+    --accent: #b09e51;
+    --accent-dark: #91813e;
+    --accent-soft: #f4f0df;
+    --accent-ring: rgba(176, 158, 81, .20);
     --blue: var(--accent);
     --blue-dark: var(--accent-dark);
     --danger: #d32f2f;
