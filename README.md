@@ -1,4 +1,17 @@
-# Story Builder — Sprint 12.10
+# Story Builder
+
+## Dernières modifications
+
+### SB-2.0.0-alpha.8 — 2026-07-21
+
+- Refonte du panneau **Images** sous forme de grille minimale à deux colonnes.
+- Un clic sélectionne une image sans modifier le chapitre.
+- Un double-clic affecte l’image au chapitre sélectionné ou la retire.
+- La sélection utilise uniquement un contour fin ; l’image utilisée est signalée par un petit point discret.
+- Le nom, la légende et les actions sont regroupés dans un éditeur sous la grille.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.8`.
+
+---
 
 ## Simplification de la barre de projet
 
