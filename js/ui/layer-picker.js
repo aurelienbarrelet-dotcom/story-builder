@@ -1,12 +1,13 @@
-import { getBaseLayerProperty, getEditableLayers } from "../features/map/map-service.js";
+import { EVENTS, on } from "../core/events.js";
+import { getCurrentLayerProperty, getEditableLayers } from "../features/map/map-service.js";
 
 let activeDialog = null;
+let activeCleanup = [];
 
 export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = "Ajouter", selectedLayerIds = [], disabledLayerIds = [], filter = null, onConfirm }) {
     closeLayerPicker();
     const selected = new Set(selectedLayerIds);
     const disabled = new Set(disabledLayerIds);
-    const layers = getEditableLayers().filter(layer => !filter || filter(layer));
 
     const backdrop = document.createElement("div");
     backdrop.className = "layer-picker-backdrop";
@@ -30,6 +31,7 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
 
     const render = () => {
         const query = search.value.trim().toLowerCase();
+        const layers = getEditableLayers().filter(layer => !filter || filter(layer));
         const filtered = layers.filter(layer => `${layer.label} ${layer.id} ${layer.type}`.toLowerCase().includes(query));
         list.innerHTML = filtered.length ? filtered.map(layer => {
             const isDisabled = disabled.has(layer.id);
@@ -51,6 +53,11 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
     };
 
     search.addEventListener("input", render);
+    activeCleanup = [
+        on(EVENTS.MAP_STYLE_READY, render),
+        on(EVENTS.SELECTION_CHANGED, render),
+        on(EVENTS.PROJECT_REPLACED, render)
+    ];
     backdrop.querySelector(".layer-picker-close").addEventListener("click", closeLayerPicker);
     backdrop.querySelector(".layer-picker-cancel").addEventListener("click", closeLayerPicker);
     backdrop.addEventListener("click", event => { if (event.target === backdrop) closeLayerPicker(); });
@@ -65,6 +72,8 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
 }
 
 export function closeLayerPicker() {
+    activeCleanup.forEach(unsubscribe => unsubscribe?.());
+    activeCleanup = [];
     activeDialog?.remove();
     activeDialog = null;
 }
@@ -73,7 +82,7 @@ function renderLayerPreview(layer) {
     const type = layer.type;
     const color = resolveLayerColor(layer.id, type);
     const secondary = resolveSecondaryColor(layer.id, type);
-    const width = clampNumber(getBaseLayerProperty(layer.id, "paint", type === "line" ? "line-width" : "circle-radius"), 1, 12, type === "line" ? 3 : 6);
+    const width = clampNumber(getCurrentLayerProperty(layer.id, "paint", type === "line" ? "line-width" : "circle-radius"), 1, 12, type === "line" ? 3 : 6);
     const style = `--layer-preview-color:${escapeHtml(color)};--layer-preview-secondary:${escapeHtml(secondary)};--layer-preview-size:${width}px`;
     const glyph = type === "symbol" ? "A" : "";
     return `<span class="layer-picker-preview layer-picker-preview--${escapeHtml(type)}" style="${style}" aria-hidden="true"><i>${glyph}</i></span>`;
@@ -91,7 +100,7 @@ function resolveLayerColor(layerId, type) {
         background: ["background-color"]
     }[type] || [];
     for (const property of properties) {
-        const value = getBaseLayerProperty(layerId, "paint", property);
+        const value = getCurrentLayerProperty(layerId, "paint", property);
         if (typeof value === "string" && isCssColor(value)) return value;
     }
     return "#65758b";
@@ -99,7 +108,7 @@ function resolveLayerColor(layerId, type) {
 
 function resolveSecondaryColor(layerId, type) {
     const property = type === "fill" ? "fill-outline-color" : type === "circle" ? "circle-stroke-color" : null;
-    const value = property ? getBaseLayerProperty(layerId, "paint", property) : null;
+    const value = property ? getCurrentLayerProperty(layerId, "paint", property) : null;
     return typeof value === "string" && isCssColor(value) ? value : "#ffffff";
 }
 

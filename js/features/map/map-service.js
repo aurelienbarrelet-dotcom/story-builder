@@ -310,6 +310,12 @@ export function getBaseLayerProperty(layerId, section, property) {
     } catch { return undefined; }
 }
 
+export function getCurrentLayerProperty(layerId, section, property) {
+    const chapterValue = getSelectedMapTarget()?.layerStyles?.[layerId]?.[section]?.[property];
+    if (getSelectedSection() === "chapter" && chapterValue !== undefined) return cloneStyleValue(chapterValue);
+    return getBaseLayerProperty(layerId, section, property);
+}
+
 export function setSelectedChapterLayerProperty(layerId, section, property, value) {
     const chapters = getSelectedMapTargets();
     const layer = map?.getLayer(layerId);
