@@ -1,0 +1,303 @@
+diff --git a/README.md b/README.md
+index 75c8aa5..9d09597 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,16 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.12 — 2026-07-21
++
++- Le bouton d’import est désormais compact et placé directement dans l’en-tête du panneau **Images**.
++- Le clic simple sélectionne une image ; `Ctrl`/`Cmd + clic` permet une sélection multiple et `Shift + clic` sélectionne une plage.
++- Une barre d’actions contextuelle affiche le nombre d’images sélectionnées et permet leur suppression groupée.
++- La suppression a été retirée de l’inspecteur afin de séparer clairement l’édition d’une image des actions globales.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.12`.
++
++---
++
+ ### SB-2.0.0-alpha.11 — 2026-07-21
+ 
+ - Le panneau **Images** occupe désormais une largeur fixe équivalente à deux colonnes standards.
+diff --git a/index.html b/index.html
+index aade220..33db918 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.11</title>
++    <title>Story Builder — 2.0.0-alpha.12</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -208,12 +208,10 @@
+         <aside id="assetsPanel" class="assets-panel">
+             <header class="assets-panel-header">
+                 <h2>Images</h2>
++                <button id="importAssetsButton" class="button button-primary assets-import-button" type="button">+ Importer</button>
++                <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
+             </header>
+             <div id="assetsPanelContent" class="assets-panel-content"></div>
+-            <footer class="assets-panel-footer">
+-                <button id="importAssetsButton" class="button button-primary" type="button">Importer des images</button>
+-                <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
+-            </footer>
+         </aside>
+ 
+         <aside id="properties" class="properties-panel">
+diff --git a/js/features/assets/assets-panel.js b/js/features/assets/assets-panel.js
+index 3884b64..05d0468 100644
+--- a/js/features/assets/assets-panel.js
++++ b/js/features/assets/assets-panel.js
+@@ -4,6 +4,8 @@ import { getProject, getSelectedChapter } from "../../core/store.js";
+ import { readFileAsDataUrl } from "../../core/utils.js";
+ 
+ let selectedAssetId = null;
++let selectedAssetIds = new Set();
++let selectionAnchorId = null;
+ 
+ function getImages() {
+     const project = getProject();
+@@ -42,20 +44,26 @@ function toggleAssetForChapter(asset) {
+     else useAsset(asset);
+ }
+ 
+-function deleteAsset(asset) {
++function deleteSelectedAssets() {
+     const images = getImages();
+-    const index = images.findIndex(item => item.id === asset.id);
+-    if (index < 0) return;
++    const ids = new Set(selectedAssetIds);
++    if (!ids.size) return;
++
++    const label = ids.size > 1 ? `${ids.size} images` : "cette image";
++    if (!confirm(`Supprimer ${label} du projet ?`)) return;
+ 
+     const chapter = getSelectedChapter();
+-    if (chapter?.image === asset.data) {
++    if (chapter && images.some(asset => ids.has(asset.id) && chapter.image === asset.data)) {
+         chapter.image = null;
+         chapter.imageName = "";
+         chapter.imageCaption = "";
+     }
+ 
+-    images.splice(index, 1);
+-    selectedAssetId = images[index]?.id ?? images[index - 1]?.id ?? null;
++    const remaining = images.filter(asset => !ids.has(asset.id));
++    images.splice(0, images.length, ...remaining);
++    selectedAssetIds.clear();
++    selectedAssetId = null;
++    selectionAnchorId = null;
+     commitProjectChange();
+ }
+ 
+@@ -84,7 +92,6 @@ function renderSelectedAssetEditor(asset) {
+                 <button type="button" class="button button-primary" data-toggle-asset="${asset.id}">
+                     ${isActive ? "Retirer du chapitre" : "Utiliser dans le chapitre"}
+                 </button>
+-                <button type="button" class="asset-delete-button" data-delete-asset="${asset.id}">Supprimer l’image</button>
+             </div>
+         </section>`;
+ }
+@@ -94,15 +101,18 @@ export function renderAssetsPanel() {
+     if (!container) return;
+ 
+     const images = getImages();
+-    if (selectedAssetId && !images.some(asset => asset.id === selectedAssetId)) selectedAssetId = null;
++    const existingIds = new Set(images.map(asset => asset.id));
++    selectedAssetIds = new Set([...selectedAssetIds].filter(id => existingIds.has(id)));
++    if (selectedAssetId && !existingIds.has(selectedAssetId)) selectedAssetId = null;
+ 
+     const selectedAsset = images.find(asset => asset.id === selectedAssetId) ?? null;
++    const selectedCount = selectedAssetIds.size;
+ 
+     const galleryMarkup = images.length ? `
+         <div class="assets-grid" role="list" aria-label="Images du projet">
+             ${images.map(asset => {
+                 const isActive = getSelectedChapter()?.image === asset.data;
+-                const isSelected = selectedAssetId === asset.id;
++                const isSelected = selectedAssetIds.has(asset.id);
+                 return `
+                 <button type="button"
+                     class="asset-card ${isSelected ? "selected" : ""} ${isActive ? "active" : ""}"
+@@ -111,6 +121,7 @@ export function renderAssetsPanel() {
+                     title="Cliquer pour sélectionner. Double-cliquer pour ${isActive ? "retirer du" : "utiliser dans le"} chapitre.">
+                     <span class="asset-preview">
+                         <img src="${asset.data}" alt="">
++                        <span class="asset-selection-check" aria-hidden="true">✓</span>
+                         <span class="asset-use-dot" aria-hidden="true"></span>
+                     </span>
+                     <span class="asset-name-static">${escapeHtml(asset.name)}</span>
+@@ -128,8 +139,14 @@ export function renderAssetsPanel() {
+ 
+     container.innerHTML = `
+         <div class="assets-workspace">
+-            <div class="assets-gallery" aria-label="Galerie d’images">
+-                ${galleryMarkup}
++            <div class="assets-gallery-column">
++                <div class="assets-gallery" aria-label="Galerie d’images">
++                    ${galleryMarkup}
++                </div>
++                <div class="assets-selection-bar ${selectedCount ? "visible" : ""}" aria-live="polite">
++                    <span>${selectedCount} image${selectedCount > 1 ? "s" : ""} sélectionnée${selectedCount > 1 ? "s" : ""}</span>
++                    <button type="button" class="assets-delete-selected" data-delete-selected>Supprimer</button>
++                </div>
+             </div>
+             <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
+                 ${inspectorMarkup}
+@@ -137,8 +154,29 @@ export function renderAssetsPanel() {
+         </div>`;
+ 
+     container.querySelectorAll("[data-select-asset]").forEach(card => {
+-        card.addEventListener("click", () => {
+-            selectedAssetId = card.dataset.selectAsset;
++        card.addEventListener("click", event => {
++            const assetId = card.dataset.selectAsset;
++            const images = getImages();
++
++            if (event.shiftKey && selectionAnchorId) {
++                const anchorIndex = images.findIndex(asset => asset.id === selectionAnchorId);
++                const currentIndex = images.findIndex(asset => asset.id === assetId);
++                if (anchorIndex >= 0 && currentIndex >= 0) {
++                    const [start, end] = [anchorIndex, currentIndex].sort((a, b) => a - b);
++                    selectedAssetIds = new Set(images.slice(start, end + 1).map(asset => asset.id));
++                }
++            } else if (event.ctrlKey || event.metaKey) {
++                if (selectedAssetIds.has(assetId)) selectedAssetIds.delete(assetId);
++                else selectedAssetIds.add(assetId);
++                selectionAnchorId = assetId;
++            } else {
++                selectedAssetIds = new Set([assetId]);
++                selectionAnchorId = assetId;
++            }
++
++            selectedAssetId = selectedAssetIds.has(assetId)
++                ? assetId
++                : [...selectedAssetIds].at(-1) ?? null;
+             renderAssetsPanel();
+         });
+ 
+@@ -147,6 +185,8 @@ export function renderAssetsPanel() {
+             const asset = getImages().find(item => item.id === card.dataset.selectAsset);
+             if (!asset) return;
+             selectedAssetId = asset.id;
++            selectedAssetIds = new Set([asset.id]);
++            selectionAnchorId = asset.id;
+             toggleAssetForChapter(asset);
+         });
+     });
+@@ -180,12 +220,7 @@ export function renderAssetsPanel() {
+         });
+     });
+ 
+-    container.querySelectorAll("[data-delete-asset]").forEach(button => {
+-        button.addEventListener("click", () => {
+-            const asset = getImages().find(item => item.id === button.dataset.deleteAsset);
+-            if (asset) deleteAsset(asset);
+-        });
+-    });
++    container.querySelector("[data-delete-selected]")?.addEventListener("click", deleteSelectedAssets);
+ }
+ 
+ async function importImages(files) {
+@@ -205,6 +240,8 @@ async function importImages(files) {
+         };
+         getImages().push(asset);
+         selectedAssetId = asset.id;
++        selectedAssetIds = new Set([asset.id]);
++        selectionAnchorId = asset.id;
+     }
+     commitProjectChange();
+ }
+diff --git a/style.css b/style.css
+index 1aa5678..4defc59 100644
+--- a/style.css
++++ b/style.css
+@@ -4261,3 +4261,85 @@ main.assets-panel-open .asset-inspector {
+         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+     }
+ }
++
++/* Alpha 12 — import compact et sélection multiple */
++.assets-panel-header {
++    justify-content: space-between;
++    gap: 12px;
++}
++
++.assets-import-button {
++    min-height: 30px;
++    padding: 5px 10px;
++    font-size: 12px;
++    line-height: 1;
++}
++
++.assets-gallery-column {
++    display: flex;
++    min-width: 0;
++    min-height: 0;
++    flex-direction: column;
++}
++
++.assets-gallery-column .assets-gallery {
++    flex: 1;
++}
++
++.asset-selection-check {
++    position: absolute;
++    top: 7px;
++    left: 7px;
++    display: grid;
++    width: 20px;
++    height: 20px;
++    place-items: center;
++    border: 1px solid rgba(255, 255, 255, .9);
++    border-radius: 50%;
++    color: #fff;
++    background: var(--accent);
++    box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
++    font-size: 12px;
++    font-weight: 800;
++    opacity: 0;
++    transform: scale(.8);
++    transition: opacity .15s ease, transform .15s ease;
++}
++
++.asset-card.selected .asset-selection-check {
++    opacity: 1;
++    transform: scale(1);
++}
++
++.assets-selection-bar {
++    display: none;
++    flex: 0 0 auto;
++    align-items: center;
++    justify-content: space-between;
++    gap: 12px;
++    min-height: 48px;
++    padding: 8px var(--right-panel-padding);
++    border-top: 1px solid var(--panel-border);
++    background: var(--right-panel-bg);
++    color: var(--text-secondary);
++    font-size: 11px;
++    font-weight: 700;
++}
++
++.assets-selection-bar.visible {
++    display: flex;
++}
++
++.assets-delete-selected {
++    padding: 5px 8px;
++    border: 0;
++    border-radius: 5px;
++    color: var(--danger);
++    background: transparent;
++    font: inherit;
++    cursor: pointer;
++}
++
++.assets-delete-selected:hover {
++    background: rgba(176, 42, 55, .08);
++}

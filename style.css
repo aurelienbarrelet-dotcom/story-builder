@@ -4261,3 +4261,85 @@ main.assets-panel-open .asset-inspector {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
 }
+
+/* Alpha 12 — import compact et sélection multiple */
+.assets-panel-header {
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.assets-import-button {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.assets-gallery-column {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.assets-gallery-column .assets-gallery {
+    flex: 1;
+}
+
+.asset-selection-check {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 50%;
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+    font-size: 12px;
+    font-weight: 800;
+    opacity: 0;
+    transform: scale(.8);
+    transition: opacity .15s ease, transform .15s ease;
+}
+
+.asset-card.selected .asset-selection-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.assets-selection-bar {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 8px var(--right-panel-padding);
+    border-top: 1px solid var(--panel-border);
+    background: var(--right-panel-bg);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.assets-selection-bar.visible {
+    display: flex;
+}
+
+.assets-delete-selected {
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 5px;
+    color: var(--danger);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.assets-delete-selected:hover {
+    background: rgba(176, 42, 55, .08);
+}

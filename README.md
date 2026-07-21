@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.12 — 2026-07-21
+
+- Le bouton d’import est désormais compact et placé directement dans l’en-tête du panneau **Images**.
+- Le clic simple sélectionne une image ; `Ctrl`/`Cmd + clic` permet une sélection multiple et `Shift + clic` sélectionne une plage.
+- Une barre d’actions contextuelle affiche le nombre d’images sélectionnées et permet leur suppression groupée.
+- La suppression a été retirée de l’inspecteur afin de séparer clairement l’édition d’une image des actions globales.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.12`.
+
+---
+
 ### SB-2.0.0-alpha.11 — 2026-07-21
 
 - Le panneau **Images** occupe désormais une largeur fixe équivalente à deux colonnes standards.
