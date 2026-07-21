@@ -183,7 +183,7 @@ export function previewSelectedChapterTransition() {
     if (sourceCamera) map.jumpTo(sourceCamera);
     applyLayerState(source, { instant: true, silent: true });
 
-    runAfterMapRender(() => {
+    waitForPreviewSourceFrame(() => {
         const targetCamera = getStoredCamera(chapter, "desktop");
         const transition = chapter.transition ?? {};
         const method = transition.method ?? "flyTo";
@@ -196,23 +196,33 @@ export function previewSelectedChapterTransition() {
             if (typeof map[method] === "function") map[method](cameraOptions);
             else map.flyTo(cameraOptions);
         }
-        applyPreviewLayerOpacityState(chapter);
+
+        // Réutilise le même moteur d'état que la lecture : restauration de la
+        // base, héritage du projet, puis état complet du chapitre cible.
+        applyLayerState(chapter, { silent: true });
     });
 
     return true;
 }
 
-function runAfterMapRender(callback) {
+function waitForPreviewSourceFrame(callback) {
     let completed = false;
     const run = () => {
         if (completed) return;
         completed = true;
-        window.requestAnimationFrame(callback);
+
+        // Deux images et une courte stabilisation garantissent que l'état
+        // source a réellement été peint avant de définir les valeurs cibles.
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                window.setTimeout(callback, 80);
+            });
+        });
     };
 
-    map.once("render", run);
+    map.once("idle", run);
     map.triggerRepaint();
-    window.setTimeout(run, 120);
+    window.setTimeout(run, 240);
 }
 
 export function updateMapStyle(styleUrl) {
@@ -405,41 +415,6 @@ function applyLayerState(chapter, options = {}) {
         applyLayerStyle(layer, chapter.layerStyles?.[id]);
     });
     if (!options.silent) emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
-}
-
-function applyPreviewLayerOpacityState(chapter) {
-    if (!chapter || !map || !map.isStyleLoaded()) return;
-    getEditableLayers().forEach(({ id }) => {
-        const layer = map.getLayer(id);
-        if (!layer) return;
-        applyLayerTransition(layer, chapter);
-        (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
-            const value = resolveLayerPaintValue(chapter, layer, property);
-            applyProperty(layer.id, "paint", property, value === undefined ? null : cloneStyleValue(value));
-        });
-    });
-}
-
-function resolveLayerPaintValue(chapter, layer, property) {
-    const projectConfig = getProjectConfig();
-    const chapterStyle = chapter?.layerStyles?.[layer.id];
-    const chapterValue = chapterStyle?.paint?.[property];
-    if (chapterValue !== undefined) return chapterValue;
-
-    if (!chapterStyle && Object.hasOwn(chapter?.layerOpacity ?? {}, layer.id)) {
-        return chapter.layerOpacity[layer.id];
-    }
-
-    if (chapter !== projectConfig) {
-        const projectStyle = projectConfig?.layerStyles?.[layer.id];
-        const projectValue = projectStyle?.paint?.[property];
-        if (projectValue !== undefined) return projectValue;
-        if (!projectStyle && Object.hasOwn(projectConfig?.layerOpacity ?? {}, layer.id)) {
-            return projectConfig.layerOpacity[layer.id];
-        }
-    }
-
-    return baseLayerStyles.get(layer.id)?.paint?.[property];
 }
 
 function applyLayerStyle(layer, style) {
