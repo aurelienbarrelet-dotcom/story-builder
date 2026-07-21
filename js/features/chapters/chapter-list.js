@@ -114,9 +114,18 @@ export function renderChapterList() {
                 </span>`);
         }
 
+        const transitionControl = chapter.transition?.control || "automatic";
+        const transitionLabels = {
+            automatic: "Automatique",
+            scroll: "Défilement",
+            "smooth-scroll": "Défilement lissé"
+        };
+        const transitionLabel = transitionLabels[transitionControl] || transitionLabels.automatic;
+
         content.innerHTML = `
             <span class="chapter-number">Chapitre ${index + 1}</span>
             <span class="chapter-title"></span>
+            <span class="chapter-transition-mode" title="Déclenchement : ${transitionLabel}">${transitionLabel}</span>
             ${indicators.length ? `<span class="chapter-status-icons">${indicators.join("")}</span>` : ""}
         `;
         content.querySelector(".chapter-title").textContent = getChapterCardLabel(chapter);

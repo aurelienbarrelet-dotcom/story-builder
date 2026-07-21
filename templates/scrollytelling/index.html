@@ -564,6 +564,7 @@
                     response.element.classList.add('active');
                     var transition = getStoryBuilderTransition(chapter);
                     if (transition.control === 'automatic') {
+                        cancelSmoothTransition();
                         playAutomaticTransition(current_chapter);
                     } else {
                         applyControlledTransition(current_chapter, response.direction === 'up' ? 1 : 0);
@@ -617,6 +618,14 @@
             // Recalculer les seuils après les mises en page asynchrones évite
             // que le chapitre 1 soit détecté trop tard après l'introduction.
             requestAnimationFrame(function () { scroller.resize(); });
+            window.addEventListener('resize', function () {
+                cancelSmoothTransition();
+                scroller.resize();
+            }, { passive: true });
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) cancelSmoothTransition();
+            });
+            window.addEventListener('pagehide', cancelSmoothTransition, { passive: true });
             if (document.fonts && document.fonts.ready) {
                 document.fonts.ready.then(function () { scroller.resize(); });
             }

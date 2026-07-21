@@ -5,7 +5,7 @@ import {
     updateChapterLayerTransition,
     updateChapterTransition
 } from "../chapters/chapter-service.js";
-import { previewSelectedChapterTransition } from "../map/map-service.js";
+import { flyToSelectedChapter, previewSelectedChapterTransition } from "../map/map-service.js";
 
 export function renderTransitionPanel() {
     const container = document.getElementById("transitionPanelContent");
@@ -155,6 +155,13 @@ function bindTransitionEvents() {
         transitionDurationProperty?.classList.toggle("is-hidden", control !== "automatic");
         transitionSmoothingProperty?.classList.toggle("is-hidden", control !== "smooth-scroll");
         updateChapterTransition("control", control);
+        // Stabilise immédiatement l’éditeur lorsqu’un mode est remplacé :
+        // toute animation en cours est interrompue et le chapitre actif est
+        // réappliqué sans transition avant le prochain aperçu ou défilement.
+        flyToSelectedChapter({ instant: true });
+        if (transitionPreviewStatus) {
+            transitionPreviewStatus.textContent = getPreviewDescription(control);
+        }
     }));
     transitionSmoothingInput?.addEventListener("input", () => updateChapterTransition("smoothing", transitionSmoothingInput.value));
 
@@ -185,9 +192,10 @@ function bindTransitionEvents() {
         }
 
         const previewDuration = getPreviewDuration(chapter);
+        const control = chapter?.transition?.control || "automatic";
         previewTransitionButton.disabled = true;
         previewTransitionButton.textContent = "Lecture en cours…";
-        transitionPreviewStatus.textContent = `Aperçu en cours — environ ${formatDuration(previewDuration)}.`;
+        transitionPreviewStatus.textContent = getPreviewRunningDescription(control, previewDuration);
 
         window.setTimeout(() => {
             if (!previewTransitionButton?.isConnected) return;
@@ -205,7 +213,24 @@ function getCameraTransitionHelp(method) {
 }
 
 function getPreviewDuration(chapter) {
-    return getTransitionTimelineDuration(chapter, 300);
+    const control = chapter?.transition?.control || "automatic";
+    const timelineDuration = getTransitionTimelineDuration(chapter, 300);
+    if (control === "scroll") return Math.max(700, timelineDuration);
+    if (control === "smooth-scroll") return Math.max(1100, timelineDuration);
+    return timelineDuration;
+}
+
+function getPreviewDescription(control) {
+    if (control === "scroll") return "Simule une progression directe du défilement, de 0 à 100 %.";
+    if (control === "smooth-scroll") return "Simule le défilement lissé avec la réactivité configurée.";
+    return "Rejoue le passage depuis le chapitre précédent, sans modifier le projet.";
+}
+
+function getPreviewRunningDescription(control, duration) {
+    const formatted = formatDuration(duration);
+    if (control === "scroll") return `Simulation du défilement direct — environ ${formatted}.`;
+    if (control === "smooth-scroll") return `Simulation du défilement lissé — environ ${formatted}.`;
+    return `Aperçu automatique en cours — environ ${formatted}.`;
 }
 
 function formatDuration(duration) {

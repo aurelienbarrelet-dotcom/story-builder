@@ -5626,3 +5626,19 @@ body > .collection-menu { z-index: 1000; }
 .transition-panel-section .is-hidden {
     display: none;
 }
+
+
+/* Alpha 31.2 — identification rapide du pilotage de chaque chapitre */
+.chapter-transition-mode {
+    display: inline-flex;
+    width: fit-content;
+    margin-top: 4px;
+    padding: 2px 7px;
+    border: 1px solid var(--color-border, #d7dce3);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-text-muted, #667085);
+    background: var(--color-surface-subtle, rgba(127, 127, 127, 0.08));
+}

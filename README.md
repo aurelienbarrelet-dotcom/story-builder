@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.31.1
+## SB-2.0.0-alpha.31.2
 
 - Trois modes de déclenchement par chapitre : automatique (par défaut), défilement direct et défilement lissé.
 - Le panneau Transitions masque les réglages sans effet selon le mode choisi.
