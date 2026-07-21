@@ -63,5 +63,8 @@ function applyState() {
         button.setAttribute("aria-pressed", String(isActive));
     });
 
+    const main = document.querySelector("main");
+    main?.classList.toggle("assets-panel-open", activePanelId === "assetsPanel");
+
     window.dispatchEvent(new Event("resize"));
 }

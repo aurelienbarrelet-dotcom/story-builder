@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.10 — 2026-07-21
+
+- L’ouverture du panneau **Images** élargit désormais réellement l’espace de travail de droite.
+- La galerie et l’inspecteur sont répartis dans deux colonnes internes avec un ratio d’environ 2/3–1/3.
+- La galerie profite de la largeur disponible et adapte automatiquement le nombre de miniatures par ligne.
+- Les autres panneaux conservent leur largeur habituelle ; l’élargissement est réservé au gestionnaire d’images.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.10`.
+
+---
+
 ### SB-2.0.0-alpha.9 — 2026-07-21
 
 - Le panneau **Images** sépare désormais la galerie et l’inspecteur de propriétés.
