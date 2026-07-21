@@ -1,3 +1,14 @@
+## SB-2.0.0-alpha.30.0
+
+### Moteur de progression normalisée
+
+- Ajout d’un moteur temporel qui transforme chaque transition en progression commune de `0` à `1`.
+- Exposition séparée des progressions globale, caméra linéaire, caméra avec easing et calques.
+- L’aperçu utilise cette horloge commune tout en conservant le rendu natif Mapbox actuel.
+- Gestion de l’annulation d’un aperçu précédent et des transitions de durée nulle.
+- Aucun changement du format JSON ni du comportement du mode lecture.
+- Fondation prête pour l’interpolation manuelle et le futur pilotage par le scroll.
+
 ## SB-2.0.0-alpha.29.1
 
 ### Fondation de la timeline de transition

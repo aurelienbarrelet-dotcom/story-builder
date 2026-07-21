@@ -2,10 +2,11 @@ import { MAPBOX_TOKEN_KEY } from "../../core/config.js";
 import { emit, EVENTS } from "../../core/events.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getChapters, getProjectConfig, getSelectedChapterIndex, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
-import { createTransitionTimeline, getTransitionEasingFunction } from "../transitions/transition-timeline.js";
+import { createTransitionTimeline, getTransitionEasingFunction, startTransitionProgress } from "../transitions/transition-timeline.js";
 
 let map = null;
 let baseLayerStyles = new Map();
+let activeTransitionProgress = null;
 let editableLayerCatalog = [];
 
 const LAYER_CONTROLS = Object.freeze({
@@ -207,6 +208,16 @@ export function previewSelectedChapterTransition() {
         // Réutilise le même moteur d'état que la lecture : restauration de la
         // base, héritage du projet, puis état complet du chapitre cible.
         applyLayerState(chapter, { silent: true });
+
+        // La progression normalisée devient l’horloge commune de l’aperçu.
+        // Le rendu reste natif Mapbox ; les futures interpolations pourront
+        // consommer directement les valeurs caméra et calques comprises entre 0 et 1.
+        activeTransitionProgress?.cancel();
+        const progressController = startTransitionProgress(chapter, {
+            onFrame: () => map?.triggerRepaint(),
+            onComplete: () => { activeTransitionProgress = null; }
+        });
+        activeTransitionProgress = progressController.duration > 0 ? progressController : null;
     });
 
     return true;

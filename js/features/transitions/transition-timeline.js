@@ -60,3 +60,73 @@ export function getTransitionEasingFunction(name) {
     if (easing === "ease") return t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     return t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
+
+
+export function createTransitionProgress(chapter, elapsedMs) {
+    const timeline = createTransitionTimeline(chapter);
+    const elapsed = Math.max(0, Number(elapsedMs) || 0);
+    const overall = timeline.duration > 0 ? clamp01(elapsed / timeline.duration) : 1;
+    const cameraLinear = getTrackProgress(timeline.camera, elapsed);
+
+    return Object.freeze({
+        elapsed,
+        duration: timeline.duration,
+        overall,
+        camera: getTransitionEasingFunction(timeline.camera.easing)(cameraLinear),
+        cameraLinear,
+        layers: getTrackProgress(timeline.layers, elapsed),
+        complete: overall >= 1
+    });
+}
+
+export function startTransitionProgress(chapter, callbacks = {}) {
+    const timeline = createTransitionTimeline(chapter);
+    const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis)
+        ?? (callback => globalThis.setTimeout(() => callback(Date.now()), 16));
+    const cancelFrame = globalThis.cancelAnimationFrame?.bind(globalThis)
+        ?? globalThis.clearTimeout?.bind(globalThis);
+    let frameId = null;
+    let cancelled = false;
+    let startedAt = null;
+
+    const finish = progress => {
+        callbacks.onFrame?.(progress);
+        callbacks.onComplete?.(progress);
+    };
+
+    const tick = timestamp => {
+        if (cancelled) return;
+        if (startedAt === null) startedAt = timestamp;
+        const progress = createTransitionProgress(chapter, timestamp - startedAt);
+        callbacks.onFrame?.(progress);
+        if (progress.complete) {
+            callbacks.onComplete?.(progress);
+            return;
+        }
+        frameId = requestFrame(tick);
+    };
+
+    if (timeline.duration <= 0) {
+        finish(createTransitionProgress(chapter, timeline.duration));
+    } else {
+        frameId = requestFrame(tick);
+    }
+
+    return Object.freeze({
+        duration: timeline.duration,
+        cancel() {
+            cancelled = true;
+            if (frameId !== null) cancelFrame?.(frameId);
+        }
+    });
+}
+
+function getTrackProgress(track, elapsed) {
+    if (!track.enabled && Object.hasOwn(track, "enabled")) return 1;
+    if (track.duration <= 0) return elapsed >= track.start ? 1 : 0;
+    return clamp01((elapsed - track.start) / track.duration);
+}
+
+function clamp01(value) {
+    return Math.min(1, Math.max(0, Number(value) || 0));
+}
