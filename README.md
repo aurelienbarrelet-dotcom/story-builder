@@ -2,6 +2,13 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.27 — 2026-07-21
+
+- Correction des contours de sélection afin qu’ils restent entièrement visibles dans les listes et galeries.
+- Mise à la largeur de la colonne des sections « Légendes actives » et « Légendes disponibles ».
+- Ajout d’un espacement autour des titres des cartes d’aperçu des images.
+- Déplacement du sélecteur Desktop/Mobile de l’espace de travail vers le panneau Vue en mode édition.
+
 ### SB-2.0.0-alpha.26 — 2026-07-21
 
 - Premier patch de refactoring JavaScript sans changement fonctionnel.
@@ -443,6 +450,7 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 
 - ✔ alpha.25 : Design System
 - ✔ alpha.26 : refactoring JavaScript
+- ✔ alpha.27 : ajustements UI des collections, légendes, images et panneau Vue
 - alpha.27 : bibliothèque d’assets
 - alpha.28 : système de widgets
 - alpha.29 : architecture des exports

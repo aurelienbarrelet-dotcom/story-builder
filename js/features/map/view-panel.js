@@ -17,9 +17,6 @@ export function setupViewPanel() {
     if (initialized) return;
     initialized = true;
     document.getElementById("toggleViewPanelButton")?.addEventListener("click", togglePanel);
-    document.getElementById("editorDeviceToggle")?.addEventListener("click", () => {
-        switchViewMode(activeViewMode === "desktop" ? "mobile" : "desktop");
-    });
     on(EVENTS.MAP_CAMERA_CHANGED, camera => {
         updateLiveCameraFields(camera);
         updateCaptureButtonState(camera);
@@ -58,6 +55,20 @@ export function renderViewPanel() {
         : (getSelectedSection() === "meta" ? "Revenir à la vue du projet" : "Revenir à la vue du chapitre");
 
     container.innerHTML = `
+        <div class="view-device-switch">
+            <button
+                id="editorDeviceToggle"
+                class="editor-device-toggle"
+                type="button"
+                role="switch"
+                aria-checked="${String(activeViewMode === "mobile")}"
+                aria-label="Basculer entre la prévisualisation desktop et mobile"
+                data-mode="${activeViewMode}"
+            >
+                <span class="editor-device-option editor-device-option-desktop" title="Desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg><span class="sr-only">Desktop</span></span>
+                <span class="editor-device-option editor-device-option-mobile" title="Mobile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"></rect><path d="M10 5h4M11 18.5h2"></path></svg><span class="sr-only">Mobile</span></span>
+            </button>
+        </div>
         <p class="view-device-status ${activeViewMode === "mobile" && !hasMobileView ? "is-inherited" : ""}">${activeViewMode === "desktop" ? "Vue de référence" : mobileStatus}</p>
         <form id="cameraForm" class="camera-form view-camera-form">
             <div class="camera-field"><label for="cameraLongitudeInput">Longitude</label><input id="cameraLongitudeInput" data-camera-field type="number" min="-180" max="180" step="0.000001" value="${Number(camera?.center?.[0] ?? 0).toFixed(6)}"></div>
@@ -74,6 +85,9 @@ export function renderViewPanel() {
         <p class="property-help view-help">${activeViewMode === "mobile" ? "La vue mobile suit la vue desktop tant qu’aucun cadrage mobile n’est enregistré." : "La vue desktop est toujours la vue de référence."}</p>`;
 
     bindMapEditorPanelEvents();
+    document.getElementById("editorDeviceToggle")?.addEventListener("click", () => {
+        switchViewMode(activeViewMode === "desktop" ? "mobile" : "desktop");
+    });
     container.querySelectorAll("[data-view-mode]").forEach(button => {
         button.addEventListener("click", () => switchViewMode(button.dataset.viewMode));
     });
