@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.23 — 2026-07-21
+
+- Le panneau Légendes adopte les cartes et interactions communes des collections.
+- Les légendes disponibles se sélectionnent par clic, sans case à cocher, puis s’ajoutent avec le bouton `+`.
+- Les légendes actives prennent en charge la sélection multiple, la suppression groupée et un menu `…` pour renommer, dupliquer ou supprimer.
+- Les anciennes croix de suppression et le bouton texte « Ajouter à la légende » sont supprimés.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.23`.
+
+---
+
 ### SB-2.0.0-alpha.22.1 — 2026-07-21
 
 - Correction de la hauteur des cartes dans la collection Chapitres.

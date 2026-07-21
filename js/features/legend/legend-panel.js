@@ -1,9 +1,11 @@
 import { on, EVENTS } from "../../core/events.js";
-import { getSelectedMapTarget, getSelectedSection } from "../../core/store.js";
+import { getSelectedMapTarget } from "../../core/store.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getBaseLayerProperty, getEditableLayers, getSelectedLayerValue } from "../map/map-service.js";
+import { createCollectionSelection, renderCollectionSelectionBar, bindCollectionMenu } from "../../ui/collection-panel.js";
 
-const selectedLayerIds = new Set();
+const availableSelection = createCollectionSelection();
+const activeSelection = createCollectionSelection();
 let searchQuery = "";
 let draggedLegendIndex = null;
 
@@ -28,7 +30,8 @@ export function setupLegendPanel() {
 }
 
 function resetAndRender() {
-    selectedLayerIds.clear();
+    availableSelection.clear();
+    activeSelection.clear();
     renderLegendPanel();
 }
 
@@ -41,13 +44,13 @@ export function renderLegendPanel() {
     if (!available || !current || !availableCount || !currentCount || !addButton) return;
 
     const chapter = getSelectedMapTarget();
-    const chapterSelected = Boolean(chapter);
-    if (!chapterSelected) {
+    if (!chapter) {
         current.innerHTML = '<p class="legend-empty">Sélectionnez le projet ou un chapitre pour composer sa légende.</p>';
         available.innerHTML = '<p class="legend-empty">Aucune légende disponible.</p>';
         availableCount.textContent = "";
         currentCount.textContent = "";
         addButton.disabled = true;
+        renderActiveSelectionBar();
         return;
     }
 
@@ -61,130 +64,147 @@ export function renderLegendPanel() {
         return !searchQuery || haystack.includes(searchQuery);
     });
 
+    availableSelection.prune(candidateLayers.filter(entry => !existingIds.has(entry.layer.id)).map(entry => entry.layer.id));
+    activeSelection.prune(chapter.legend.map(item => item.id));
     currentCount.textContent = `${chapter.legend.length} élément${chapter.legend.length > 1 ? "s" : ""}`;
     availableCount.textContent = `${candidateLayers.length} possibilité${candidateLayers.length > 1 ? "s" : ""}`;
 
-    current.innerHTML = "";
-    if (!chapter.legend.length) {
-        current.innerHTML = '<p class="legend-empty">La légende est vide.</p>';
-    } else {
-        chapter.legend.forEach((item, index) => current.append(createLegendItemCard(item, index)));
-    }
+    current.innerHTML = chapter.legend.length ? "" : '<p class="legend-empty">La légende est vide.</p>';
+    chapter.legend.forEach((item, index) => current.append(createLegendItemCard(item, index, chapter.legend.map(entry => entry.id))));
 
     available.innerHTML = "";
-    if (!getEditableLayers().length) {
-        available.innerHTML = '<p class="legend-empty">Connectez la carte pour analyser les calques disponibles.</p>';
-    } else if (!candidateLayers.length) {
-        available.innerHTML = '<p class="legend-empty">Aucun calque avec fond ou contour exploitable.</p>';
-    } else if (!filtered.length) {
-        available.innerHTML = '<p class="legend-empty">Aucun calque ne correspond à la recherche.</p>';
-    } else {
-        filtered.forEach(({ layer, symbol }) => available.append(createAvailableLayerRow(layer, symbol, existingIds.has(layer.id))));
-    }
+    if (!getEditableLayers().length) available.innerHTML = '<p class="legend-empty">Connectez la carte pour analyser les calques disponibles.</p>';
+    else if (!candidateLayers.length) available.innerHTML = '<p class="legend-empty">Aucun calque avec fond ou contour exploitable.</p>';
+    else if (!filtered.length) available.innerHTML = '<p class="legend-empty">Aucun calque ne correspond à la recherche.</p>';
+    else filtered.forEach(({ layer, symbol }) => available.append(createAvailableLayerCard(layer, symbol, existingIds.has(layer.id), filtered.map(entry => entry.layer.id))));
 
-    [...selectedLayerIds].forEach(id => {
-        if (!candidateLayers.some(({ layer }) => layer.id === id) || existingIds.has(id)) selectedLayerIds.delete(id);
-    });
     updateAddButton();
+    renderActiveSelectionBar();
 }
 
-function createAvailableLayerRow(layer, symbolData, alreadyAdded) {
-    const row = document.createElement("label");
-    row.className = `legend-available-row${alreadyAdded ? " is-added" : ""}`;
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = selectedLayerIds.has(layer.id);
-    checkbox.disabled = alreadyAdded;
-    checkbox.addEventListener("change", () => {
-        checkbox.checked ? selectedLayerIds.add(layer.id) : selectedLayerIds.delete(layer.id);
-        updateAddButton();
-    });
-    const text = document.createElement("span");
-    text.className = "legend-available-copy";
-    text.innerHTML = `<strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small>`;
-    const state = document.createElement("span");
-    state.className = "legend-added-state";
-    state.textContent = alreadyAdded ? "Ajouté" : "";
-    row.append(checkbox, createSymbolPreview(symbolData), text, state);
-    return row;
-}
-
-function createLegendItemCard(item, index) {
+function createAvailableLayerCard(layer, symbolData, alreadyAdded, orderedIds) {
     const card = document.createElement("article");
-    card.className = "legend-item-card";
+    card.className = `legend-available-row collection-card${alreadyAdded ? " is-added" : ""}${availableSelection.has(layer.id) ? " selected" : ""}`;
+    card.tabIndex = alreadyAdded ? -1 : 0;
+    card.setAttribute("aria-disabled", String(alreadyAdded));
+    card.innerHTML = `<span class="legend-card-symbol"></span><span class="legend-available-copy"><strong>${escapeHtml(layer.label)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span><span class="legend-added-state">${alreadyAdded ? "Ajouté" : ""}</span>`;
+    card.querySelector(".legend-card-symbol").replaceWith(createSymbolPreview(symbolData));
+    const select = event => {
+        if (alreadyAdded) return;
+        availableSelection.select(layer.id, orderedIds, event);
+        renderLegendPanel();
+    };
+    card.addEventListener("click", select);
+    card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); select(event); }
+    });
+    return card;
+}
+
+function createLegendItemCard(item, index, orderedIds) {
+    const card = document.createElement("article");
+    card.className = `legend-item-card collection-card${activeSelection.has(item.id) ? " selected" : ""}`;
     card.draggable = true;
     card.dataset.legendIndex = String(index);
+    card.addEventListener("click", event => {
+        if (event.target.closest("button,input")) return;
+        activeSelection.select(item.id, orderedIds, event);
+        renderLegendPanel();
+    });
 
     const handle = document.createElement("span");
     handle.className = "legend-drag-handle";
     handle.textContent = "⋮⋮";
     handle.title = "Glisser pour réordonner";
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = item.label;
-    input.className = "panel-text-input";
-    input.setAttribute("aria-label", "Libellé de la légende");
-    input.addEventListener("change", () => {
-        item.label = input.value.trim() || item.layerId || "Élément de légende";
-        commitProjectChange();
-        renderLegendPanel();
-    });
+    const copy = document.createElement("span");
+    copy.className = "legend-item-copy";
+    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
 
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "legend-icon-button";
-    remove.textContent = "×";
-    remove.title = "Supprimer";
-    remove.setAttribute("aria-label", "Supprimer");
-    remove.addEventListener("click", () => removeLegendItem(index));
+    const actions = document.createElement("div");
+    actions.className = "collection-card-actions";
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "ui-icon-button collection-menu-trigger";
+    trigger.textContent = "…";
+    trigger.setAttribute("aria-label", "Actions de la légende");
+    trigger.setAttribute("aria-expanded", "false");
+    const menu = document.createElement("div");
+    menu.className = "collection-card-menu";
+    menu.dataset.collectionMenu = "";
+    menu.hidden = true;
+    menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';
+    actions.append(trigger, menu);
+    bindCollectionMenu({ root: card, trigger, menu, onAction: action => handleLegendAction(action, item.id) });
 
-    const top = document.createElement("div");
-    top.className = "legend-item-top";
-    top.append(handle, createSymbolPreview(item.symbol), input, remove);
-    const meta = document.createElement("div");
-    meta.className = "legend-item-meta";
-    meta.textContent = `${item.symbol?.type ?? "symbole"} · ${item.layerId || "sans calque"}`;
-    card.append(top, meta);
-
+    card.append(handle, createSymbolPreview(item.symbol), copy, actions);
     card.addEventListener("dragstart", event => {
         draggedLegendIndex = index;
         card.classList.add("dragging");
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", String(index));
     });
-    card.addEventListener("dragover", event => {
-        event.preventDefault();
-        if (draggedLegendIndex !== index) card.classList.add("drag-over");
-    });
+    card.addEventListener("dragover", event => { event.preventDefault(); if (draggedLegendIndex !== index) card.classList.add("drag-over"); });
     card.addEventListener("dragleave", () => card.classList.remove("drag-over"));
-    card.addEventListener("drop", event => {
-        event.preventDefault();
-        if (draggedLegendIndex !== null) moveLegendItem(draggedLegendIndex, index);
-        draggedLegendIndex = null;
-    });
+    card.addEventListener("drop", event => { event.preventDefault(); if (draggedLegendIndex !== null) moveLegendItem(draggedLegendIndex, index); draggedLegendIndex = null; });
     card.addEventListener("dragend", () => {
         draggedLegendIndex = null;
-        document.querySelectorAll(".legend-item-card").forEach(el => el.classList.remove("dragging", "drag-over"));
+        document.querySelectorAll(".legend-item-card").forEach(element => element.classList.remove("dragging", "drag-over"));
     });
     return card;
+}
+
+function handleLegendAction(action, id) {
+    const chapter = getSelectedMapTarget();
+    const index = chapter?.legend?.findIndex(item => item.id === id) ?? -1;
+    if (index < 0) return;
+    if (action === "rename") {
+        const next = window.prompt("Nom de la légende", chapter.legend[index].label);
+        if (next === null) return;
+        chapter.legend[index].label = next.trim() || chapter.legend[index].layerId || "Élément de légende";
+    } else if (action === "duplicate") {
+        const source = chapter.legend[index];
+        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, symbol: { ...source.symbol } });
+    } else if (action === "delete") {
+        chapter.legend.splice(index, 1);
+        activeSelection.prune(chapter.legend.map(item => item.id));
+    }
+    commitProjectChange();
+    renderLegendPanel();
 }
 
 function addSelectedLayers() {
     const chapter = getSelectedMapTarget();
     if (!chapter) return;
-    const candidates = getEditableLayers()
-        .map(layer => ({ layer, symbol: createSymbolFromLayer(layer, false) }))
-        .filter(entry => entry.symbol);
+    const candidates = getEditableLayers().map(layer => ({ layer, symbol: createSymbolFromLayer(layer, false) })).filter(entry => entry.symbol);
     const byId = new Map(candidates.map(entry => [entry.layer.id, entry]));
     const existing = new Set((chapter.legend ?? []).map(item => item.layerId));
     chapter.legend ??= [];
-    [...selectedLayerIds].forEach(layerId => {
+    [...availableSelection.ids].forEach(layerId => {
         const entry = byId.get(layerId);
         if (!entry || existing.has(layerId)) return;
         chapter.legend.push({ id: createLegendId(layerId), layerId, label: entry.layer.label, symbol: entry.symbol });
     });
-    selectedLayerIds.clear();
+    availableSelection.clear();
+    commitProjectChange();
+    renderLegendPanel();
+}
+
+function renderActiveSelectionBar() {
+    renderCollectionSelectionBar(document.getElementById("legendSelectionBar"), {
+        count: activeSelection.count,
+        singular: "légende",
+        plural: "légendes",
+        deleteLabel: "Supprimer les légendes sélectionnées",
+        onDelete: deleteSelectedLegendItems
+    });
+}
+
+function deleteSelectedLegendItems() {
+    const chapter = getSelectedMapTarget();
+    if (!chapter?.legend) return;
+    chapter.legend = chapter.legend.filter(item => !activeSelection.has(item.id));
+    activeSelection.clear();
     commitProjectChange();
     renderLegendPanel();
 }
@@ -194,14 +214,6 @@ function moveLegendItem(fromIndex, toIndex) {
     if (!chapter?.legend || fromIndex === toIndex || toIndex < 0 || toIndex >= chapter.legend.length) return;
     const [item] = chapter.legend.splice(fromIndex, 1);
     chapter.legend.splice(toIndex, 0, item);
-    commitProjectChange();
-    renderLegendPanel();
-}
-
-function removeLegendItem(index) {
-    const chapter = getSelectedMapTarget();
-    if (!chapter?.legend?.[index]) return;
-    chapter.legend.splice(index, 1);
     commitProjectChange();
     renderLegendPanel();
 }
@@ -259,12 +271,12 @@ function createSymbolPreview(symbol = {}) {
     return preview;
 }
 
+
 function updateAddButton() {
     const button = document.getElementById("addSelectedLegendItemsButton");
     if (!button) return;
-    const count = selectedLayerIds.size;
-    button.disabled = count === 0;
-    button.textContent = count ? `Ajouter ${count} calque${count > 1 ? "s" : ""} à la légende` : "Ajouter à la légende";
+    button.disabled = availableSelection.count === 0;
+    button.setAttribute("aria-label", availableSelection.count ? `Ajouter ${availableSelection.count} légende${availableSelection.count > 1 ? "s" : ""}` : "Ajouter les légendes sélectionnées");
 }
 
 function createLegendId(layerId) {

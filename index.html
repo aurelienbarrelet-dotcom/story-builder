@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.22.1</title>
+    <title>Story Builder — 2.0.0-alpha.23</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -180,26 +180,29 @@
                 </div>
             </header>
             <div class="legend-panel-content">
-                <section class="legend-section" aria-labelledby="legendCurrentTitle">
-                    <div class="legend-section-heading">
-                        <h3 id="legendCurrentTitle">Légendes actives</h3>
-                        <span id="legendCurrentCount"></span>
+                <section class="legend-section collection-panel" data-collection="active-legends" aria-labelledby="legendCurrentTitle">
+                    <div class="legend-section-heading collection-panel-header">
+                        <div>
+                            <h3 id="legendCurrentTitle">Légendes actives</h3>
+                            <span id="legendCurrentCount"></span>
+                        </div>
                     </div>
-                    <div id="legendCurrentItems" class="legend-current-list"></div>
+                    <div id="legendCurrentItems" class="legend-current-list collection-panel-content"></div>
+                    <div id="legendSelectionBar" class="collection-selection-bar legend-selection-bar" aria-live="polite" hidden></div>
                 </section>
-                <section class="legend-section" aria-labelledby="legendAvailableTitle">
-                    <div class="legend-section-heading">
-                        <h3 id="legendAvailableTitle">Légendes disponibles</h3>
-                        <span id="legendAvailableCount"></span>
+                <section class="legend-section collection-panel" data-collection="available-legends" aria-labelledby="legendAvailableTitle">
+                    <div class="legend-section-heading collection-panel-header">
+                        <div>
+                            <h3 id="legendAvailableTitle">Légendes disponibles</h3>
+                            <span id="legendAvailableCount"></span>
+                        </div>
+                        <button id="addSelectedLegendItemsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter les légendes sélectionnées" title="Ajouter les légendes sélectionnées" disabled>+</button>
                     </div>
                     <label class="legend-search layers-search">
                         <span class="visually-hidden">Rechercher un calque pour la légende</span>
                         <input id="legendLayerSearchInput" class="ui-input" type="search" placeholder="Rechercher un calque…">
                     </label>
-                    <div id="legendAvailableLayers" class="legend-available-list"></div>
-                    <button id="addSelectedLegendItemsButton" class="ui-button ui-button--primary legend-add-selected" type="button" disabled>
-                        Ajouter à la légende
-                    </button>
+                    <div id="legendAvailableLayers" class="legend-available-list collection-panel-content"></div>
                 </section>
             </div>
         </aside>
