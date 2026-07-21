@@ -183,25 +183,36 @@ export function previewSelectedChapterTransition() {
     if (sourceCamera) map.jumpTo(sourceCamera);
     applyLayerState(source, { instant: true });
 
-    window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-            const targetCamera = getStoredCamera(chapter, "desktop");
-            const transition = chapter.transition ?? {};
-            const method = transition.method ?? "flyTo";
-            const cameraOptions = {
-                ...targetCamera,
-                duration: Math.max(0, Number(transition.duration) || 0),
-                essential: transition.essential !== false
-            };
-            if (targetCamera) {
-                if (typeof map[method] === "function") map[method](cameraOptions);
-                else map.flyTo(cameraOptions);
-            }
-            applyLayerState(chapter);
-        });
+    runAfterMapRender(() => {
+        const targetCamera = getStoredCamera(chapter, "desktop");
+        const transition = chapter.transition ?? {};
+        const method = transition.method ?? "flyTo";
+        const cameraOptions = {
+            ...targetCamera,
+            duration: Math.max(0, Number(transition.duration) || 0),
+            essential: transition.essential !== false
+        };
+        if (targetCamera) {
+            if (typeof map[method] === "function") map[method](cameraOptions);
+            else map.flyTo(cameraOptions);
+        }
+        applyLayerState(chapter);
     });
 
     return true;
+}
+
+function runAfterMapRender(callback) {
+    let completed = false;
+    const run = () => {
+        if (completed) return;
+        completed = true;
+        window.requestAnimationFrame(callback);
+    };
+
+    map.once("render", run);
+    map.triggerRepaint();
+    window.setTimeout(run, 120);
 }
 
 export function updateMapStyle(styleUrl) {
