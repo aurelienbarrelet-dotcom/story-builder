@@ -1,5 +1,6 @@
 import { getSelectedChapter } from "../../core/store.js";
 import { sanitizeRichText } from "../../core/utils.js";
+import { createSymbolPreview, resolveLegendSymbol } from "../legend/legend-symbol.js";
 
 export function renderPreview() {
     const chapter = getSelectedChapter();
@@ -52,21 +53,10 @@ function renderPreviewLegend(container, items) {
     items.forEach(item => {
         const row = document.createElement("div");
         row.className = "preview-map-legend-item";
-        row.append(createSymbol(item.symbol));
+        row.append(createSymbolPreview(resolveLegendSymbol(item)));
         const label = document.createElement("span");
         label.textContent = item.label || item.layerId || "Élément";
         row.append(label);
         container.append(row);
     });
-}
-
-function createSymbol(symbol = {}) {
-    const preview = document.createElement("span");
-    const type = symbol.type ?? "fill";
-    preview.className = `legend-symbol legend-symbol-${type}`;
-    preview.style.setProperty("--legend-color", symbol.color || "#4b78ff");
-    preview.style.setProperty("--legend-outline", symbol.outlineColor || symbol.color || "#4b78ff");
-    preview.style.setProperty("--legend-opacity", String(symbol.opacity ?? 1));
-    preview.style.setProperty("--legend-width", `${Math.max(1, Math.min(8, Number(symbol.width) || 2))}px`);
-    return preview;
 }

@@ -114,6 +114,7 @@ function validateLegend(value) {
             id: String(source.id ?? `legend-${index + 1}`),
             layerId: String(source.layerId ?? ""),
             label: String(source.label ?? source.layerId ?? "Élément de légende"),
+            styleMode: source.styleMode === "custom" ? "custom" : "linked",
             symbol: {
                 type: String(symbol.type ?? "fill"),
                 color: String(symbol.color ?? "#4b78ff"),

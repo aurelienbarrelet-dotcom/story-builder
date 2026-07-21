@@ -1,0 +1,204 @@
+diff --git a/README.md b/README.md
+index 4e34f42..f22dbe4 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-## SB-2.0.0-alpha.33.3.1
++## SB-2.0.0-alpha.33.3.2
+ 
+ - Correctif : les aperçus du sélecteur commun de calques utilisent désormais les styles du chapitre actif.
+ - Le sélecteur se rafraîchit automatiquement lorsqu’un style, le chapitre sélectionné ou le projet change.
+diff --git a/index.html b/index.html
+index 48a9428..db931b2 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.33.3.1</title>
++    <title>Story Builder — 2.0.0-alpha.33.3.2</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 31a2ba1..0601969 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.33.3.1";
++export const APP_VERSION = "2.0.0-alpha.33.3.2";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/core/project-service.js b/js/core/project-service.js
+index 3191646..fa7bcf8 100644
+--- a/js/core/project-service.js
++++ b/js/core/project-service.js
+@@ -114,6 +114,7 @@ function validateLegend(value) {
+             id: String(source.id ?? `legend-${index + 1}`),
+             layerId: String(source.layerId ?? ""),
+             label: String(source.label ?? source.layerId ?? "Élément de légende"),
++            styleMode: source.styleMode === "custom" ? "custom" : "linked",
+             symbol: {
+                 type: String(symbol.type ?? "fill"),
+                 color: String(symbol.color ?? "#4b78ff"),
+diff --git a/js/features/legend/legend-panel.js b/js/features/legend/legend-panel.js
+index b5e048f..9f19eb5 100644
+--- a/js/features/legend/legend-panel.js
++++ b/js/features/legend/legend-panel.js
+@@ -1,21 +1,14 @@
+ import { on, EVENTS } from "../../core/events.js";
+ import { getSelectedMapTarget } from "../../core/store.js";
+ import { commitProjectChange } from "../../core/project-service.js";
+-import { getBaseLayerProperty, getEditableLayers, getSelectedLayerValue } from "../map/map-service.js";
++import { getEditableLayers } from "../map/map-service.js";
+ import { createCollectionSelection, renderCollectionSelectionBar, bindCollectionMenu } from "../../ui/collection-panel.js";
+ import { openLayerPicker } from "../../ui/layer-picker.js";
++import { createSymbolFromLayer, createSymbolPreview, resolveLegendSymbol } from "./legend-symbol.js";
+ 
+ const activeSelection = createCollectionSelection();
+ let draggedLegendIndex = null;
+ 
+-const SYMBOL_PROPERTIES = {
+-    fill: { color: ["fill-color"], outline: ["fill-outline-color"], opacity: ["fill-opacity"] },
+-    line: { color: ["line-color"], outline: ["line-color"], opacity: ["line-opacity"], width: ["line-width"] },
+-    circle: { color: ["circle-color"], outline: ["circle-stroke-color"], opacity: ["circle-opacity"], width: ["circle-radius"] },
+-    symbol: { color: ["icon-color", "text-color"], outline: ["icon-halo-color", "text-halo-color"], opacity: ["icon-opacity", "text-opacity"] },
+-    "fill-extrusion": { color: ["fill-extrusion-color"], outline: [], opacity: ["fill-extrusion-opacity"] },
+-    background: { color: ["background-color"], outline: [], opacity: ["background-opacity"] }
+-};
+ 
+ export function setupLegendPanel() {
+     document.getElementById("addLegendItemsButton")?.addEventListener("click", openLegendLayerPicker);
+@@ -78,7 +71,7 @@ function addLayersToLegend(layerIds) {
+         const layer = byId.get(layerId);
+         const symbol = layer ? createSymbolFromLayer(layer, false) : null;
+         if (!layer || !symbol || existing.has(layerId)) return;
+-        chapter.legend.push({ id: createLegendId(layerId), layerId, label: layer.label, symbol });
++        chapter.legend.push({ id: createLegendId(layerId), layerId, label: layer.label, styleMode: "linked", symbol });
+         existing.add(layerId);
+     });
+     commitProjectChange();
+@@ -103,7 +96,6 @@ function createLegendItemCard(item, index, orderedIds) {
+ 
+     const copy = document.createElement("span");
+     copy.className = "legend-item-copy";
+-    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
+ 
+     const actions = document.createElement("div");
+     actions.className = "collection-card-actions";
+@@ -121,7 +113,9 @@ function createLegendItemCard(item, index, orderedIds) {
+     actions.append(trigger, menu);
+     bindCollectionMenu({ root: card, trigger, menu, floating: true, onAction: action => handleLegendAction(action, item.id) });
+ 
+-    card.append(handle, createSymbolPreview(item.symbol), copy, actions);
++    const symbol = resolveLegendSymbol(item);
++    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
++    card.append(handle, createSymbolPreview(symbol), copy, actions);
+     card.addEventListener("dragstart", event => {
+         draggedLegendIndex = index;
+         card.classList.add("dragging");
+@@ -148,7 +142,7 @@ function handleLegendAction(action, id) {
+         chapter.legend[index].label = next.trim() || chapter.legend[index].layerId || "Élément de légende";
+     } else if (action === "duplicate") {
+         const source = chapter.legend[index];
+-        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, symbol: { ...source.symbol } });
++        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, styleMode: source.styleMode ?? "linked", symbol: { ...source.symbol } });
+     } else if (action === "delete") {
+         chapter.legend.splice(index, 1);
+         activeSelection.prune(chapter.legend.map(item => item.id));
+@@ -185,59 +179,6 @@ function moveLegendItem(fromIndex, toIndex) {
+     renderLegendPanel();
+ }
+ 
+-function createSymbolFromLayer(layer, allowFallback = true) {
+-    const config = SYMBOL_PROPERTIES[layer.type];
+-    if (!config) return null;
+-    const color = resolveFirstProperty(layer.id, config.color);
+-    const outlineColor = resolveFirstProperty(layer.id, config.outline);
+-    if (!color && !outlineColor && !allowFallback) return null;
+-    const resolvedColor = color || outlineColor || "#4b78ff";
+-    return {
+-        type: layer.type,
+-        color: resolvedColor,
+-        outlineColor: outlineColor || resolvedColor,
+-        opacity: resolveNumberProperty(layer.id, config.opacity, 1),
+-        width: resolveNumberProperty(layer.id, config.width, layer.type === "circle" ? 5 : 2)
+-    };
+-}
+-
+-function resolveFirstProperty(layerId, properties) {
+-    for (const property of properties ?? []) {
+-        const selected = getSelectedLayerValue(layerId, "paint", property);
+-        const value = selected.mixed ? undefined : selected.value;
+-        const resolved = normalizeColor(value ?? getBaseLayerProperty(layerId, "paint", property));
+-        if (resolved) return resolved;
+-    }
+-    return null;
+-}
+-
+-function resolveNumberProperty(layerId, properties, fallback) {
+-    for (const property of properties ?? []) {
+-        const selected = getSelectedLayerValue(layerId, "paint", property);
+-        const value = selected.mixed ? undefined : selected.value;
+-        const resolved = value ?? getBaseLayerProperty(layerId, "paint", property);
+-        if (typeof resolved === "number" && Number.isFinite(resolved)) return resolved;
+-    }
+-    return fallback;
+-}
+-
+-function normalizeColor(value) {
+-    if (typeof value !== "string") return null;
+-    if (/^#[0-9a-f]{3,8}$/i.test(value) || /^(rgb|hsl)a?\(/i.test(value) || /^[a-z]+$/i.test(value)) return value;
+-    return null;
+-}
+-
+-function createSymbolPreview(symbol = {}) {
+-    const preview = document.createElement("span");
+-    const type = symbol.type ?? "fill";
+-    preview.className = `legend-symbol legend-symbol-${type}`;
+-    preview.style.setProperty("--legend-color", symbol.color || "#4b78ff");
+-    preview.style.setProperty("--legend-outline", symbol.outlineColor || symbol.color || "#4b78ff");
+-    preview.style.setProperty("--legend-opacity", String(symbol.opacity ?? 1));
+-    preview.style.setProperty("--legend-width", `${Math.max(1, Math.min(8, Number(symbol.width) || 2))}px`);
+-    return preview;
+-}
+-
+ function createLegendId(layerId) {
+     return `legend-${layerId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+ }
+diff --git a/js/features/preview/preview.js b/js/features/preview/preview.js
+index ad8557a..c04f83b 100644
+--- a/js/features/preview/preview.js
++++ b/js/features/preview/preview.js
+@@ -1,5 +1,6 @@
+ import { getSelectedChapter } from "../../core/store.js";
+ import { sanitizeRichText } from "../../core/utils.js";
++import { createSymbolPreview, resolveLegendSymbol } from "../legend/legend-symbol.js";
+ 
+ export function renderPreview() {
+     const chapter = getSelectedChapter();
+@@ -52,21 +53,10 @@ function renderPreviewLegend(container, items) {
+     items.forEach(item => {
+         const row = document.createElement("div");
+         row.className = "preview-map-legend-item";
+-        row.append(createSymbol(item.symbol));
++        row.append(createSymbolPreview(resolveLegendSymbol(item)));
+         const label = document.createElement("span");
+         label.textContent = item.label || item.layerId || "Élément";
+         row.append(label);
+         container.append(row);
+     });
+ }
+-
+-function createSymbol(symbol = {}) {
+-    const preview = document.createElement("span");
+-    const type = symbol.type ?? "fill";
+-    preview.className = `legend-symbol legend-symbol-${type}`;
+-    preview.style.setProperty("--legend-color", symbol.color || "#4b78ff");
+-    preview.style.setProperty("--legend-outline", symbol.outlineColor || symbol.color || "#4b78ff");
+-    preview.style.setProperty("--legend-opacity", String(symbol.opacity ?? 1));
+-    preview.style.setProperty("--legend-width", `${Math.max(1, Math.min(8, Number(symbol.width) || 2))}px`);
+-    return preview;
+-}

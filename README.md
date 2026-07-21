@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.33.3.1
+## SB-2.0.0-alpha.33.3.2
 
 - Correctif : les aperçus du sélecteur commun de calques utilisent désormais les styles du chapitre actif.
 - Le sélecteur se rafraîchit automatiquement lorsqu’un style, le chapitre sélectionné ou le projet change.
