@@ -109,3 +109,12 @@
 - [ ] Le compteur de sélection et le pictogramme de réinitialisation restent visibles en bas du volet.
 - [ ] Le menu des légendes actives s’ouvre sans ajouter de barre de défilement.
 - [ ] Les filtres des légendes disponibles restent fixes pendant le défilement de la liste.
+
+
+## Alpha 27.4 — Validation finale UI
+
+- [ ] Vérifier le panneau Chapitres : sélection, menu contextuel et barre d’action.
+- [ ] Vérifier le panneau Calques : recherche, filtre, sélection et réinitialisation.
+- [ ] Vérifier le panneau Légendes : menu flottant, filtres fixes et défilement de la liste.
+- [ ] Vérifier le panneau Vue : contrôle Desktop/Mobile compact et fonctionnel.
+- [ ] Vérifier les cartes d’images : titres correctement espacés.

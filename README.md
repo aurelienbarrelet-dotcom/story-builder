@@ -1,3 +1,9 @@
+## SB-2.0.0-alpha.27.4
+
+- Consolide les ajustements UI validés de la série 27.3.x.
+- Fige les panneaux Calques et Légendes avant le prochain chantier fonctionnel.
+- Synchronise la version interne, le titre du navigateur et la documentation, sans changement de comportement.
+
 ## SB-2.0.0-alpha.27.3.4
 
 - Fige l’état UI validé des panneaux Calques et Légendes après les correctifs 27.3.x.
