@@ -1,0 +1,181 @@
+diff --git a/README.md b/README.md
+index 75b0a14..5432127 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,11 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.27.2 — 2026-07-21
++
++- Corrige le menu des légendes actives afin qu’il s’ouvre hors du conteneur défilant, sans ajouter de barre de défilement ni être rogné.
++- Harmonise la recherche et le filtre de type du panneau Légendes avec les contrôles du panneau Calques.
++
+ ### SB-2.0.0-alpha.27.1 — 2026-07-21
+ 
+ - Remplacement du sélecteur Desktop/Mobile du panneau Vue par un contrôle segmenté plus compact.
+diff --git a/index.html b/index.html
+index 53cd28f..810facd 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.27.1</title>
++    <title>Story Builder — 2.0.0-alpha.27.2</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -186,12 +186,12 @@
+                         </div>
+                         <button id="addSelectedLegendItemsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter les légendes sélectionnées" title="Ajouter les légendes sélectionnées" disabled>+</button>
+                     </div>
+-                    <div class="legend-tools">
+-                        <label class="legend-search layers-search">
++                    <div class="layers-tools legend-tools">
++                        <label class="layers-search">
+                             <span class="visually-hidden">Rechercher un calque pour la légende</span>
+                             <input id="legendLayerSearchInput" class="ui-input" type="search" placeholder="Rechercher un calque…">
+                         </label>
+-                        <select id="legendLayerTypeFilter" class="ui-input legend-type-filter" aria-label="Filtrer les calques de légende par type">
++                        <select id="legendLayerTypeFilter" class="ui-input layers-type-filter" aria-label="Filtrer les calques de légende par type">
+                             <option value="all">Tous les types</option>
+                         </select>
+                     </div>
+diff --git a/js/core/config.js b/js/core/config.js
+index f3b2d59..af0497f 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.27.1";
++export const APP_VERSION = "2.0.0-alpha.27.2";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/legend/legend-panel.js b/js/features/legend/legend-panel.js
+index b51f486..aaee1d0 100644
+--- a/js/features/legend/legend-panel.js
++++ b/js/features/legend/legend-panel.js
+@@ -151,7 +151,7 @@ function createLegendItemCard(item, index, orderedIds) {
+     menu.hidden = true;
+     menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';
+     actions.append(trigger, menu);
+-    bindCollectionMenu({ root: card, trigger, menu, onAction: action => handleLegendAction(action, item.id) });
++    bindCollectionMenu({ root: card, trigger, menu, floating: true, onAction: action => handleLegendAction(action, item.id) });
+ 
+     card.append(handle, createSymbolPreview(item.symbol), copy, actions);
+     card.addEventListener("dragstart", event => {
+diff --git a/js/ui/collection-panel.js b/js/ui/collection-panel.js
+index c959746..94678de 100644
+--- a/js/ui/collection-panel.js
++++ b/js/ui/collection-panel.js
+@@ -73,14 +73,44 @@ export function renderCollectionSelectionBar(element, {
+     element.querySelector("[data-collection-delete]")?.addEventListener("click", onDelete);
+ }
+ 
+-export function bindCollectionMenu({ root, trigger, menu, onAction }) {
++export function bindCollectionMenu({ root, trigger, menu, onAction, floating = false }) {
++    const originalParent = menu.parentElement;
++
++    const closeMenu = () => {
++        menu.hidden = true;
++        trigger.setAttribute("aria-expanded", "false");
++        if (floating && originalParent && menu.parentElement !== originalParent) originalParent.append(menu);
++        menu.style.removeProperty("position");
++        menu.style.removeProperty("top");
++        menu.style.removeProperty("right");
++        menu.style.removeProperty("left");
++    };
++
++    menu.closeCollectionMenu = closeMenu;
++
+     trigger.addEventListener("click", event => {
+         event.stopPropagation();
++        const willOpen = menu.hidden;
+         document.querySelectorAll("[data-collection-menu]").forEach(other => {
+-            if (other !== menu) other.hidden = true;
++            if (other !== menu) other.closeCollectionMenu?.();
+         });
+-        menu.hidden = !menu.hidden;
+-        trigger.setAttribute("aria-expanded", String(!menu.hidden));
++        if (!willOpen) {
++            closeMenu();
++            return;
++        }
++        if (floating) {
++            document.body.append(menu);
++            menu.hidden = false;
++            const triggerRect = trigger.getBoundingClientRect();
++            const menuWidth = menu.getBoundingClientRect().width;
++            menu.style.position = "fixed";
++            menu.style.top = `${triggerRect.bottom + 4}px`;
++            menu.style.left = `${Math.max(8, triggerRect.right - menuWidth)}px`;
++            menu.style.right = "auto";
++        } else {
++            menu.hidden = false;
++        }
++        trigger.setAttribute("aria-expanded", "true");
+     });
+ 
+     menu.addEventListener("click", event => {
+@@ -88,8 +118,7 @@ export function bindCollectionMenu({ root, trigger, menu, onAction }) {
+         if (!actionButton) return;
+         event.stopPropagation();
+         onAction(actionButton.dataset.action);
+-        menu.hidden = true;
+-        trigger.setAttribute("aria-expanded", "false");
++        closeMenu();
+     });
+ 
+     root.classList.add("collection-card");
+@@ -98,7 +127,10 @@ export function bindCollectionMenu({ root, trigger, menu, onAction }) {
+ export function closeCollectionMenus(event) {
+     if (event?.target?.closest?.(".collection-card-actions")) return;
+     document.querySelectorAll("[data-collection-menu]").forEach(menu => {
+-        menu.hidden = true;
+-        menu.previousElementSibling?.setAttribute?.("aria-expanded", "false");
++        if (menu.closeCollectionMenu) menu.closeCollectionMenu();
++        else {
++            menu.hidden = true;
++            menu.previousElementSibling?.setAttribute?.("aria-expanded", "false");
++        }
+     });
+ }
+diff --git a/style.css b/style.css
+index d90d232..2e3f6e7 100644
+--- a/style.css
++++ b/style.css
+@@ -2706,9 +2706,6 @@ main {
+     padding-top: var(--space-8);
+     border-top: var(--border-width) solid var(--panel-border);
+ }
+-.legend-search.layers-search {
+-    margin-bottom: var(--space-4);
+-}
+ .legend-search.layers-search input,
+ .panel-text-input {
+     width: 100%;
+@@ -5409,16 +5406,14 @@ body:not(.reader-mode) .chapter:hover {
+     flex-direction: column;
+     overflow: hidden;
+ }
+-.legend-section[data-collection="active-legends"] { flex: 0 1 auto; max-height: 46%; overflow: hidden; }
++.legend-section[data-collection="active-legends"] { flex: 0 1 auto; max-height: 46%; min-height: 0; }
+ .legend-section[data-collection="available-legends"] { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+ .legend-current-list { overflow-y: auto; }
+ .legend-available-list { flex: 1 1 0; max-height: none; overflow-y: auto; }
++
++/* SB-2.0.0-alpha.27.2 — menus flottants et filtres harmonisés */
+ .legend-tools {
+-    display: grid;
+-    grid-template-columns: minmax(0, 1fr) 126px;
+-    gap: var(--space-3);
+-    margin-bottom: var(--space-4);
++    width: 100%;
++    padding-bottom: var(--space-4);
+ }
+-.legend-search { margin-bottom: 0; }
+-.legend-type-filter { width: 100%; min-width: 0; }
+-.legend-item-card .chapter-menu { top: 32px; right: 0; }
++body > .collection-menu { z-index: 1000; }

@@ -2,6 +2,11 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.27.2 — 2026-07-21
+
+- Corrige le menu des légendes actives afin qu’il s’ouvre hors du conteneur défilant, sans ajouter de barre de défilement ni être rogné.
+- Harmonise la recherche et le filtre de type du panneau Légendes avec les contrôles du panneau Calques.
+
 ### SB-2.0.0-alpha.27.1 — 2026-07-21
 
 - Remplacement du sélecteur Desktop/Mobile du panneau Vue par un contrôle segmenté plus compact.

@@ -151,7 +151,7 @@ function createLegendItemCard(item, index, orderedIds) {
     menu.hidden = true;
     menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';
     actions.append(trigger, menu);
-    bindCollectionMenu({ root: card, trigger, menu, onAction: action => handleLegendAction(action, item.id) });
+    bindCollectionMenu({ root: card, trigger, menu, floating: true, onAction: action => handleLegendAction(action, item.id) });
 
     card.append(handle, createSymbolPreview(item.symbol), copy, actions);
     card.addEventListener("dragstart", event => {

@@ -2706,9 +2706,6 @@ main {
     padding-top: var(--space-8);
     border-top: var(--border-width) solid var(--panel-border);
 }
-.legend-search.layers-search {
-    margin-bottom: var(--space-4);
-}
 .legend-search.layers-search input,
 .panel-text-input {
     width: 100%;
@@ -5409,16 +5406,14 @@ body:not(.reader-mode) .chapter:hover {
     flex-direction: column;
     overflow: hidden;
 }
-.legend-section[data-collection="active-legends"] { flex: 0 1 auto; max-height: 46%; overflow: hidden; }
+.legend-section[data-collection="active-legends"] { flex: 0 1 auto; max-height: 46%; min-height: 0; }
 .legend-section[data-collection="available-legends"] { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
 .legend-current-list { overflow-y: auto; }
 .legend-available-list { flex: 1 1 0; max-height: none; overflow-y: auto; }
+
+/* SB-2.0.0-alpha.27.2 — menus flottants et filtres harmonisés */
 .legend-tools {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 126px;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
+    width: 100%;
+    padding-bottom: var(--space-4);
 }
-.legend-search { margin-bottom: 0; }
-.legend-type-filter { width: 100%; min-width: 0; }
-.legend-item-card .chapter-menu { top: 32px; right: 0; }
+body > .collection-menu { z-index: 1000; }

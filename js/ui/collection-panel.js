@@ -73,14 +73,44 @@ export function renderCollectionSelectionBar(element, {
     element.querySelector("[data-collection-delete]")?.addEventListener("click", onDelete);
 }
 
-export function bindCollectionMenu({ root, trigger, menu, onAction }) {
+export function bindCollectionMenu({ root, trigger, menu, onAction, floating = false }) {
+    const originalParent = menu.parentElement;
+
+    const closeMenu = () => {
+        menu.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+        if (floating && originalParent && menu.parentElement !== originalParent) originalParent.append(menu);
+        menu.style.removeProperty("position");
+        menu.style.removeProperty("top");
+        menu.style.removeProperty("right");
+        menu.style.removeProperty("left");
+    };
+
+    menu.closeCollectionMenu = closeMenu;
+
     trigger.addEventListener("click", event => {
         event.stopPropagation();
+        const willOpen = menu.hidden;
         document.querySelectorAll("[data-collection-menu]").forEach(other => {
-            if (other !== menu) other.hidden = true;
+            if (other !== menu) other.closeCollectionMenu?.();
         });
-        menu.hidden = !menu.hidden;
-        trigger.setAttribute("aria-expanded", String(!menu.hidden));
+        if (!willOpen) {
+            closeMenu();
+            return;
+        }
+        if (floating) {
+            document.body.append(menu);
+            menu.hidden = false;
+            const triggerRect = trigger.getBoundingClientRect();
+            const menuWidth = menu.getBoundingClientRect().width;
+            menu.style.position = "fixed";
+            menu.style.top = `${triggerRect.bottom + 4}px`;
+            menu.style.left = `${Math.max(8, triggerRect.right - menuWidth)}px`;
+            menu.style.right = "auto";
+        } else {
+            menu.hidden = false;
+        }
+        trigger.setAttribute("aria-expanded", "true");
     });
 
     menu.addEventListener("click", event => {
@@ -88,8 +118,7 @@ export function bindCollectionMenu({ root, trigger, menu, onAction }) {
         if (!actionButton) return;
         event.stopPropagation();
         onAction(actionButton.dataset.action);
-        menu.hidden = true;
-        trigger.setAttribute("aria-expanded", "false");
+        closeMenu();
     });
 
     root.classList.add("collection-card");
@@ -98,7 +127,10 @@ export function bindCollectionMenu({ root, trigger, menu, onAction }) {
 export function closeCollectionMenus(event) {
     if (event?.target?.closest?.(".collection-card-actions")) return;
     document.querySelectorAll("[data-collection-menu]").forEach(menu => {
-        menu.hidden = true;
-        menu.previousElementSibling?.setAttribute?.("aria-expanded", "false");
+        if (menu.closeCollectionMenu) menu.closeCollectionMenu();
+        else {
+            menu.hidden = true;
+            menu.previousElementSibling?.setAttribute?.("aria-expanded", "false");
+        }
     });
 }
