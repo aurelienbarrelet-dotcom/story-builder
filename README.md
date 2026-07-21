@@ -1,3 +1,14 @@
+## SB-2.0.0-alpha.28.4
+
+### Finalisation du panneau Transitions
+
+- Ajout du réglage existant **Mouvement essentiel** dans la section Caméra.
+- Libellés explicites pour `flyTo`, `easeTo` et `jumpTo`, avec une aide contextuelle.
+- Désactivation de la durée caméra lorsque `jumpTo` est sélectionné.
+- Verrouillage du bouton pendant l’aperçu pour éviter les lectures concurrentes.
+- Durée d’aperçu calculée à partir de la caméra, du délai et du fondu des calques.
+- Aucun changement du format JSON ni du package de publication.
+
 ## SB-2.0.0-alpha.28.3
 
 ### Aperçu manuel des transitions
