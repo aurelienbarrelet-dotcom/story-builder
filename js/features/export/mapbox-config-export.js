@@ -201,6 +201,7 @@ function exportChapter(chapter, index, projectConfig = {}) {
                     ? 0
                     : Math.max(0, Number(chapter.layerTransition?.delay) || 0)
             },
+            layerTransitions: cloneLayerStyles(chapter.layerTransitions ?? {}),
             layerStyles: chapter.layerStyles ?? {},
             legend: chapter.legend ?? {}
         }

@@ -175,6 +175,49 @@ export function updateChapterLayerTransition(field, value) {
     commitProjectChange();
 }
 
+export function updateSelectedLayerTransitions(layerIds, field, value) {
+    const chapters = getSelectedChapters();
+    if (!chapters.length || !layerIds.length) return;
+    const normalized = field === "enabled"
+        ? value !== false
+        : field === "effect"
+            ? (["fade", "grow", "none"].includes(value) ? value : "fade")
+            : Math.max(0, Number(value) || 0);
+    chapters.forEach(chapter => {
+        chapter.layerTransitions ??= {};
+        layerIds.forEach(layerId => {
+            const fallback = chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+            chapter.layerTransitions[layerId] ??= {
+                enabled: fallback.enabled !== false,
+                duration: Math.max(0, Number(fallback.duration) || 0),
+                delay: Math.max(0, Number(fallback.delay) || 0),
+                effect: "fade"
+            };
+            chapter.layerTransitions[layerId][field] = normalized;
+        });
+    });
+    commitProjectChange();
+}
+
+export function sequenceSelectedLayerTransitions(layerIds, step = 200) {
+    const chapters = getSelectedChapters();
+    if (!chapters.length || !layerIds.length) return;
+    const normalizedStep = Math.max(0, Number(step) || 0);
+    chapters.forEach(chapter => {
+        chapter.layerTransitions ??= {};
+        layerIds.forEach((layerId, index) => {
+            const fallback = chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+            chapter.layerTransitions[layerId] = {
+                enabled: true,
+                duration: Math.max(0, Number(chapter.layerTransitions[layerId]?.duration ?? fallback.duration) || 0),
+                delay: index * normalizedStep,
+                effect: chapter.layerTransitions[layerId]?.effect || "fade"
+            };
+        });
+    });
+    commitProjectChange();
+}
+
 export function moveChapter(fromIndex, toIndex) {
     const chapters = getChapters();
 

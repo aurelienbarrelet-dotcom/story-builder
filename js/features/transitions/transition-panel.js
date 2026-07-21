@@ -1,11 +1,14 @@
 import { getSelectedChapter, getSelectedChapters, getSelectedSection } from "../../core/store.js";
 import { createTransitionTimeline, getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
+    sequenceSelectedLayerTransitions,
     updateChapterLayerMode,
     updateChapterLayerTransition,
-    updateChapterTransition
+    updateChapterTransition,
+    updateSelectedLayerTransitions
 } from "../chapters/chapter-service.js";
-import { flyToSelectedChapter, previewSelectedChapterTransition } from "../map/map-service.js";
+import { flyToSelectedChapter, getEditableLayers, previewSelectedChapterTransition } from "../map/map-service.js";
+import { getSelectedLayerIds } from "../layers/layers-panel.js";
 
 export function renderTransitionPanel() {
     const container = document.getElementById("transitionPanelContent");
@@ -36,10 +39,15 @@ export function renderTransitionPanel() {
     const layerDelay = getCommonValue(selectedChapters, item => Number(item.layerTransition?.delay ?? 0), 0);
     const isAutomatic = !transitionControl.mixed && transitionControl.value === "automatic";
     const isSmoothScroll = !transitionControl.mixed && transitionControl.value === "smooth-scroll";
+    const selectedLayerIds = getSelectedLayerIds();
+    const selectedLayerLabels = getEditableLayers()
+        .filter(layer => selectedLayerIds.includes(layer.id))
+        .map(layer => ({ id: layer.id, label: layer.label || layer.id }));
+    const selectedLayerTransition = getCommonLayerTransition(selectedChapters, selectedLayerIds);
 
     container.innerHTML = `
         ${selectionCount > 1 ? `<p class="transition-multi-selection"><strong>${selectionCount} chapitres sélectionnés.</strong> Toute modification ci-dessous sera appliquée à l’ensemble de la sélection.</p>` : ""}
-        ${renderTransitionTimeline(chapter, selectionCount > 1)}
+        ${renderTransitionTimeline(chapter, selectionCount > 1, selectedLayerLabels)}
         <section class="transition-panel-section" aria-labelledby="transitionControlTitle">
             <header class="transition-panel-section-header">
                 <h3 id="transitionControlTitle">Déclenchement</h3>
@@ -139,6 +147,8 @@ export function renderTransitionPanel() {
             </div>
         </section>
 
+        ${renderSelectedLayerTransitionSection(selectedLayerLabels, selectedLayerTransition)}
+
         <div class="transition-preview-bar">
             <button id="previewTransitionButton" type="button" class="button button-primary">▶ Jouer la transition</button>
             <p id="transitionPreviewStatus" class="property-help" aria-live="polite">Rejoue le passage depuis le chapitre précédent, sans modifier le projet.</p>
@@ -166,6 +176,12 @@ function bindTransitionEvents() {
     const layerModeInput = document.getElementById("layerModeInput");
     const layerDurationInput = document.getElementById("layerDurationInput");
     const layerDelayInput = document.getElementById("layerDelayInput");
+    const selectedLayerEnabledInput = document.getElementById("selectedLayerTransitionEnabledInput");
+    const selectedLayerEffectInput = document.getElementById("selectedLayerEffectInput");
+    const selectedLayerDurationInput = document.getElementById("selectedLayerDurationInput");
+    const selectedLayerDelayInput = document.getElementById("selectedLayerDelayInput");
+    const sequenceLayerTransitionsButton = document.getElementById("sequenceLayerTransitionsButton");
+    const sequenceLayerStepInput = document.getElementById("sequenceLayerStepInput");
     const previewTransitionButton = document.getElementById("previewTransitionButton");
     const transitionPreviewStatus = document.getElementById("transitionPreviewStatus");
     const timelinePlayhead = document.getElementById("transitionTimelinePlayhead");
@@ -204,6 +220,13 @@ function bindTransitionEvents() {
     layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
     layerDurationInput?.addEventListener("change", () => updateChapterLayerTransition("duration", layerDurationInput.value));
     layerDelayInput?.addEventListener("change", () => updateChapterLayerTransition("delay", layerDelayInput.value));
+    selectedLayerEnabledInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "enabled", selectedLayerEnabledInput.checked));
+    selectedLayerEffectInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "effect", selectedLayerEffectInput.value));
+    selectedLayerDurationInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "duration", selectedLayerDurationInput.value));
+    selectedLayerDelayInput?.addEventListener("change", () => updateSelectedLayerTransitions(getSelectedLayerIds(), "delay", selectedLayerDelayInput.value));
+    sequenceLayerTransitionsButton?.addEventListener("click", () => {
+        sequenceSelectedLayerTransitions(getSelectedLayerIds(), sequenceLayerStepInput?.value ?? 200);
+    });
     previewTransitionButton?.addEventListener("click", () => {
         const chapter = getSelectedChapter();
         const started = previewSelectedChapterTransition();
@@ -270,7 +293,80 @@ function formatDuration(duration) {
 }
 
 
-function renderTransitionTimeline(chapter, mixedSelection) {
+function renderSelectedLayerTransitionSection(layers, state) {
+    if (!layers.length) {
+        return `
+            <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
+                <header class="transition-panel-section-header">
+                    <h3 id="selectedLayerTransitionTitle">Calques sélectionnés</h3>
+                    <span>32.1 · 32.2</span>
+                </header>
+                <p class="property-help">Sélectionne un ou plusieurs calques dans le panneau Calques pour leur attribuer une transition individuelle.</p>
+            </section>`;
+    }
+    const label = layers.length === 1 ? layers[0].label : `${layers.length} calques`;
+    return `
+        <section class="transition-panel-section selected-layer-transition-section" aria-labelledby="selectedLayerTransitionTitle">
+            <header class="transition-panel-section-header">
+                <h3 id="selectedLayerTransitionTitle">Calques sélectionnés</h3>
+                <span>${escapeHtml(label)}</span>
+            </header>
+            <div class="property transition-toggle-property">
+                <label class="transition-toggle" for="selectedLayerTransitionEnabledInput">
+                    <input id="selectedLayerTransitionEnabledInput" type="checkbox" ${state.enabled.mixed || state.enabled.value ? "checked" : ""}>
+                    <span>Transition individuelle</span>
+                </label>
+            </div>
+            <div class="property">
+                <label for="selectedLayerEffectInput">Type d’apparition</label>
+                <select id="selectedLayerEffectInput">
+                    ${state.effect.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
+                    <option value="fade" ${!state.effect.mixed && state.effect.value === "fade" ? "selected" : ""}>Fondu</option>
+                    <option value="grow" ${!state.effect.mixed && state.effect.value === "grow" ? "selected" : ""}>Croissance / interpolation</option>
+                    <option value="none" ${!state.effect.mixed && state.effect.value === "none" ? "selected" : ""}>Instantané</option>
+                </select>
+                <p class="property-help">Croissance anime aussi les propriétés numériques disponibles, comme le rayon, la largeur ou l’extrusion.</p>
+            </div>
+            <div class="camera-form">
+                <div class="camera-field">
+                    <label for="selectedLayerDurationInput">Durée (ms)</label>
+                    <input id="selectedLayerDurationInput" type="number" min="0" step="50" value="${state.duration.mixed ? "" : state.duration.value}" placeholder="${state.duration.mixed ? "Valeurs multiples" : ""}">
+                </div>
+                <div class="camera-field">
+                    <label for="selectedLayerDelayInput">Délai (ms)</label>
+                    <input id="selectedLayerDelayInput" type="number" min="0" step="50" value="${state.delay.mixed ? "" : state.delay.value}" placeholder="${state.delay.mixed ? "Valeurs multiples" : ""}">
+                </div>
+            </div>
+            <div class="transition-sequence-row">
+                <label for="sequenceLayerStepInput">Décalage automatique</label>
+                <input id="sequenceLayerStepInput" type="number" min="0" step="50" value="200" aria-label="Décalage entre les calques en millisecondes">
+                <button id="sequenceLayerTransitionsButton" type="button" class="button">Séquencer</button>
+            </div>
+            <p class="property-help">Séquencer répartit les délais dans l’ordre des calques sélectionnés.</p>
+        </section>`;
+}
+
+function getCommonLayerTransition(chapters, layerIds) {
+    const values = [];
+    chapters.forEach(chapter => layerIds.forEach(layerId => {
+        const fallback = chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+        const value = chapter.layerTransitions?.[layerId] ?? {};
+        values.push({
+            enabled: value.enabled ?? (fallback.enabled !== false),
+            duration: Number(value.duration ?? fallback.duration ?? 600),
+            delay: Number(value.delay ?? fallback.delay ?? 0),
+            effect: value.effect || "fade"
+        });
+    }));
+    return {
+        enabled: getCommonValue(values, item => item.enabled, true),
+        duration: getCommonValue(values, item => item.duration, 600),
+        delay: getCommonValue(values, item => item.delay, 0),
+        effect: getCommonValue(values, item => item.effect, "fade")
+    };
+}
+
+function renderTransitionTimeline(chapter, mixedSelection, selectedLayers = []) {
     if (mixedSelection) {
         return `
             <section class="transition-panel-section transition-timeline-section" aria-labelledby="transitionTimelineTitle">
@@ -278,39 +374,59 @@ function renderTransitionTimeline(chapter, mixedSelection) {
                     <h3 id="transitionTimelineTitle">Timeline</h3>
                     <span>Valeurs multiples</span>
                 </header>
-                <p class="property-help">Sélectionne un seul chapitre pour visualiser précisément ses pistes caméra et calques.</p>
+                <p class="property-help">Sélectionne un seul chapitre pour visualiser précisément ses pistes.</p>
             </section>`;
     }
 
     const timeline = createTransitionTimeline(chapter);
-    const total = Math.max(timeline.duration, 1);
+    const individualTracks = selectedLayers.map(layer => {
+        const fallback = chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+        const config = chapter.layerTransitions?.[layer.id] ?? fallback;
+        return {
+            ...layer,
+            enabled: config.enabled !== false && config.effect !== "none",
+            duration: Math.max(0, Number(config.duration) || 0),
+            delay: Math.max(0, Number(config.delay) || 0)
+        };
+    });
+    const maxLayerEnd = individualTracks.reduce((max, track) => Math.max(max, track.delay + track.duration), 0);
+    const total = Math.max(timeline.duration, maxLayerEnd, 1);
     const cameraWidth = Math.max(0, timeline.camera.duration / total * 100);
-    const layerLeft = Math.max(0, timeline.layers.start / total * 100);
-    const layerWidth = Math.max(0, timeline.layers.duration / total * 100);
+    const rows = individualTracks.length ? individualTracks : [{
+        id: "global", label: "Calques", enabled: timeline.layers.enabled,
+        duration: timeline.layers.duration, delay: timeline.layers.start
+    }];
     const middle = total / 2;
 
     return `
         <section class="transition-panel-section transition-timeline-section" aria-labelledby="transitionTimelineTitle">
             <header class="transition-panel-section-header">
                 <h3 id="transitionTimelineTitle">Timeline</h3>
-                <span>${formatDuration(timeline.duration)}</span>
+                <span>${formatDuration(total)}</span>
             </header>
-            <div class="transition-timeline" style="--camera-width:${cameraWidth}%;--layer-left:${layerLeft}%;--layer-width:${layerWidth}%">
+            <div class="transition-timeline">
                 <div class="transition-timeline-ruler" aria-hidden="true">
                     <span>0</span><span>${formatDuration(middle)}</span><span>${formatDuration(total)}</span>
                 </div>
                 <div class="transition-timeline-track">
                     <span class="transition-timeline-label">Caméra</span>
-                    <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-camera"></span></div>
+                    <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-camera" style="left:0;width:${cameraWidth}%"></span></div>
                 </div>
-                <div class="transition-timeline-track ${timeline.layers.enabled ? "" : "is-disabled"}">
-                    <span class="transition-timeline-label">Calques</span>
-                    <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-layers"></span></div>
-                </div>
+                ${rows.map(track => `
+                    <div class="transition-timeline-track ${track.enabled ? "" : "is-disabled"}">
+                        <span class="transition-timeline-label" title="${escapeHtml(track.label)}">${escapeHtml(track.label)}</span>
+                        <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-layers" style="left:${track.delay / total * 100}%;width:${track.duration / total * 100}%"></span></div>
+                    </div>`).join("")}
                 <span id="transitionTimelinePlayhead" class="transition-timeline-playhead" aria-hidden="true"></span>
             </div>
-            <p class="property-help">La caméra part immédiatement. La piste Calques reflète son délai et son fondu.</p>
+            <p class="property-help">La timeline affiche la caméra et, lorsqu’ils sont sélectionnés, les calques avec leurs délais individuels.</p>
         </section>`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    })[character]);
 }
 
 function animateTimelinePlayhead(playhead, duration) {
@@ -322,7 +438,7 @@ function animateTimelinePlayhead(playhead, duration) {
         return;
     }
     playhead.animate(
-        [{ left: "74px" }, { left: "100%" }],
+        [{ left: "82px" }, { left: "100%" }],
         { duration, easing: "linear", fill: "forwards" }
     );
 }

@@ -11,7 +11,8 @@ export const EVENTS = Object.freeze({
     MAP_STYLE_READY: "map:style-ready",
     READER_MODE_CHANGED: "reader-mode:changed",
     HISTORY_CHANGED: "history:changed",
-    CLIPBOARD_CHANGED: "clipboard:changed"
+    CLIPBOARD_CHANGED: "clipboard:changed",
+    LAYER_SELECTION_CHANGED: "layer-selection:changed"
 });
 
 export function on(eventName, callback) {

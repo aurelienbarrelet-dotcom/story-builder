@@ -109,6 +109,7 @@ function setupApplicationEvents() {
     on(EVENTS.HISTORY_CHANGED, () => updateProductivityButtons());
     on(EVENTS.CLIPBOARD_CHANGED, () => updateProductivityButtons());
     on(EVENTS.SELECTION_CHANGED, () => updateProductivityButtons());
+    on(EVENTS.LAYER_SELECTION_CHANGED, () => renderTransitionPanel());
 
     on(EVENTS.SAVE_STATUS_CHANGED, ({ isSaved, message }) => {
         const status = getElement("saveStatus");

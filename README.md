@@ -1,18 +1,16 @@
-## SB-2.0.0-alpha.33.0
+## SB-2.0.0-alpha.33.1
 
-- Ajoute une timeline visuelle dans le panneau Transitions, avec pistes Caméra et Calques.
-- Représente graphiquement la durée caméra, le délai et le fondu des calques.
-- Anime la tête de lecture pendant l’aperçu sans modifier le format du projet.
+### Transitions individuelles, séquençage et timeline
 
+- Ajout de transitions propres aux calques sélectionnés : activation, type d’apparition, durée et délai.
+- Types disponibles : fondu, croissance/interpolation des propriétés numériques et changement instantané.
+- Modification groupée de plusieurs calques depuis le panneau Transitions.
+- Séquençage automatique des calques sélectionnés avec un décalage configurable.
+- Timeline visuelle affichant la caméra et les pistes individuelles des calques sélectionnés.
+- Correction du conteneur de timeline afin que le titre et les pistes restent entièrement visibles.
+- Export des réglages `layerTransitions` dans le package de publication.
 
-### Alpha 31.3 — copie et édition groupée des transitions
-
-- Ajout de l’option **Transitions** à la boîte existante « Copier les styles ».
-- Copie indépendante des réglages de caméra, de déclenchement, de lissage et de transition des calques.
-- Le panneau Transitions applique désormais chaque modification à tous les chapitres sélectionnés.
-- Affichage des valeurs mixtes sans écraser les différences tant qu’un réglage n’est pas modifié.
-- Une modification groupée produit une seule entrée dans l’historique.
-
+## SB-2.0.0-alpha.31.2
 
 - Trois modes de déclenchement par chapitre : automatique (par défaut), défilement direct et défilement lissé.
 - Le panneau Transitions masque les réglages sans effet selon le mode choisi.

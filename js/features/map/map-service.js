@@ -442,9 +442,22 @@ function applyLayerStyle(layer, style) {
 }
 
 function applyLayerTransition(layer, chapter, options = {}) {
-    const track = createTransitionTimeline(chapter).layers;
-    const enabled = track.enabled && !options.instant;
-    (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
+    const globalTrack = createTransitionTimeline(chapter).layers;
+    const override = chapter.layerTransitions?.[layer.id];
+    const track = override ? {
+        enabled: override.enabled !== false,
+        duration: Math.max(0, Number(override.duration) || 0),
+        delay: Math.max(0, Number(override.delay) || 0),
+        effect: override.effect || "fade"
+    } : { ...globalTrack, effect: "fade" };
+    const enabled = track.enabled && track.effect !== "none" && !options.instant;
+    const properties = new Set(LAYER_CONTROLS[layer.type]?.opacity ?? []);
+    if (track.effect === "grow") {
+        (LAYER_CONTROLS[layer.type]?.controls ?? []).forEach(control => {
+            if (control.kind !== "color") properties.add(control.key);
+        });
+    }
+    properties.forEach(property => {
         try {
             map.setPaintProperty(layer.id, `${property}-transition`, {
                 duration: enabled ? track.duration : 0,

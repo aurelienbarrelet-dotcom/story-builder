@@ -1,4 +1,4 @@
-import { on, EVENTS } from "../../core/events.js";
+import { emit, on, EVENTS } from "../../core/events.js";
 import { getSelectedMapTargets, getSelectedSection } from "../../core/store.js";
 import {
     getBaseLayerProperty,
@@ -16,6 +16,8 @@ const COLLAPSED_KEY = "storyBuilderLayersPanelCollapsed";
 let searchQuery = "";
 let typeFilter = "all";
 const selectedLayerIds = new Set();
+
+export function getSelectedLayerIds() { return [...selectedLayerIds]; }
 
 export function setupLayersPanel() {
     const panel = document.getElementById("layersPanel");
@@ -109,6 +111,7 @@ function createLayerModule(layer, isOpen = false) {
         if (selector.checked) selectedLayerIds.add(layer.id);
         else selectedLayerIds.delete(layer.id);
         updateResetSelectionButton();
+        emit(EVENTS.LAYER_SELECTION_CHANGED, { layerIds: getSelectedLayerIds() });
     });
 
     const dot = document.createElement("span");
