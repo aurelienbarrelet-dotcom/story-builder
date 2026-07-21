@@ -2,6 +2,14 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.25 — 2026-07-21
+
+- Consolidation du Design System CSS sans modification fonctionnelle ni structurelle.
+- Centralisation des couleurs, espacements, bordures, rayons et durées de transition récurrents.
+- Suppression des alias de couleur historiques au profit des variables d’accent canoniques.
+- Conservation des valeurs calculées existantes afin de préserver le rendu visuel.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.25`.
+
 ### SB-2.0.0-alpha.24.2 — 2026-07-21
 
 - Correctif de restauration après les régressions d’alpha.24 et alpha.24.1.
@@ -414,3 +422,20 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Le titre et la légende restent statiques hors sélection, puis deviennent éditables sur la carte sélectionnée.
 - Les actions « Ajouter l’image » et « Supprimer » apparaissent uniquement sur la carte sélectionnée.
 - La coche indique exclusivement qu’une image est utilisée par le chapitre courant et permet de la retirer.
+---
+
+## Roadmap actuelle
+
+- ✔ alpha.21 : unification UI
+- ✔ alpha.22 : extraction CollectionPanel
+- ✔ alpha.22.1 : correction des cartes de chapitres
+- ✔ alpha.23 : refonte du panneau des légendes
+- ✔ alpha.24.2 : retour à une base stable (abandon de l’édition inline)
+
+### À venir
+
+- alpha.25 : Design System
+- alpha.26 : refactoring JavaScript
+- alpha.27 : bibliothèque d’assets
+- alpha.28 : système de widgets
+- alpha.29 : architecture des exports
