@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.11 — 2026-07-21
+
+- Le panneau **Images** occupe désormais une largeur fixe équivalente à deux colonnes standards.
+- Cette largeur est divisée en deux parties égales : les images à gauche et les propriétés à droite.
+- Les images ne sont plus affichées en mosaïque : elles apparaissent sous forme de cartes empilées verticalement.
+- Le titre de chaque image est affiché discrètement sous sa miniature.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.11`.
+
+---
+
 ### SB-2.0.0-alpha.10 — 2026-07-21
 
 - L’ouverture du panneau **Images** élargit désormais réellement l’espace de travail de droite.

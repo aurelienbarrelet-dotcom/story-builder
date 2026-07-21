@@ -1,0 +1,125 @@
+diff --git a/README.md b/README.md
+index 536dc9f..75c8aa5 100644
+--- a/README.md
++++ b/README.md
+@@ -2,6 +2,16 @@
+ 
+ ## Dernières modifications
+ 
++### SB-2.0.0-alpha.11 — 2026-07-21
++
++- Le panneau **Images** occupe désormais une largeur fixe équivalente à deux colonnes standards.
++- Cette largeur est divisée en deux parties égales : les images à gauche et les propriétés à droite.
++- Les images ne sont plus affichées en mosaïque : elles apparaissent sous forme de cartes empilées verticalement.
++- Le titre de chaque image est affiché discrètement sous sa miniature.
++- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.11`.
++
++---
++
+ ### SB-2.0.0-alpha.10 — 2026-07-21
+ 
+ - L’ouverture du panneau **Images** élargit désormais réellement l’espace de travail de droite.
+diff --git a/index.html b/index.html
+index c608349..aade220 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.10</title>
++    <title>Story Builder — 2.0.0-alpha.11</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/style.css b/style.css
+index 56daaae..1aa5678 100644
+--- a/style.css
++++ b/style.css
+@@ -4198,56 +4198,66 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
+ }
+ 
+ 
+-/* Alpha 10 — Images : espace de travail large en deux colonnes */
++/* Alpha 11 — Images : double largeur standard et cartes empilées */
+ main.assets-panel-open {
+-    grid-template-columns: 260px minmax(300px, .72fr) minmax(640px, 1.28fr) !important;
++    grid-template-columns: 260px minmax(380px, 1fr) minmax(752px, 752px) !important;
+ }
+ 
+ main.assets-panel-open .right-panels-shell {
+-    min-width: 640px;
++    width: 752px;
++    min-width: 752px;
+ }
+ 
+ main.assets-panel-open .assets-workspace {
+-    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
++    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+ }
+ 
+ main.assets-panel-open .assets-grid {
+-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+-    gap: 16px 12px;
++    grid-template-columns: minmax(0, 1fr);
++    gap: 16px;
++}
++
++main.assets-panel-open .asset-card {
++    width: 100%;
++}
++
++main.assets-panel-open .asset-preview {
++    aspect-ratio: 16 / 9;
++}
++
++main.assets-panel-open .asset-name-static {
++    margin-top: 5px;
++    color: var(--text-secondary);
++    font-size: 11px;
++    font-weight: 500;
+ }
+ 
+ main.assets-panel-open .asset-inspector {
+-    min-width: 240px;
++    min-width: 0;
+ }
+ 
+ @media (max-width: 1450px) {
+     main.assets-panel-open {
+-        grid-template-columns: 230px minmax(280px, .68fr) minmax(580px, 1.32fr) !important;
++        grid-template-columns: 230px minmax(340px, 1fr) minmax(692px, 692px) !important;
+     }
+ 
+     main.assets-panel-open .right-panels-shell {
+-        min-width: 580px;
+-    }
+-
+-    main.assets-panel-open .assets-workspace {
+-        grid-template-columns: minmax(0, 1.8fr) minmax(220px, 1fr);
++        width: 692px;
++        min-width: 692px;
+     }
+ }
+ 
+ @media (max-width: 1100px) {
+     main.assets-panel-open {
+-        grid-template-columns: 220px minmax(240px, .55fr) minmax(520px, 1.45fr) !important;
++        grid-template-columns: 220px minmax(300px, 1fr) minmax(580px, 580px) !important;
+     }
+ 
+     main.assets-panel-open .right-panels-shell {
+-        min-width: 520px;
++        width: 580px;
++        min-width: 580px;
+     }
+ 
+     main.assets-panel-open .assets-workspace {
+-        grid-template-columns: minmax(0, 1.55fr) minmax(200px, 1fr);
+-    }
+-
+-    main.assets-panel-open .assets-grid {
+-        grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
++        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+     }
+ }

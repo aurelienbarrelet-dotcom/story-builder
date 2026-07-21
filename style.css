@@ -4198,56 +4198,66 @@ body:not(.reader-mode) .chapter.multi-selected .chapter-number {
 }
 
 
-/* Alpha 10 — Images : espace de travail large en deux colonnes */
+/* Alpha 11 — Images : double largeur standard et cartes empilées */
 main.assets-panel-open {
-    grid-template-columns: 260px minmax(300px, .72fr) minmax(640px, 1.28fr) !important;
+    grid-template-columns: 260px minmax(380px, 1fr) minmax(752px, 752px) !important;
 }
 
 main.assets-panel-open .right-panels-shell {
-    min-width: 640px;
+    width: 752px;
+    min-width: 752px;
 }
 
 main.assets-panel-open .assets-workspace {
-    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 main.assets-panel-open .assets-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 16px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+}
+
+main.assets-panel-open .asset-card {
+    width: 100%;
+}
+
+main.assets-panel-open .asset-preview {
+    aspect-ratio: 16 / 9;
+}
+
+main.assets-panel-open .asset-name-static {
+    margin-top: 5px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
 }
 
 main.assets-panel-open .asset-inspector {
-    min-width: 240px;
+    min-width: 0;
 }
 
 @media (max-width: 1450px) {
     main.assets-panel-open {
-        grid-template-columns: 230px minmax(280px, .68fr) minmax(580px, 1.32fr) !important;
+        grid-template-columns: 230px minmax(340px, 1fr) minmax(692px, 692px) !important;
     }
 
     main.assets-panel-open .right-panels-shell {
-        min-width: 580px;
-    }
-
-    main.assets-panel-open .assets-workspace {
-        grid-template-columns: minmax(0, 1.8fr) minmax(220px, 1fr);
+        width: 692px;
+        min-width: 692px;
     }
 }
 
 @media (max-width: 1100px) {
     main.assets-panel-open {
-        grid-template-columns: 220px minmax(240px, .55fr) minmax(520px, 1.45fr) !important;
+        grid-template-columns: 220px minmax(300px, 1fr) minmax(580px, 580px) !important;
     }
 
     main.assets-panel-open .right-panels-shell {
-        min-width: 520px;
+        width: 580px;
+        min-width: 580px;
     }
 
     main.assets-panel-open .assets-workspace {
-        grid-template-columns: minmax(0, 1.55fr) minmax(200px, 1fr);
-    }
-
-    main.assets-panel-open .assets-grid {
-        grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
 }
