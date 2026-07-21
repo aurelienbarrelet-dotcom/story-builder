@@ -183,7 +183,11 @@ function exportChapter(chapter, index, projectConfig = {}) {
         mapboxStoryBuilder: {
             imageCaption: normalizeText(chapter.imageCaption),
             transition: {
+                control: ["automatic", "scroll", "smooth-scroll"].includes(transition.control)
+                    ? transition.control
+                    : "automatic",
                 duration: Math.max(0, Number(transition.duration) || 0),
+                smoothing: Math.min(0.5, Math.max(0.04, Number(transition.smoothing) || 0.18)),
                 essential: transition.essential !== false,
                 easing: transition.easing || "ease-in-out"
             },

@@ -58,7 +58,7 @@ export function addChapter() {
         legend: cloneObject(referenceChapter?.legend ?? []),
         layerMode: referenceChapter?.layerMode ?? "snapshot",
         layerTransition: cloneObject(referenceChapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 }),
-        transition: cloneObject(referenceChapter?.transition ?? { method: "flyTo", duration: 1200, essential: true, easing: "ease-in-out" })
+        transition: cloneObject(referenceChapter?.transition ?? { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" })
     };
 
     chapters.splice(insertIndex, 0, chapter);
@@ -141,8 +141,12 @@ export function deleteSelectedChapters() {
 export function updateChapterTransition(field, value) {
     const chapter = getSelectedChapter();
     if (!chapter) return;
-    chapter.transition ??= { method: "flyTo", duration: 1200, essential: true, easing: "ease-in-out" };
-    chapter.transition[field] = field === "duration" ? Math.max(0, Number(value) || 0) : value;
+    chapter.transition ??= { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" };
+    chapter.transition[field] = field === "duration"
+        ? Math.max(0, Number(value) || 0)
+        : field === "smoothing"
+            ? Math.min(0.5, Math.max(0.04, Number(value) || 0.18))
+            : value;
     commitProjectChange();
 }
 

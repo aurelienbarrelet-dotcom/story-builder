@@ -22,7 +22,38 @@ export function renderTransitionPanel() {
         return;
     }
 
+    const transitionControl = chapter.transition?.control || "automatic";
+    const isAutomatic = transitionControl === "automatic";
+    const isSmoothScroll = transitionControl === "smooth-scroll";
+
     container.innerHTML = `
+        <section class="transition-panel-section" aria-labelledby="transitionControlTitle">
+            <header class="transition-panel-section-header">
+                <h3 id="transitionControlTitle">Déclenchement</h3>
+                <span>Progression du récit</span>
+            </header>
+            <div class="transition-control-options" role="radiogroup" aria-label="Déclenchement de la transition">
+                <label class="transition-control-option">
+                    <input type="radio" name="transitionControl" value="automatic" ${isAutomatic ? "checked" : ""}>
+                    <span>Automatique</span>
+                </label>
+                <label class="transition-control-option">
+                    <input type="radio" name="transitionControl" value="scroll" ${transitionControl === "scroll" ? "checked" : ""}>
+                    <span>Défilement</span>
+                </label>
+                <label class="transition-control-option">
+                    <input type="radio" name="transitionControl" value="smooth-scroll" ${isSmoothScroll ? "checked" : ""}>
+                    <span>Défilement lissé</span>
+                </label>
+            </div>
+            <p class="property-help">Automatique joue la transition à l’entrée du chapitre. Les modes de défilement suivent la progression du lecteur.</p>
+            <div id="transitionSmoothingProperty" class="property ${isSmoothScroll ? "" : "is-hidden"}">
+                <label for="transitionSmoothingInput">Lissage</label>
+                <input id="transitionSmoothingInput" type="range" min="0.04" max="0.5" step="0.01" value="${Number(chapter.transition?.smoothing ?? 0.18)}">
+                <p class="property-help">Réactivité du mouvement : faible = plus cinématique, forte = plus proche du défilement.</p>
+            </div>
+        </section>
+
         <section class="transition-panel-section" aria-labelledby="cameraTransitionTitle">
             <header class="transition-panel-section-header">
                 <h3 id="cameraTransitionTitle">Caméra</h3>
@@ -36,7 +67,7 @@ export function renderTransitionPanel() {
                     <option value="jumpTo" ${chapter.transition?.method === "jumpTo" ? "selected" : ""}>Sans animation (jumpTo)</option>
                 </select>
             </div>
-            <div class="property">
+            <div id="transitionDurationProperty" class="property ${isAutomatic ? "" : "is-hidden"}">
                 <label for="transitionDurationInput">Durée caméra (ms)</label>
                 <input id="transitionDurationInput" type="number" min="0" step="100" value="${Number(chapter.transition?.duration ?? 1200)}" ${chapter.transition?.method === "jumpTo" ? "disabled" : ""}>
                 <p id="cameraTransitionHelp" class="property-help">${getCameraTransitionHelp(chapter.transition?.method)}</p>
@@ -102,6 +133,10 @@ export function renderTransitionPanel() {
 }
 
 function bindTransitionEvents() {
+    const transitionControlInputs = [...document.querySelectorAll('input[name="transitionControl"]')];
+    const transitionSmoothingProperty = document.getElementById("transitionSmoothingProperty");
+    const transitionSmoothingInput = document.getElementById("transitionSmoothingInput");
+    const transitionDurationProperty = document.getElementById("transitionDurationProperty");
     const transitionMethodInput = document.getElementById("transitionMethodInput");
     const transitionDurationInput = document.getElementById("transitionDurationInput");
     const transitionEssentialInput = document.getElementById("transitionEssentialInput");
@@ -113,6 +148,15 @@ function bindTransitionEvents() {
     const layerDelayInput = document.getElementById("layerDelayInput");
     const previewTransitionButton = document.getElementById("previewTransitionButton");
     const transitionPreviewStatus = document.getElementById("transitionPreviewStatus");
+
+    transitionControlInputs.forEach(input => input.addEventListener("change", () => {
+        if (!input.checked) return;
+        const control = input.value;
+        transitionDurationProperty?.classList.toggle("is-hidden", control !== "automatic");
+        transitionSmoothingProperty?.classList.toggle("is-hidden", control !== "smooth-scroll");
+        updateChapterTransition("control", control);
+    }));
+    transitionSmoothingInput?.addEventListener("input", () => updateChapterTransition("smoothing", transitionSmoothingInput.value));
 
     transitionMethodInput?.addEventListener("change", () => {
         const method = transitionMethodInput.value;

@@ -1,5 +1,7 @@
-## SB-2.0.0-alpha.31.0
+## SB-2.0.0-alpha.31.1
 
+- Trois modes de déclenchement par chapitre : automatique (par défaut), défilement direct et défilement lissé.
+- Le panneau Transitions masque les réglages sans effet selon le mode choisi.
 ### Transitions pilotées par le scroll
 
 - Le mode lecture interpole désormais la caméra en continu selon la progression de chaque chapitre.

@@ -50,7 +50,7 @@ export const defaultStory = {
             legend: [],
             layerMode: "snapshot",
             layerTransition: { enabled: true, duration: 600, delay: 0 },
-            transition: { method: "flyTo", duration: 1200, essential: true, easing: "ease-in-out" }
+            transition: { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" }
         },
         {
             id: "chapitre-1",
@@ -70,7 +70,7 @@ export const defaultStory = {
             legend: [],
             layerMode: "snapshot",
             layerTransition: { enabled: true, duration: 600, delay: 0 },
-            transition: { method: "flyTo", duration: 1200, essential: true, easing: "ease-in-out" }
+            transition: { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" }
         },
         {
             id: "chapitre-2",
@@ -90,7 +90,7 @@ export const defaultStory = {
             legend: [],
             layerMode: "snapshot",
             layerTransition: { enabled: true, duration: 600, delay: 0 },
-            transition: { method: "flyTo", duration: 1200, essential: true, easing: "ease-in-out" }
+            transition: { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" }
         }
     ]
 };

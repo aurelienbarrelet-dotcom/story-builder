@@ -5583,3 +5583,46 @@ body > .collection-menu { z-index: 1000; }
     margin: 0;
     text-align: center;
 }
+
+
+/* Transition control modes */
+.transition-control-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.transition-control-option {
+    position: relative;
+    cursor: pointer;
+}
+.transition-control-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.transition-control-option span {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 6px;
+    border: 1px solid var(--border-color, #d6d9df);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.78rem;
+    line-height: 1.15;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+.transition-control-option input:checked + span {
+    border-color: var(--accent-color, #3264ff);
+    background: color-mix(in srgb, var(--accent-color, #3264ff) 10%, transparent);
+    font-weight: 650;
+}
+.transition-control-option input:focus-visible + span {
+    outline: 2px solid var(--accent-color, #3264ff);
+    outline-offset: 2px;
+}
+.transition-panel-section .is-hidden {
+    display: none;
+}

@@ -191,6 +191,8 @@
             var layerDuration = layerEnabled ? Math.max(0, Number(layers.duration) || 0) : 0;
 
             return {
+                control: ['automatic', 'scroll', 'smooth-scroll'].includes(camera.control) ? camera.control : 'automatic',
+                smoothing: Math.min(0.5, Math.max(0.04, Number(camera.smoothing) || 0.18)),
                 cameraDuration: cameraDuration,
                 easing: camera.easing || 'ease-in-out',
                 layerEnabled: layerEnabled,
@@ -318,6 +320,65 @@
                     try { map.setLayoutProperty(layerId, property, value); } catch (error) {}
                 });
             });
+        }
+
+        var smoothTransitionState = { chapterIndex: -1, current: 0, target: 0, frame: null };
+
+        function cancelSmoothTransition() {
+            if (smoothTransitionState.frame !== null) cancelAnimationFrame(smoothTransitionState.frame);
+            smoothTransitionState.frame = null;
+        }
+
+        function requestSmoothTransition(chapterIndex, target) {
+            var transition = getStoryBuilderTransition(config.chapters[chapterIndex]);
+            if (smoothTransitionState.chapterIndex !== chapterIndex) {
+                cancelSmoothTransition();
+                smoothTransitionState.chapterIndex = chapterIndex;
+                smoothTransitionState.current = target;
+            }
+            smoothTransitionState.target = clamp01(target);
+            if (smoothTransitionState.frame !== null) return;
+
+            function tick() {
+                var distance = smoothTransitionState.target - smoothTransitionState.current;
+                smoothTransitionState.current += distance * transition.smoothing;
+                if (Math.abs(distance) < 0.001) smoothTransitionState.current = smoothTransitionState.target;
+                applyScrollTransition(chapterIndex, smoothTransitionState.current);
+                if (smoothTransitionState.current !== smoothTransitionState.target) {
+                    smoothTransitionState.frame = requestAnimationFrame(tick);
+                } else {
+                    smoothTransitionState.frame = null;
+                }
+            }
+            smoothTransitionState.frame = requestAnimationFrame(tick);
+        }
+
+        function playAutomaticTransition(chapterIndex) {
+            cancelSmoothTransition();
+            var chapter = config.chapters[chapterIndex];
+            if (!chapter) return;
+            var transition = getStoryBuilderTransition(chapter);
+            var location = getChapterLocation(chapter);
+            var method = chapter.mapAnimation || 'flyTo';
+            var cameraOptions = Object.assign({}, location, {
+                duration: transition.cameraDuration,
+                essential: chapter.location && chapter.location.essential !== false,
+                easing: function (t) { return applyEasing(transition.easing, t); }
+            });
+            if (typeof map[method] === 'function') map[method](cameraOptions);
+            else map.flyTo(cameraOptions);
+            applyLayerStyleState(chapter.layerState);
+            if (config.showMarkers && location) marker.setLngLat(location.center);
+        }
+
+        function applyControlledTransition(chapterIndex, progress) {
+            var transition = getStoryBuilderTransition(config.chapters[chapterIndex]);
+            if (transition.control === 'automatic') return;
+            if (transition.control === 'smooth-scroll') requestSmoothTransition(chapterIndex, progress);
+            else {
+                cancelSmoothTransition();
+                applyScrollTransition(chapterIndex, progress);
+            }
         }
 
         function applyScrollTransition(chapterIndex, progress) {
@@ -501,9 +562,12 @@
                         step.classList.remove('active');
                     });
                     response.element.classList.add('active');
-                    // La caméra et les propriétés numériques des calques sont
-                    // désormais pilotées en continu par onStepProgress.
-                    applyScrollTransition(current_chapter, response.direction === 'up' ? 1 : 0);
+                    var transition = getStoryBuilderTransition(chapter);
+                    if (transition.control === 'automatic') {
+                        playAutomaticTransition(current_chapter);
+                    } else {
+                        applyControlledTransition(current_chapter, response.direction === 'up' ? 1 : 0);
+                    }
                     if (chapter.callback) {
                         window[chapter.callback]();
                     }
@@ -529,7 +593,7 @@
                         return chapter.id === response.element.id;
                     });
                     if (current_chapter < 0) return;
-                    applyScrollTransition(current_chapter, response.progress);
+                    applyControlledTransition(current_chapter, response.progress);
                 })
                 .onStepExit(response => {
                     var current_chapter = config.chapters.findIndex(chap => chap.id === response.element.id);

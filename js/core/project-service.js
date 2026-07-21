@@ -127,11 +127,15 @@ function validateLegend(value) {
 
 function validateTransition(value) {
     const source = value && typeof value === "object" ? value : {};
+    const allowedControls = new Set(["automatic", "scroll", "smooth-scroll"]);
     const allowedMethods = new Set(["flyTo", "easeTo", "jumpTo"]);
     const allowedEasings = new Set(["linear", "ease", "ease-in", "ease-out", "ease-in-out"]);
+    const smoothing = Number(source.smoothing);
     return {
+        control: allowedControls.has(source.control) ? source.control : "automatic",
         method: allowedMethods.has(source.method) ? source.method : "flyTo",
         duration: Math.max(0, Number(source.duration) || 1200),
+        smoothing: Number.isFinite(smoothing) ? Math.min(0.5, Math.max(0.04, smoothing)) : 0.18,
         essential: source.essential !== false,
         easing: allowedEasings.has(source.easing) ? source.easing : "ease-in-out"
     };
