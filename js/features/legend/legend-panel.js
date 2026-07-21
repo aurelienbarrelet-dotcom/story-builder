@@ -3,6 +3,7 @@ import { getSelectedMapTarget } from "../../core/store.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getBaseLayerProperty, getEditableLayers, getSelectedLayerValue } from "../map/map-service.js";
 import { createCollectionSelection, renderCollectionSelectionBar, bindCollectionMenu } from "../../ui/collection-panel.js";
+import { bindInlineEditor } from "../../ui/inline-editor.js";
 
 const availableSelection = createCollectionSelection();
 const activeSelection = createCollectionSelection();
@@ -119,7 +120,20 @@ function createLegendItemCard(item, index, orderedIds) {
 
     const copy = document.createElement("span");
     copy.className = "legend-item-copy";
-    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
+    copy.innerHTML = `<strong></strong><small>${escapeHtml(item.symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
+    const labelElement = copy.querySelector("strong");
+    labelElement.textContent = item.label;
+    bindInlineEditor({
+        element: labelElement,
+        value: item.label,
+        emptyValue: item.layerId || "Élément de légende",
+        ariaLabel: "Renommer la légende",
+        onCommit(nextLabel) {
+            item.label = nextLabel;
+            commitProjectChange();
+            renderLegendPanel();
+        }
+    });
 
     const actions = document.createElement("div");
     actions.className = "collection-card-actions";

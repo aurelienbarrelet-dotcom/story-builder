@@ -2,6 +2,14 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.24 — 2026-07-21
+
+- Ajoute un composant partagé d’édition directe pour les titres affichés sur les cartes.
+- Double-clic ou touche F2/Entrée pour renommer; Entrée valide, Échap annule et la perte de focus valide.
+- Active le renommage direct des chapitres, images, légendes actives et calques.
+- Conserve les noms de calques personnalisés dans le projet et synchronise les noms d’images avec le chapitre actif.
+- Met à jour le titre du navigateur vers `Story Builder — 2.0.0-alpha.24`.
+
 ### SB-2.0.0-alpha.23 — 2026-07-21
 
 - Le panneau Légendes adopte les cartes et interactions communes des collections.

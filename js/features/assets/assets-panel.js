@@ -6,6 +6,7 @@ import {
     createCollectionSelection,
     renderCollectionSelectionBar
 } from "../../ui/collection-panel.js";
+import { bindInlineEditor } from "../../ui/inline-editor.js";
 
 const assetSelection = createCollectionSelection();
 
@@ -149,7 +150,23 @@ export function renderAssetsPanel() {
         </div>`;
 
     container.querySelectorAll("[data-select-asset]").forEach(card => {
+        const asset = getImages().find(item => item.id === card.dataset.selectAsset);
+        const nameElement = card.querySelector(".asset-name-static");
+        if (asset && nameElement) bindInlineEditor({
+            element: nameElement,
+            value: asset.name,
+            emptyValue: asset.originalName || "Image",
+            ariaLabel: "Renommer l’image",
+            onCommit(nextName) {
+                asset.name = nextName;
+                const chapter = getSelectedChapter();
+                if (chapter?.image === asset.data) chapter.imageName = nextName;
+                commitProjectChange();
+                renderAssetsPanel();
+            }
+        });
         card.addEventListener("click", event => {
+            if (event.target.closest(".inline-editor-input")) return;
             const assetId = card.dataset.selectAsset;
             const images = getImages();
 

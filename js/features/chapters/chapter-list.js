@@ -26,6 +26,8 @@ import {
     closeCollectionMenus,
     renderCollectionSelectionBar
 } from "../../ui/collection-panel.js";
+import { bindInlineEditor } from "../../ui/inline-editor.js";
+import { commitProjectChange } from "../../core/project-service.js";
 
 
 function getChapterCardLabel(chapter) {
@@ -119,7 +121,19 @@ export function renderChapterList() {
             <span class="chapter-title"></span>
             ${indicators.length ? `<span class="chapter-status-icons">${indicators.join("")}</span>` : ""}
         `;
-        content.querySelector(".chapter-title").textContent = getChapterCardLabel(chapter);
+        const titleElement = content.querySelector(".chapter-title");
+        titleElement.textContent = getChapterCardLabel(chapter);
+        bindInlineEditor({
+            element: titleElement,
+            value: chapter.title,
+            emptyValue: "Chapitre sans titre",
+            ariaLabel: `Renommer le chapitre ${index + 1}`,
+            onCommit(nextTitle) {
+                chapter.title = nextTitle;
+                commitProjectChange();
+                renderChapterList();
+            }
+        });
 
         const actions = document.createElement("div");
         actions.className = "chapter-actions collection-card-actions";
