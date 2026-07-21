@@ -1,3 +1,9 @@
+## SB-2.0.0-alpha.27.3.4
+
+- Fige l’état UI validé des panneaux Calques et Légendes après les correctifs 27.3.x.
+- Synchronise la version interne, le titre du navigateur et la documentation.
+- Ajoute une courte checklist de non-régression, sans modifier la structure ni le comportement des panneaux.
+
 ## SB-2.0.0-alpha.27.3.3
 
 - Met en forme l’action de réinitialisation des calques comme la barre de sélection des chapitres.

@@ -100,3 +100,12 @@
 - [ ] Sélectionner un chapitre : le numéro reste noir et lisible.
 - [ ] Vérifier que le numéro est légèrement plus grand que dans le Sprint 13.13.
 - [ ] Retirer l'image d'un chapitre : la prévisualisation affiche un fond gris uni, sans trame.
+
+## Alpha 27.3.4 — Stabilisation des panneaux
+
+- [ ] Le panneau Calques s’ouvre sans déformation ni débordement.
+- [ ] La recherche, le filtre de type et la liste des calques conservent leur comportement actuel.
+- [ ] La barre de réinitialisation apparaît uniquement lorsqu’au moins un calque est sélectionné.
+- [ ] Le compteur de sélection et le pictogramme de réinitialisation restent visibles en bas du volet.
+- [ ] Le menu des légendes actives s’ouvre sans ajouter de barre de défilement.
+- [ ] Les filtres des légendes disponibles restent fixes pendant le défilement de la liste.
