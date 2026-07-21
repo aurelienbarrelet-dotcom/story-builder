@@ -1,3 +1,13 @@
+## SB-2.0.0-alpha.29.0
+
+### Fondation de la timeline de transition
+
+- Ajout d’un module central qui normalise les pistes **caméra** et **calques**.
+- Calcul commun des débuts, durées, délais et fins de piste.
+- Le déplacement de l’éditeur, l’aperçu manuel et les transitions de calques utilisent désormais cette même timeline.
+- Aucun nouveau champ JSON et aucun changement visible du comportement de lecture.
+- Fondation prête pour l’easing puis le pilotage progressif par le scroll.
+
 ## SB-2.0.0-alpha.28.4
 
 ### Finalisation du panneau Transitions

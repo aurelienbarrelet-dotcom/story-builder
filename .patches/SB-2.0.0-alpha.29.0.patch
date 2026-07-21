@@ -1,0 +1,186 @@
+diff --git a/README.md b/README.md
+index b0fd327..94cf8c4 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,13 @@
++## SB-2.0.0-alpha.29.0
++
++### Fondation de la timeline de transition
++
++- Ajout d’un module central qui normalise les pistes **caméra** et **calques**.
++- Calcul commun des débuts, durées, délais et fins de piste.
++- Le déplacement de l’éditeur, l’aperçu manuel et les transitions de calques utilisent désormais cette même timeline.
++- Aucun nouveau champ JSON et aucun changement visible du comportement de lecture.
++- Fondation prête pour l’easing puis le pilotage progressif par le scroll.
++
+ ## SB-2.0.0-alpha.28.4
+ 
+ ### Finalisation du panneau Transitions
+diff --git a/index.html b/index.html
+index 2ec85ec..dc23dae 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.28.4</title>
++    <title>Story Builder — 2.0.0-alpha.29.0</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 52bdb50..c0f85c1 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.28.4";
++export const APP_VERSION = "2.0.0-alpha.29.0";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/map/map-service.js b/js/features/map/map-service.js
+index 6130e5f..d75bb09 100644
+--- a/js/features/map/map-service.js
++++ b/js/features/map/map-service.js
+@@ -2,6 +2,7 @@ import { MAPBOX_TOKEN_KEY } from "../../core/config.js";
+ import { emit, EVENTS } from "../../core/events.js";
+ import { commitProjectChange } from "../../core/project-service.js";
+ import { getChapters, getProjectConfig, getSelectedChapterIndex, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
++import { createTransitionTimeline } from "../transitions/transition-timeline.js";
+ 
+ let map = null;
+ let baseLayerStyles = new Map();
+@@ -163,9 +164,13 @@ export function flyToSelectedChapter(options = {}) {
+     const chapter = getSelectedMapTarget();
+     const camera = getStoredCamera(chapter, options.viewMode ?? "desktop");
+     if (!camera || !map) return;
+-    const transition = chapter.transition ?? {};
+-    const method = options.instant ? "jumpTo" : (transition.method ?? "flyTo");
+-    const cameraOptions = { ...camera, duration: options.instant ? 0 : Number(transition.duration ?? 1200), essential: transition.essential !== false };
++    const timeline = createTransitionTimeline(chapter);
++    const method = options.instant ? "jumpTo" : timeline.camera.method;
++    const cameraOptions = {
++        ...camera,
++        duration: options.instant ? 0 : timeline.camera.duration,
++        essential: timeline.camera.essential
++    };
+     if (typeof map[method] === "function") map[method](cameraOptions); else map.flyTo(cameraOptions);
+     applySelectedChapterLayerOpacity();
+ }
+@@ -185,12 +190,12 @@ export function previewSelectedChapterTransition() {
+ 
+     waitForPreviewSourceFrame(() => {
+         const targetCamera = getStoredCamera(chapter, "desktop");
+-        const transition = chapter.transition ?? {};
+-        const method = transition.method ?? "flyTo";
++        const timeline = createTransitionTimeline(chapter);
++        const method = timeline.camera.method;
+         const cameraOptions = {
+             ...targetCamera,
+-            duration: Math.max(0, Number(transition.duration) || 0),
+-            essential: transition.essential !== false
++            duration: timeline.camera.duration,
++            essential: timeline.camera.essential
+         };
+         if (targetCamera) {
+             if (typeof map[method] === "function") map[method](cameraOptions);
+@@ -424,13 +429,13 @@ function applyLayerStyle(layer, style) {
+ }
+ 
+ function applyLayerTransition(layer, chapter, options = {}) {
+-    const transition = chapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+-    const enabled = transition.enabled !== false && !options.instant;
++    const track = createTransitionTimeline(chapter).layers;
++    const enabled = track.enabled && !options.instant;
+     (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
+         try {
+             map.setPaintProperty(layer.id, `${property}-transition`, {
+-                duration: enabled ? Math.max(0, Number(transition.duration) || 0) : 0,
+-                delay: enabled ? Math.max(0, Number(transition.delay) || 0) : 0
++                duration: enabled ? track.duration : 0,
++                delay: enabled ? track.delay : 0
+             });
+         } catch {}
+     });
+diff --git a/js/features/transitions/transition-panel.js b/js/features/transitions/transition-panel.js
+index fa134e7..760db29 100644
+--- a/js/features/transitions/transition-panel.js
++++ b/js/features/transitions/transition-panel.js
+@@ -1,4 +1,5 @@
+ import { getSelectedChapter, getSelectedSection } from "../../core/store.js";
++import { getTransitionTimelineDuration } from "./transition-timeline.js";
+ import {
+     updateChapterLayerMode,
+     updateChapterLayerTransition,
+@@ -147,13 +148,7 @@ function getCameraTransitionHelp(method) {
+ }
+ 
+ function getPreviewDuration(chapter) {
+-    const cameraDuration = chapter?.transition?.method === "jumpTo"
+-        ? 0
+-        : Math.max(0, Number(chapter?.transition?.duration) || 0);
+-    const layersEnabled = chapter?.layerTransition?.enabled !== false;
+-    const layerDuration = layersEnabled ? Math.max(0, Number(chapter?.layerTransition?.duration) || 0) : 0;
+-    const layerDelay = layersEnabled ? Math.max(0, Number(chapter?.layerTransition?.delay) || 0) : 0;
+-    return Math.max(cameraDuration, layerDelay + layerDuration, 300);
++    return getTransitionTimelineDuration(chapter, 300);
+ }
+ 
+ function formatDuration(duration) {
+diff --git a/js/features/transitions/transition-timeline.js b/js/features/transitions/transition-timeline.js
+new file mode 100644
+index 0000000..b9b0d58
+--- /dev/null
++++ b/js/features/transitions/transition-timeline.js
+@@ -0,0 +1,50 @@
++const DEFAULT_CAMERA_DURATION = 1200;
++const DEFAULT_LAYER_DURATION = 600;
++
++export function createTransitionTimeline(chapter) {
++    const camera = normalizeCameraTrack(chapter?.transition);
++    const layers = normalizeLayerTrack(chapter?.layerTransition);
++
++    return Object.freeze({
++        camera,
++        layers,
++        duration: Math.max(camera.end, layers.end, 0)
++    });
++}
++
++export function getTransitionTimelineDuration(chapter, minimum = 0) {
++    return Math.max(createTransitionTimeline(chapter).duration, Math.max(0, Number(minimum) || 0));
++}
++
++function normalizeCameraTrack(source = {}) {
++    const method = ["flyTo", "easeTo", "jumpTo"].includes(source.method)
++        ? source.method
++        : "flyTo";
++    const duration = method === "jumpTo"
++        ? 0
++        : Math.max(0, Number(source.duration ?? DEFAULT_CAMERA_DURATION) || 0);
++
++    return Object.freeze({
++        start: 0,
++        end: duration,
++        duration,
++        method,
++        essential: source.essential !== false
++    });
++}
++
++function normalizeLayerTrack(source = {}) {
++    const enabled = source.enabled !== false;
++    const delay = enabled ? Math.max(0, Number(source.delay) || 0) : 0;
++    const duration = enabled
++        ? Math.max(0, Number(source.duration ?? DEFAULT_LAYER_DURATION) || 0)
++        : 0;
++
++    return Object.freeze({
++        start: delay,
++        end: delay + duration,
++        delay,
++        duration,
++        enabled
++    });
++}

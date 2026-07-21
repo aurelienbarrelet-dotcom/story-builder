@@ -1,4 +1,5 @@
 import { getSelectedChapter, getSelectedSection } from "../../core/store.js";
+import { getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
     updateChapterLayerMode,
     updateChapterLayerTransition,
@@ -147,13 +148,7 @@ function getCameraTransitionHelp(method) {
 }
 
 function getPreviewDuration(chapter) {
-    const cameraDuration = chapter?.transition?.method === "jumpTo"
-        ? 0
-        : Math.max(0, Number(chapter?.transition?.duration) || 0);
-    const layersEnabled = chapter?.layerTransition?.enabled !== false;
-    const layerDuration = layersEnabled ? Math.max(0, Number(chapter?.layerTransition?.duration) || 0) : 0;
-    const layerDelay = layersEnabled ? Math.max(0, Number(chapter?.layerTransition?.delay) || 0) : 0;
-    return Math.max(cameraDuration, layerDelay + layerDuration, 300);
+    return getTransitionTimelineDuration(chapter, 300);
 }
 
 function formatDuration(duration) {

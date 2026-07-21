@@ -2,6 +2,7 @@ import { MAPBOX_TOKEN_KEY } from "../../core/config.js";
 import { emit, EVENTS } from "../../core/events.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getChapters, getProjectConfig, getSelectedChapterIndex, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
+import { createTransitionTimeline } from "../transitions/transition-timeline.js";
 
 let map = null;
 let baseLayerStyles = new Map();
@@ -163,9 +164,13 @@ export function flyToSelectedChapter(options = {}) {
     const chapter = getSelectedMapTarget();
     const camera = getStoredCamera(chapter, options.viewMode ?? "desktop");
     if (!camera || !map) return;
-    const transition = chapter.transition ?? {};
-    const method = options.instant ? "jumpTo" : (transition.method ?? "flyTo");
-    const cameraOptions = { ...camera, duration: options.instant ? 0 : Number(transition.duration ?? 1200), essential: transition.essential !== false };
+    const timeline = createTransitionTimeline(chapter);
+    const method = options.instant ? "jumpTo" : timeline.camera.method;
+    const cameraOptions = {
+        ...camera,
+        duration: options.instant ? 0 : timeline.camera.duration,
+        essential: timeline.camera.essential
+    };
     if (typeof map[method] === "function") map[method](cameraOptions); else map.flyTo(cameraOptions);
     applySelectedChapterLayerOpacity();
 }
@@ -185,12 +190,12 @@ export function previewSelectedChapterTransition() {
 
     waitForPreviewSourceFrame(() => {
         const targetCamera = getStoredCamera(chapter, "desktop");
-        const transition = chapter.transition ?? {};
-        const method = transition.method ?? "flyTo";
+        const timeline = createTransitionTimeline(chapter);
+        const method = timeline.camera.method;
         const cameraOptions = {
             ...targetCamera,
-            duration: Math.max(0, Number(transition.duration) || 0),
-            essential: transition.essential !== false
+            duration: timeline.camera.duration,
+            essential: timeline.camera.essential
         };
         if (targetCamera) {
             if (typeof map[method] === "function") map[method](cameraOptions);
@@ -424,13 +429,13 @@ function applyLayerStyle(layer, style) {
 }
 
 function applyLayerTransition(layer, chapter, options = {}) {
-    const transition = chapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
-    const enabled = transition.enabled !== false && !options.instant;
+    const track = createTransitionTimeline(chapter).layers;
+    const enabled = track.enabled && !options.instant;
     (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
         try {
             map.setPaintProperty(layer.id, `${property}-transition`, {
-                duration: enabled ? Math.max(0, Number(transition.duration) || 0) : 0,
-                delay: enabled ? Math.max(0, Number(transition.delay) || 0) : 0
+                duration: enabled ? track.duration : 0,
+                delay: enabled ? track.delay : 0
             });
         } catch {}
     });
