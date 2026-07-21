@@ -109,12 +109,13 @@ function createLegendItemCard(item, index, orderedIds) {
     menu.className = "chapter-menu collection-menu";
     menu.dataset.collectionMenu = "";
     menu.hidden = true;
-    menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';
+    menu.innerHTML = `<button type="button" data-action="rename">Renommer</button><button type="button" data-action="${item.styleMode === "custom" ? "link" : "customize"}">${item.styleMode === "custom" ? "Relier au calque" : "Personnaliser"}</button>${item.styleMode === "custom" ? '<button type="button" data-action="reset">Réinitialiser depuis le calque</button>' : ''}<button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>`;
     actions.append(trigger, menu);
     bindCollectionMenu({ root: card, trigger, menu, floating: true, onAction: action => handleLegendAction(action, item.id) });
 
     const symbol = resolveLegendSymbol(item);
-    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
+    const modeLabel = item.styleMode === "custom" ? "Personnalisée" : "Liée au calque";
+    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small><span class="legend-style-mode legend-style-mode--${item.styleMode === "custom" ? "custom" : "linked"}">${modeLabel}</span>`;
     card.append(handle, createSymbolPreview(symbol), copy, actions);
     card.addEventListener("dragstart", event => {
         draggedLegendIndex = index;
@@ -140,9 +141,19 @@ function handleLegendAction(action, id) {
         const next = window.prompt("Nom de la légende", chapter.legend[index].label);
         if (next === null) return;
         chapter.legend[index].label = next.trim() || chapter.legend[index].layerId || "Élément de légende";
+    } else if (action === "customize") {
+        const current = resolveLegendSymbol(chapter.legend[index]);
+        chapter.legend[index].styleMode = "custom";
+        chapter.legend[index].symbol = current ? structuredClone(current) : chapter.legend[index].symbol;
+    } else if (action === "link") {
+        chapter.legend[index].styleMode = "linked";
+    } else if (action === "reset") {
+        const layer = getEditableLayers().find(entry => entry.id === chapter.legend[index].layerId);
+        const current = layer ? createSymbolFromLayer(layer, false) : null;
+        if (current) chapter.legend[index].symbol = structuredClone(current);
     } else if (action === "duplicate") {
         const source = chapter.legend[index];
-        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, styleMode: source.styleMode ?? "linked", symbol: { ...source.symbol } });
+        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, styleMode: source.styleMode ?? "linked", symbol: structuredClone(source.symbol) });
     } else if (action === "delete") {
         chapter.legend.splice(index, 1);
         activeSelection.prune(chapter.legend.map(item => item.id));

@@ -1,4 +1,4 @@
-export const APP_VERSION = "2.0.0-alpha.33.5";
+export const APP_VERSION = "2.0.0-alpha.33.6";
 export const PROJECT_FORMAT = "story-builder-project";
 export const PROJECT_FORMAT_VERSION = 1;
 export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";

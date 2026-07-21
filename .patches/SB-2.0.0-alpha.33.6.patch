@@ -1,0 +1,100 @@
+diff --git a/README.md b/README.md
+index 69bd6ab..34393f2 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-## SB-2.0.0-alpha.33.5
++## SB-2.0.0-alpha.33.6
+ 
+ ### Alpha 33.4 — contraste automatique des légendes
+ 
+@@ -608,7 +608,12 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
+ - Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
+ - Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
+ 
+-### 2.0.0-alpha.33.5
++### 2.0.0-alpha.33.6
+ 
+ - Le sélecteur de calques devient un composant commun configurable : titre, aide, mode simple ou multiple, éléments désactivés et message vide.
+ - Les panneaux Légendes et Transitions continuent d’utiliser la même source de calques et les mêmes aperçus dynamiques.
++
++### 2.0.0-alpha.33.6
++
++- Chaque légende affiche son état « Liée au calque » ou « Personnalisée ».
++- Le menu permet de figer le symbole courant, de rétablir la liaison dynamique et de réinitialiser un symbole personnalisé depuis le calque.
+diff --git a/index.html b/index.html
+index 4a056e3..d054324 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.33.5</title>
++    <title>Story Builder — 2.0.0-alpha.33.6</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index c2a3217..9b95258 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.33.5";
++export const APP_VERSION = "2.0.0-alpha.33.6";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/legend/legend-panel.js b/js/features/legend/legend-panel.js
+index 9f19eb5..bd398da 100644
+--- a/js/features/legend/legend-panel.js
++++ b/js/features/legend/legend-panel.js
+@@ -109,12 +109,13 @@ function createLegendItemCard(item, index, orderedIds) {
+     menu.className = "chapter-menu collection-menu";
+     menu.dataset.collectionMenu = "";
+     menu.hidden = true;
+-    menu.innerHTML = '<button type="button" data-action="rename">Renommer</button><button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>';
++    menu.innerHTML = `<button type="button" data-action="rename">Renommer</button><button type="button" data-action="${item.styleMode === "custom" ? "link" : "customize"}">${item.styleMode === "custom" ? "Relier au calque" : "Personnaliser"}</button>${item.styleMode === "custom" ? '<button type="button" data-action="reset">Réinitialiser depuis le calque</button>' : ''}<button type="button" data-action="duplicate">Dupliquer</button><button type="button" data-action="delete" class="danger">Supprimer</button>`;
+     actions.append(trigger, menu);
+     bindCollectionMenu({ root: card, trigger, menu, floating: true, onAction: action => handleLegendAction(action, item.id) });
+ 
+     const symbol = resolveLegendSymbol(item);
+-    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small>`;
++    const modeLabel = item.styleMode === "custom" ? "Personnalisée" : "Liée au calque";
++    copy.innerHTML = `<strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(symbol?.type ?? "symbole")} · ${escapeHtml(item.layerId || "sans calque")}</small><span class="legend-style-mode legend-style-mode--${item.styleMode === "custom" ? "custom" : "linked"}">${modeLabel}</span>`;
+     card.append(handle, createSymbolPreview(symbol), copy, actions);
+     card.addEventListener("dragstart", event => {
+         draggedLegendIndex = index;
+@@ -140,9 +141,19 @@ function handleLegendAction(action, id) {
+         const next = window.prompt("Nom de la légende", chapter.legend[index].label);
+         if (next === null) return;
+         chapter.legend[index].label = next.trim() || chapter.legend[index].layerId || "Élément de légende";
++    } else if (action === "customize") {
++        const current = resolveLegendSymbol(chapter.legend[index]);
++        chapter.legend[index].styleMode = "custom";
++        chapter.legend[index].symbol = current ? structuredClone(current) : chapter.legend[index].symbol;
++    } else if (action === "link") {
++        chapter.legend[index].styleMode = "linked";
++    } else if (action === "reset") {
++        const layer = getEditableLayers().find(entry => entry.id === chapter.legend[index].layerId);
++        const current = layer ? createSymbolFromLayer(layer, false) : null;
++        if (current) chapter.legend[index].symbol = structuredClone(current);
+     } else if (action === "duplicate") {
+         const source = chapter.legend[index];
+-        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, styleMode: source.styleMode ?? "linked", symbol: { ...source.symbol } });
++        chapter.legend.splice(index + 1, 0, { ...source, id: createLegendId(source.layerId), label: `${source.label} copie`, styleMode: source.styleMode ?? "linked", symbol: structuredClone(source.symbol) });
+     } else if (action === "delete") {
+         chapter.legend.splice(index, 1);
+         activeSelection.prune(chapter.legend.map(item => item.id));
+diff --git a/style.css b/style.css
+index 804abc5..fcd15ac 100644
+--- a/style.css
++++ b/style.css
+@@ -5743,3 +5743,7 @@ body > .collection-menu { z-index: 1000; }
+ .layer-picker-preview--symbol i { color: var(--layer-preview-color); font-size: 21px; font-weight: 800; line-height: 1; text-shadow: 0 1px 0 var(--layer-preview-secondary); }
+ .layer-picker-preview--heatmap i, .layer-picker-preview--hillshade i, .layer-picker-preview--raster i { width: 28px; height: 24px; border-radius: 6px; background: radial-gradient(circle at 65% 35%, #fff 0 8%, transparent 9%), linear-gradient(135deg, var(--layer-preview-secondary), var(--layer-preview-color)); }
+ .layer-picker-copy { min-width: 0; }
++
++.legend-style-mode { display: inline-flex; width: max-content; margin-top: 4px; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: .02em; }
++.legend-style-mode--linked { color: #255d45; background: #e8f5ee; }
++.legend-style-mode--custom { color: #714d13; background: #fff3d6; }
