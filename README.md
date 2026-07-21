@@ -1,3 +1,14 @@
+## SB-2.0.0-alpha.31.0
+
+### Transitions pilotées par le scroll
+
+- Le mode lecture interpole désormais la caméra en continu selon la progression de chaque chapitre.
+- L’easing choisi reste appliqué à la piste caméra, mais sa progression est fournie par le défilement.
+- Les propriétés numériques de peinture des calques, notamment les opacités, sont interpolées entre l’état précédent et l’état courant.
+- Le délai et la durée de la piste des calques sont conservés dans la timeline normalisée.
+- Les propriétés non numériques et de layout basculent à la fin de la piste afin d’éviter des valeurs Mapbox invalides.
+- Le format JSON reste inchangé et les anciens projets demeurent compatibles.
+
 ## SB-2.0.0-alpha.30.0
 
 ### Moteur de progression normalisée

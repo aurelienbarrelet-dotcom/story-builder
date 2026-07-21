@@ -1,0 +1,267 @@
+diff --git a/README.md b/README.md
+index 6645943..8a246ad 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,14 @@
++## SB-2.0.0-alpha.31.0
++
++### Transitions pilotées par le scroll
++
++- Le mode lecture interpole désormais la caméra en continu selon la progression de chaque chapitre.
++- L’easing choisi reste appliqué à la piste caméra, mais sa progression est fournie par le défilement.
++- Les propriétés numériques de peinture des calques, notamment les opacités, sont interpolées entre l’état précédent et l’état courant.
++- Le délai et la durée de la piste des calques sont conservés dans la timeline normalisée.
++- Les propriétés non numériques et de layout basculent à la fin de la piste afin d’éviter des valeurs Mapbox invalides.
++- Le format JSON reste inchangé et les anciens projets demeurent compatibles.
++
+ ## SB-2.0.0-alpha.30.0
+ 
+ ### Moteur de progression normalisée
+diff --git a/index.html b/index.html
+index c6508df..82c0b31 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.30.0</title>
++    <title>Story Builder — 2.0.0-alpha.31.0</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 0e7f22e..c2b6e2e 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.30.0";
++export const APP_VERSION = "2.0.0-alpha.31.0";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/templates/scrollytelling/index.html b/templates/scrollytelling/index.html
+index 81c7254..14d5cf4 100644
+--- a/templates/scrollytelling/index.html
++++ b/templates/scrollytelling/index.html
+@@ -173,6 +173,163 @@
+             });
+         }
+ 
++
++
++        function clamp01(value) {
++            return Math.min(1, Math.max(0, Number(value) || 0));
++        }
++
++        function getStoryBuilderTransition(chapter) {
++            var metadata = chapter && chapter.mapboxStoryBuilder || {};
++            var camera = metadata.transition || {};
++            var layers = metadata.layerTransition || {};
++            var cameraDuration = chapter && chapter.mapAnimation === 'jumpTo'
++                ? 0
++                : Math.max(0, Number(camera.duration ?? chapter?.location?.duration) || 0);
++            var layerEnabled = layers.enabled !== false;
++            var layerDelay = layerEnabled ? Math.max(0, Number(layers.delay) || 0) : 0;
++            var layerDuration = layerEnabled ? Math.max(0, Number(layers.duration) || 0) : 0;
++
++            return {
++                cameraDuration: cameraDuration,
++                easing: camera.easing || 'ease-in-out',
++                layerEnabled: layerEnabled,
++                layerDelay: layerDelay,
++                layerDuration: layerDuration,
++                duration: Math.max(cameraDuration, layerDelay + layerDuration, 1)
++            };
++        }
++
++        function applyEasing(name, progress) {
++            var t = clamp01(progress);
++            if (name === 'linear') return t;
++            if (name === 'ease-in') return t * t;
++            if (name === 'ease-out') return 1 - ((1 - t) * (1 - t));
++            if (name === 'ease') return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
++            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
++        }
++
++        function getChapterLocation(chapter) {
++            var isMobile = window.innerWidth <= 750;
++            return isMobile && chapter && chapter.locationMobile
++                ? chapter.locationMobile
++                : chapter.location;
++        }
++
++        function interpolateNumber(start, end, progress) {
++            var from = Number(start);
++            var to = Number(end);
++            if (!Number.isFinite(from) || !Number.isFinite(to)) return progress >= 1 ? end : start;
++            return from + ((to - from) * progress);
++        }
++
++        function interpolateBearing(start, end, progress) {
++            var from = Number(start) || 0;
++            var to = Number(end) || 0;
++            var delta = ((to - from + 540) % 360) - 180;
++            return from + (delta * progress);
++        }
++
++        function applyScrollCamera(chapterIndex, progress) {
++            var chapter = config.chapters[chapterIndex];
++            if (!chapter) return;
++            var transition = getStoryBuilderTransition(chapter);
++            var elapsed = clamp01(progress) * transition.duration;
++            var cameraLinear = transition.cameraDuration > 0
++                ? clamp01(elapsed / transition.cameraDuration)
++                : 1;
++            var cameraProgress = applyEasing(transition.easing, cameraLinear);
++            var from = chapterIndex > 0
++                ? getChapterLocation(config.chapters[chapterIndex - 1])
++                : initialLocation;
++            var to = getChapterLocation(chapter);
++            if (!from || !to) return;
++
++            map.jumpTo({
++                center: [
++                    interpolateNumber(from.center && from.center[0], to.center && to.center[0], cameraProgress),
++                    interpolateNumber(from.center && from.center[1], to.center && to.center[1], cameraProgress)
++                ],
++                zoom: interpolateNumber(from.zoom, to.zoom, cameraProgress),
++                pitch: interpolateNumber(from.pitch, to.pitch, cameraProgress),
++                bearing: interpolateBearing(from.bearing, to.bearing, cameraProgress)
++            });
++        }
++
++        function resolveManagedLayerState(state) {
++            state = state || { layerOpacity: {}, layerStyles: {} };
++            var resolved = {};
++            Object.entries(managedLayerBase).forEach(function (entry) {
++                resolved[entry[0]] = {
++                    paint: Object.assign({}, entry[1].paint || {}),
++                    layout: Object.assign({}, entry[1].layout || {})
++                };
++            });
++            Object.entries(state.layerOpacity || {}).forEach(function (entry) {
++                var layerId = entry[0], opacity = entry[1];
++                if (!map.getLayer(layerId)) return;
++                resolved[layerId] = resolved[layerId] || { paint: {}, layout: {} };
++                (layerTypes[map.getLayer(layerId).type] || []).forEach(function (property) {
++                    resolved[layerId].paint[property] = opacity;
++                });
++            });
++            Object.entries(state.layerStyles || {}).forEach(function (entry) {
++                var layerId = entry[0], style = entry[1] || {};
++                resolved[layerId] = resolved[layerId] || { paint: {}, layout: {} };
++                Object.assign(resolved[layerId].paint, style.paint || {});
++                Object.assign(resolved[layerId].layout, style.layout || {});
++            });
++            return resolved;
++        }
++
++        function applyScrollLayers(chapterIndex, progress) {
++            var chapter = config.chapters[chapterIndex];
++            if (!chapter) return;
++            var transition = getStoryBuilderTransition(chapter);
++            var elapsed = clamp01(progress) * transition.duration;
++            var layerProgress = !transition.layerEnabled
++                ? 1
++                : (transition.layerDuration > 0
++                    ? clamp01((elapsed - transition.layerDelay) / transition.layerDuration)
++                    : (elapsed >= transition.layerDelay ? 1 : 0));
++            var fromState = chapterIndex > 0
++                ? config.chapters[chapterIndex - 1].layerState
++                : config.projectLayerStyles;
++            var from = resolveManagedLayerState(fromState);
++            var to = resolveManagedLayerState(chapter.layerState);
++
++            Object.keys(Object.assign({}, from, to)).forEach(function (layerId) {
++                if (!map.getLayer(layerId)) return;
++                var fromLayer = from[layerId] || { paint: {}, layout: {} };
++                var toLayer = to[layerId] || { paint: {}, layout: {} };
++                Object.keys(Object.assign({}, fromLayer.paint, toLayer.paint)).forEach(function (property) {
++                    var start = fromLayer.paint[property];
++                    var end = toLayer.paint[property];
++                    var value = (typeof start === 'number' && typeof end === 'number')
++                        ? interpolateNumber(start, end, layerProgress)
++                        : (layerProgress >= 1 ? end : start);
++                    try {
++                        map.setPaintProperty(layerId, property + '-transition', { duration: 0, delay: 0 });
++                        map.setPaintProperty(layerId, property, value);
++                    } catch (error) {}
++                });
++                Object.keys(Object.assign({}, fromLayer.layout, toLayer.layout)).forEach(function (property) {
++                    var value = layerProgress >= 1 ? toLayer.layout[property] : fromLayer.layout[property];
++                    try { map.setLayoutProperty(layerId, property, value); } catch (error) {}
++                });
++            });
++        }
++
++        function applyScrollTransition(chapterIndex, progress) {
++            applyScrollCamera(chapterIndex, progress);
++            applyScrollLayers(chapterIndex, progress);
++            if (config.showMarkers) {
++                var chapter = config.chapters[chapterIndex];
++                var location = chapter && getChapterLocation(chapter);
++                if (location && progress >= 0.5) marker.setLngLat(location.center);
++            }
++        }
++
+         var story = document.getElementById('story');
+         var features = document.createElement('div');
+         features.setAttribute('id', 'features');
+@@ -344,23 +501,9 @@
+                         step.classList.remove('active');
+                     });
+                     response.element.classList.add('active');
+-                    const isMobile = window.innerWidth <= 750;
+-
+-                    const targetLocation =
+-                        isMobile && chapter.locationMobile
+-                            ? chapter.locationMobile
+-                            : chapter.location;
+-
+-                    map[chapter.mapAnimation || 'flyTo'](targetLocation);
+-
+-                    if (config.showMarkers) {
+-                        marker.setLngLat(targetLocation.center);
+-                    }
+-                    if (chapter.layerState) {
+-                        applyLayerStyleState(chapter.layerState);
+-                    } else if (chapter.onChapterEnter.length > 0) {
+-                        chapter.onChapterEnter.forEach(setLayerOpacity);
+-                    }
++                    // La caméra et les propriétés numériques des calques sont
++                    // désormais pilotées en continu par onStepProgress.
++                    applyScrollTransition(current_chapter, response.direction === 'up' ? 1 : 0);
+                     if (chapter.callback) {
+                         window[chapter.callback]();
+                     }
+@@ -381,6 +524,13 @@
+                         });
+                     }
+                 })
++                .onStepProgress(response => {
++                    var current_chapter = config.chapters.findIndex(function (chapter) {
++                        return chapter.id === response.element.id;
++                    });
++                    if (current_chapter < 0) return;
++                    applyScrollTransition(current_chapter, response.progress);
++                })
+                 .onStepExit(response => {
+                     var current_chapter = config.chapters.findIndex(chap => chap.id === response.element.id);
+                     var chapter = config.chapters[current_chapter];
+@@ -390,13 +540,9 @@
+                     // l'état d'introduction : aucune légende de chapitre.
+                     if (current_chapter === 0 && response.direction === 'up') {
+                         updateLegend(null);
+-                        map[chapter.mapAnimation || 'flyTo'](initialLocation);
++                        map.jumpTo(initialLocation);
+                         if (config.showMarkers) marker.setLngLat(initialLocation.center);
+-                        if (config.projectLayerStyles) {
+-                            applyLayerStyleState(config.projectLayerStyles);
+-                        } else {
+-                            (config.projectLayerState || []).forEach(setLayerOpacity);
+-                        }
++                        applyLayerStyleState(config.projectLayerStyles);
+                     }
+ 
+                     if (chapter.onChapterExit.length > 0) {
