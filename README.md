@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.21 — 2026-07-21
+
+- Un socle visuel commun harmonise les champs de texte, recherches, listes, zones de texte et contrôles numériques.
+- Les boutons principaux et secondaires partagent désormais les mêmes dimensions, rayons, transitions et états désactivés.
+- La sélection des cartes Images et Chapitres utilise exclusivement un contour rouge uniforme, sans barre latérale ni coche.
+- Les cartes, en-têtes et barres d’actions des collections suivent un contrat visuel commun préparant la refonte des Légendes.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.21`.
+
+---
+
 ### SB-2.0.0-alpha.20 — 2026-07-21
 
 - Les transitions, contrastes, zones de focus et détails de survol sont finalisés pour une interface plus stable.

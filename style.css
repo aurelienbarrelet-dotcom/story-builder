@@ -4954,3 +4954,185 @@ body:not(.reader-mode) .chapter {
         animation-iteration-count: 1 !important;
     }
 }
+
+
+/* Alpha 21 — socle d’interface unifié */
+:root {
+    --ui-accent: #820b1c;
+    --ui-accent-hover: #690817;
+    --ui-border: #cfd4d9;
+    --ui-border-hover: #aeb5bc;
+    --ui-surface: #ffffff;
+    --ui-surface-hover: #f5f6f7;
+    --ui-text: #22262a;
+    --ui-text-muted: #687078;
+    --ui-radius: 6px;
+    --ui-field-height: 34px;
+    --ui-transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease, color .14s ease;
+    --ui-focus-ring: 0 0 0 3px rgba(130, 11, 28, .16);
+    --ui-selection-ring: 0 0 0 2px var(--ui-accent);
+}
+
+/* Tous les contrôles de saisie partagent le même contrat visuel. */
+.ui-input,
+:where(.properties-panel-content, .view-panel-content, .layers-panel-content, .legend-panel-content, .asset-inspector, .modal-content)
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea),
+.form-group :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea),
+.panel-text-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--ui-field-height);
+    padding: 7px 10px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    outline: 0;
+    color: var(--ui-text);
+    background: var(--ui-surface);
+    font: inherit;
+    line-height: 1.35;
+    transition: var(--ui-transition);
+}
+
+.ui-input:hover:not(:disabled),
+:where(.properties-panel-content, .view-panel-content, .layers-panel-content, .legend-panel-content, .asset-inspector, .modal-content)
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):hover:not(:disabled),
+.form-group :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):hover:not(:disabled),
+.panel-text-input:hover:not(:disabled) {
+    border-color: var(--ui-border-hover);
+}
+
+.ui-input:focus,
+:where(.properties-panel-content, .view-panel-content, .layers-panel-content, .legend-panel-content, .asset-inspector, .modal-content)
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus,
+.form-group :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea):focus,
+.panel-text-input:focus {
+    border-color: var(--ui-accent);
+    box-shadow: var(--ui-focus-ring);
+}
+
+textarea.ui-input,
+.form-group textarea,
+.asset-inspector textarea,
+.properties-panel-content textarea {
+    min-height: 78px;
+    resize: vertical;
+}
+
+.ui-input:disabled,
+:where(.properties-panel-content, .view-panel-content, .layers-panel-content, .legend-panel-content, .asset-inspector, .modal-content)
+:where(input, select, textarea):disabled {
+    color: var(--ui-text-muted);
+    background: #f0f2f3;
+    cursor: not-allowed;
+    opacity: .72;
+}
+
+/* Les familles historiques de boutons adoptent le même rythme et les mêmes états. */
+.ui-button,
+.ui-icon-button,
+.button,
+.icon-button,
+.project-tool-button,
+.view-toggle-button,
+.layers-toggle-button,
+.properties-toggle-button,
+.chapter-menu-button,
+.modal-close-button {
+    border-radius: var(--ui-radius);
+    transition: var(--ui-transition), transform .1s ease;
+}
+
+.ui-button,
+.button {
+    min-height: var(--ui-field-height);
+    padding: 7px 12px;
+    font-weight: 650;
+}
+
+.ui-button--primary,
+.button-primary {
+    border-color: var(--ui-accent);
+    color: #fff;
+    background: var(--ui-accent);
+}
+
+.ui-button--primary:hover:not(:disabled),
+.button-primary:hover:not(:disabled) {
+    border-color: var(--ui-accent-hover);
+    background: var(--ui-accent-hover);
+}
+
+.ui-button--secondary,
+.button-secondary {
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+    background: var(--ui-surface);
+}
+
+.ui-button--secondary:hover:not(:disabled),
+.button-secondary:hover:not(:disabled) {
+    border-color: var(--ui-border-hover);
+    background: var(--ui-surface-hover);
+}
+
+/* Une seule règle de sélection : contour rouge complet, sans barre latérale ni coche. */
+.asset-card::before,
+body:not(.reader-mode) .chapter::before,
+.collection-card::before {
+    display: none !important;
+}
+
+.asset-card.selected,
+.collection-card.selected,
+body:not(.reader-mode) .chapter.selected,
+body:not(.reader-mode) .chapter.multi-selected,
+body:not(.reader-mode) .chapter.selected:hover,
+body:not(.reader-mode) .chapter.multi-selected:hover {
+    border-color: var(--ui-accent) !important;
+    background: var(--ui-surface) !important;
+    box-shadow: var(--ui-selection-ring) !important;
+}
+
+.asset-selection-check,
+.collection-selection-check {
+    display: none !important;
+}
+
+.asset-card,
+.collection-card,
+body:not(.reader-mode) .chapter {
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    transition: var(--ui-transition);
+}
+
+.asset-card:hover,
+.collection-card:hover,
+body:not(.reader-mode) .chapter:hover {
+    border-color: var(--ui-border);
+    background: var(--ui-surface-hover);
+}
+
+/* En-têtes et barres d’action des collections alignés sur le même composant. */
+.collection-panel-header,
+.assets-panel-header,
+.chapters-list-section > .panel-header,
+.legend-section-heading {
+    min-height: 42px;
+    padding-inline: 12px;
+    border-bottom: 1px solid var(--panel-divider);
+}
+
+.collection-add-button {
+    border-radius: var(--ui-radius);
+}
+
+.collection-selection-bar,
+.assets-selection-bar,
+.chapters-selection-bar {
+    min-height: 42px;
+    padding: 6px 10px;
+    border-top: 1px solid var(--panel-divider);
+    background: var(--ui-surface);
+}

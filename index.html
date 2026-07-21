@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.20</title>
+    <title>Story Builder — 2.0.0-alpha.21</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -153,12 +153,12 @@
                 <div class="layers-tools">
                     <label class="layers-search">
                         <span class="visually-hidden">Rechercher un calque</span>
-                        <input id="layerSearchInput" type="search" placeholder="Rechercher un calque…">
+                        <input id="layerSearchInput" class="ui-input" type="search" placeholder="Rechercher un calque…">
                     </label>
-                    <select id="layerTypeFilter" class="layers-type-filter" aria-label="Filtrer les calques par type">
+                    <select id="layerTypeFilter" class="ui-input layers-type-filter" aria-label="Filtrer les calques par type">
                         <option value="all">Tous les types</option>
                     </select>
-                    <button id="resetSelectedLayerStylesButton" class="button button-primary layers-reset-selected" type="button" disabled>
+                    <button id="resetSelectedLayerStylesButton" class="ui-button ui-button--secondary layers-reset-selected" type="button" disabled>
                         Réinitialiser les calques sélectionnés
                     </button>
                 </div>
@@ -194,10 +194,10 @@
                     </div>
                     <label class="legend-search layers-search">
                         <span class="visually-hidden">Rechercher un calque pour la légende</span>
-                        <input id="legendLayerSearchInput" type="search" placeholder="Rechercher un calque…">
+                        <input id="legendLayerSearchInput" class="ui-input" type="search" placeholder="Rechercher un calque…">
                     </label>
                     <div id="legendAvailableLayers" class="legend-available-list"></div>
-                    <button id="addSelectedLegendItemsButton" class="button button-primary legend-add-selected" type="button" disabled>
+                    <button id="addSelectedLegendItemsButton" class="ui-button ui-button--primary legend-add-selected" type="button" disabled>
                         Ajouter à la légende
                     </button>
                 </section>
