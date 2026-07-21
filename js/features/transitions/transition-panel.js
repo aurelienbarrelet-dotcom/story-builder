@@ -2,7 +2,6 @@ import { getSelectedChapter, getSelectedChapters, getSelectedSection } from "../
 import { createTransitionTimeline, getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
     addLayerTransitions,
-    applyLayerTransitionPreset,
     removeLayerTransitions,
     sequenceSelectedLayerTransitions,
     updateChapterLayerMode,
@@ -192,7 +191,6 @@ function bindTransitionEvents() {
     const selectedLayerDurationInput = document.getElementById("selectedLayerDurationInput");
     const selectedLayerDelayInput = document.getElementById("selectedLayerDelayInput");
     const sequenceLayerTransitionsButton = document.getElementById("sequenceLayerTransitionsButton");
-    const transitionPresetButtons = [...document.querySelectorAll("[data-transition-preset]")];
     const sequenceLayerStepInput = document.getElementById("sequenceLayerStepInput");
     const previewTransitionButton = document.getElementById("previewTransitionButton");
     const transitionPreviewStatus = document.getElementById("transitionPreviewStatus");
@@ -266,10 +264,6 @@ function bindTransitionEvents() {
     selectedLayerEffectInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "effect", selectedLayerEffectInput.value));
     selectedLayerDurationInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "duration", selectedLayerDurationInput.value));
     selectedLayerDelayInput?.addEventListener("change", () => updateSelectedLayerTransitions([...selectedTransitionLayerIds], "delay", selectedLayerDelayInput.value));
-    transitionPresetButtons.forEach(button => button.addEventListener("click", () => {
-        applyLayerTransitionPreset([...selectedTransitionLayerIds], button.dataset.transitionPreset);
-        renderTransitionPanel();
-    }));
     sequenceLayerTransitionsButton?.addEventListener("click", () => {
         sequenceSelectedLayerTransitions([...selectedTransitionLayerIds], sequenceLayerStepInput?.value ?? 200);
     });
@@ -362,12 +356,6 @@ function renderLayerTransitionManager(layers, selectedIds, state) {
             ${selectedCount ? `
                 <div class="transition-layer-editor">
                     <p class="transition-layer-selection-summary"><strong>${selectedCount} calque${selectedCount > 1 ? "s" : ""} sélectionné${selectedCount > 1 ? "s" : ""}</strong></p>
-                    <div class="transition-preset-row" aria-label="Préréglages de transition">
-                        <button type="button" class="button" data-transition-preset="fade">Fondu</button>
-                        <button type="button" class="button" data-transition-preset="grow">Croissance</button>
-                        <button type="button" class="button" data-transition-preset="quick">Rapide</button>
-                        <button type="button" class="button" data-transition-preset="instant">Instantané</button>
-                    </div>
                     <div class="property transition-toggle-property">
                         <label class="transition-toggle" for="selectedLayerTransitionEnabledInput">
                             <input id="selectedLayerTransitionEnabledInput" type="checkbox" ${state.enabled.mixed || state.enabled.value ? "checked" : ""}>

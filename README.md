@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.33.7
+## SB-2.0.0-alpha.33.8
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -608,17 +608,14 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
 - Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
 
-### 2.0.0-alpha.33.7
+### 2.0.0-alpha.33.8
+
+- Correctif cumulatif à appliquer après `33.7`.
+- Retire les modes de légende ajoutés par `33.6` et restaure le comportement de légende liée existant.
+- Retire le module de préréglages ajouté par `33.7`; le type d’animation reste choisi dans le menu déroulant existant.
+- Conserve le sélecteur de calques commun introduit par `33.5`.
+
+### 2.0.0-alpha.33.5
 
 - Le sélecteur de calques devient un composant commun configurable : titre, aide, mode simple ou multiple, éléments désactivés et message vide.
 - Les panneaux Légendes et Transitions continuent d’utiliser la même source de calques et les mêmes aperçus dynamiques.
-
-### 2.0.0-alpha.33.7
-
-- Chaque légende affiche son état « Liée au calque » ou « Personnalisée ».
-- Le menu permet de figer le symbole courant, de rétablir la liaison dynamique et de réinitialiser un symbole personnalisé depuis le calque.
-
-### 2.0.0-alpha.33.7
-
-- Ajout de quatre préréglages pour les transitions spécifiques : Fondu, Croissance, Rapide et Instantané.
-- Un préréglage s’applique en une seule modification à tous les calques sélectionnés, puis les réglages restent entièrement éditables.

@@ -199,26 +199,6 @@ export function updateSelectedLayerTransitions(layerIds, field, value) {
     commitProjectChange();
 }
 
-export function applyLayerTransitionPreset(layerIds, preset) {
-    const chapters = getSelectedChapters();
-    if (!chapters.length || !layerIds.length) return;
-    const presets = {
-        fade: { enabled: true, effect: "fade", duration: 600, delay: 0 },
-        grow: { enabled: true, effect: "grow", duration: 800, delay: 0 },
-        quick: { enabled: true, effect: "fade", duration: 250, delay: 0 },
-        instant: { enabled: true, effect: "none", duration: 0, delay: 0 }
-    };
-    const config = presets[preset];
-    if (!config) return;
-    chapters.forEach(chapter => {
-        chapter.layerTransitions ??= {};
-        layerIds.forEach(layerId => {
-            chapter.layerTransitions[layerId] = { ...config };
-        });
-    });
-    commitProjectChange();
-}
-
 export function addLayerTransitions(layerIds) {
     const chapters = getSelectedChapters();
     if (!chapters.length || !layerIds.length) return;
