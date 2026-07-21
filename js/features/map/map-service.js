@@ -383,7 +383,7 @@ export function resetSelectedChapterLayerOpacity(layerId) {
 export function applySelectedChapterLayerOpacity() {
     const chapter = getSelectedMapTarget();
     if (!chapter || !map || !map.isStyleLoaded()) return;
-    applyLayerState(chapter);
+    applyLayerState(chapter, { instant: true });
 }
 
 function applyLayerState(chapter, options = {}) {
