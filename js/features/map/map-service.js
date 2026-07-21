@@ -364,9 +364,15 @@ function applyLayerStyle(layer, style) {
 }
 
 function applyLayerTransition(layer, chapter) {
-    const transition = chapter?.layerTransition ?? { duration: 600, delay: 0 };
+    const transition = chapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
+    const enabled = transition.enabled !== false;
     (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
-        try { map.setPaintProperty(layer.id, `${property}-transition`, { duration: Number(transition.duration ?? 600), delay: Number(transition.delay ?? 0) }); } catch {}
+        try {
+            map.setPaintProperty(layer.id, `${property}-transition`, {
+                duration: enabled ? Math.max(0, Number(transition.duration) || 0) : 0,
+                delay: enabled ? Math.max(0, Number(transition.delay) || 0) : 0
+            });
+        } catch {}
     });
 }
 

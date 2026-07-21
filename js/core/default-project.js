@@ -16,7 +16,7 @@ export const defaultStory = {
         layerOpacity: {},
         layerStyles: {},
         legend: [],
-        layerTransition: { duration: 600, delay: 0 }
+        layerTransition: { enabled: true, duration: 600, delay: 0 }
     },
 
     meta: {
@@ -49,7 +49,7 @@ export const defaultStory = {
             layerStyles: {},
             legend: [],
             layerMode: "snapshot",
-            layerTransition: { duration: 600, delay: 0 },
+            layerTransition: { enabled: true, duration: 600, delay: 0 },
             transition: { method: "flyTo", duration: 1200, essential: true }
         },
         {
@@ -69,7 +69,7 @@ export const defaultStory = {
             layerStyles: {},
             legend: [],
             layerMode: "snapshot",
-            layerTransition: { duration: 600, delay: 0 },
+            layerTransition: { enabled: true, duration: 600, delay: 0 },
             transition: { method: "flyTo", duration: 1200, essential: true }
         },
         {
@@ -89,7 +89,7 @@ export const defaultStory = {
             layerStyles: {},
             legend: [],
             layerMode: "snapshot",
-            layerTransition: { duration: 600, delay: 0 },
+            layerTransition: { enabled: true, duration: 600, delay: 0 },
             transition: { method: "flyTo", duration: 1200, essential: true }
         }
     ]

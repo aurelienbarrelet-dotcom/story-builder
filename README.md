@@ -1,3 +1,13 @@
+## SB-2.0.0-alpha.28.2
+
+### Contrôle explicite des transitions de calques
+
+- Ajout d’un interrupteur pour activer ou désactiver les transitions de calques par chapitre.
+- Désactivation des champs Fondu et Délai lorsque les transitions sont coupées.
+- Ajout rétrocompatible de `layerTransition.enabled` dans le projet JSON ; une valeur absente reste interprétée comme activée.
+- Export d’une durée et d’un délai nuls lorsque les transitions sont désactivées.
+- Conservation des changements instantanés pour les propriétés non interpolables comme `visibility`.
+
 ## SB-2.0.0-alpha.28.1
 
 ### Panneau Transitions autonome

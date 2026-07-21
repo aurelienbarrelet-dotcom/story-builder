@@ -55,7 +55,7 @@ export function getProjectConfig() {
     story.projectConfig ??= {
         location: { center: [6.6323, 46.5197], zoom: 9, pitch: 0, bearing: 0 },
         layerOpacity: {}, layerStyles: {}, legend: [],
-        layerTransition: { duration: 600, delay: 0 }
+        layerTransition: { enabled: true, duration: 600, delay: 0 }
     };
     return story.projectConfig;
 }

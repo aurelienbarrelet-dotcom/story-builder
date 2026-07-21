@@ -57,7 +57,7 @@ export function addChapter() {
         layerStyles: cloneObject(referenceChapter?.layerStyles ?? {}),
         legend: cloneObject(referenceChapter?.legend ?? []),
         layerMode: referenceChapter?.layerMode ?? "snapshot",
-        layerTransition: cloneObject(referenceChapter?.layerTransition ?? { duration: 600, delay: 0 }),
+        layerTransition: cloneObject(referenceChapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 }),
         transition: cloneObject(referenceChapter?.transition ?? { method: "flyTo", duration: 1200, essential: true })
     };
 
@@ -156,8 +156,10 @@ export function updateChapterLayerMode(value) {
 export function updateChapterLayerTransition(field, value) {
     const chapter = getSelectedChapter();
     if (!chapter) return;
-    chapter.layerTransition ??= { duration: 600, delay: 0 };
-    chapter.layerTransition[field] = Math.max(0, Number(value) || 0);
+    chapter.layerTransition ??= { enabled: true, duration: 600, delay: 0 };
+    chapter.layerTransition[field] = field === "enabled"
+        ? value !== false
+        : Math.max(0, Number(value) || 0);
     commitProjectChange();
 }
 

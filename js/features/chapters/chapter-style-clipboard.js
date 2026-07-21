@@ -31,7 +31,7 @@ export function openStyleCopyDialog(chapterId) {
         layerStyles: cloneObject(chapter.layerStyles ?? {}),
         legend: cloneObject(chapter.legend ?? []),
         layerMode: chapter.layerMode ?? "snapshot",
-        layerTransition: cloneObject(chapter.layerTransition ?? { duration: 600, delay: 0 })
+        layerTransition: cloneObject(chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 })
     };
 
     const modal = document.getElementById("styleClipboardModal");

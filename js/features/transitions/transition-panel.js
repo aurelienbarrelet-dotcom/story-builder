@@ -45,6 +45,13 @@ export function renderTransitionPanel() {
                 <h3 id="layerTransitionTitle">Calques</h3>
                 <span>État et fondu</span>
             </header>
+            <div class="property transition-toggle-property">
+                <label class="transition-toggle" for="layerTransitionEnabledInput">
+                    <input id="layerTransitionEnabledInput" type="checkbox" ${chapter.layerTransition?.enabled !== false ? "checked" : ""}>
+                    <span>Activer les transitions de calques</span>
+                </label>
+                <p class="property-help">Les propriétés animables évoluent progressivement. La visibilité reste instantanée.</p>
+            </div>
             <div class="property">
                 <label for="layerModeInput">Comportement des calques</label>
                 <select id="layerModeInput">
@@ -55,11 +62,11 @@ export function renderTransitionPanel() {
             <div class="camera-form">
                 <div class="camera-field">
                     <label for="layerDurationInput">Fondu (ms)</label>
-                    <input id="layerDurationInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.duration ?? 600)}">
+                    <input id="layerDurationInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.duration ?? 600)}" ${chapter.layerTransition?.enabled === false ? "disabled" : ""}>
                 </div>
                 <div class="camera-field">
                     <label for="layerDelayInput">Délai (ms)</label>
-                    <input id="layerDelayInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.delay ?? 0)}">
+                    <input id="layerDelayInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.delay ?? 0)}" ${chapter.layerTransition?.enabled === false ? "disabled" : ""}>
                 </div>
             </div>
         </section>
@@ -71,12 +78,19 @@ export function renderTransitionPanel() {
 function bindTransitionEvents() {
     const transitionMethodInput = document.getElementById("transitionMethodInput");
     const transitionDurationInput = document.getElementById("transitionDurationInput");
+    const layerTransitionEnabledInput = document.getElementById("layerTransitionEnabledInput");
     const layerModeInput = document.getElementById("layerModeInput");
     const layerDurationInput = document.getElementById("layerDurationInput");
     const layerDelayInput = document.getElementById("layerDelayInput");
 
     transitionMethodInput?.addEventListener("change", () => updateChapterTransition("method", transitionMethodInput.value));
     transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
+    layerTransitionEnabledInput?.addEventListener("change", () => {
+        const enabled = layerTransitionEnabledInput.checked;
+        layerDurationInput.disabled = !enabled;
+        layerDelayInput.disabled = !enabled;
+        updateChapterLayerTransition("enabled", enabled);
+    });
     layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
     layerDurationInput?.addEventListener("change", () => updateChapterLayerTransition("duration", layerDurationInput.value));
     layerDelayInput?.addEventListener("change", () => updateChapterLayerTransition("delay", layerDelayInput.value));

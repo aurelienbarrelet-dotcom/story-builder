@@ -99,7 +99,9 @@ function buildChapterLayerEntries(chapter) {
         return [{
             layer: layerId,
             opacity: Math.max(0, Math.min(1, opacity)),
-            duration: Math.max(0, Number(chapter.layerTransition?.duration) || 0)
+            duration: chapter.layerTransition?.enabled === false
+                ? 0
+                : Math.max(0, Number(chapter.layerTransition?.duration) || 0)
         }];
     });
 }
@@ -114,8 +116,12 @@ function buildLayerStyleState(chapter = {}) {
         layerOpacity: { ...(chapter.layerOpacity ?? {}) },
         layerStyles: cloneLayerStyles(chapter.layerStyles ?? {}),
         transition: {
-            duration: Math.max(0, Number(chapter.layerTransition?.duration) || 0),
-            delay: Math.max(0, Number(chapter.layerTransition?.delay) || 0)
+            duration: chapter.layerTransition?.enabled === false
+                ? 0
+                : Math.max(0, Number(chapter.layerTransition?.duration) || 0),
+            delay: chapter.layerTransition?.enabled === false
+                ? 0
+                : Math.max(0, Number(chapter.layerTransition?.delay) || 0)
         }
     };
 }
@@ -182,8 +188,13 @@ function exportChapter(chapter, index, projectConfig = {}) {
             },
             layerMode: chapter.layerMode === "inherit" ? "inherit" : "snapshot",
             layerTransition: {
-                duration: Math.max(0, Number(chapter.layerTransition?.duration) || 0),
-                delay: Math.max(0, Number(chapter.layerTransition?.delay) || 0)
+                enabled: chapter.layerTransition?.enabled !== false,
+                duration: chapter.layerTransition?.enabled === false
+                    ? 0
+                    : Math.max(0, Number(chapter.layerTransition?.duration) || 0),
+                delay: chapter.layerTransition?.enabled === false
+                    ? 0
+                    : Math.max(0, Number(chapter.layerTransition?.delay) || 0)
             },
             layerStyles: chapter.layerStyles ?? {},
             legend: chapter.legend ?? {}

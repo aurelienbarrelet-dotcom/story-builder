@@ -137,9 +137,12 @@ function validateTransition(value) {
 
 function validateLayerTransition(value) {
     const source = value && typeof value === "object" ? value : {};
+    const duration = Number(source.duration);
+    const delay = Number(source.delay);
     return {
-        duration: Math.max(0, Number(source.duration) || 600),
-        delay: Math.max(0, Number(source.delay) || 0)
+        enabled: source.enabled !== false,
+        duration: Number.isFinite(duration) ? Math.max(0, duration) : 600,
+        delay: Number.isFinite(delay) ? Math.max(0, delay) : 0
     };
 }
 
@@ -270,7 +273,7 @@ export function createNewProject() {
         layerOpacity: {},
         layerStyles: {},
         legend: [],
-        layerTransition: { duration: 600, delay: 0 }
+        layerTransition: { enabled: true, duration: 600, delay: 0 }
     };
     project.meta = {
         title: "",
