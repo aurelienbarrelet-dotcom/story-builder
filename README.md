@@ -2,6 +2,17 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.15 — 2026-07-21
+
+- Un socle commun de boutons (`ui-button` et `ui-icon-button`) formalise les actions principales, secondaires, iconographiques et destructives.
+- Les états de survol, activation, focus clavier et désactivation sont désormais homogènes.
+- Les panneaux Images et Chapitres ainsi que la fenêtre de copie des styles utilisent ces nouveaux composants.
+- Les variables CSS de taille, transition, focus et danger doux sont centralisées pour les prochains panneaux.
+- Aucun comportement fonctionnel de sélection ou de suppression n’a été modifié.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.15`.
+
+---
+
 ### SB-2.0.0-alpha.14 — 2026-07-21
 
 - Les actions de suppression groupée utilisent désormais une icône poubelle compacte avec infobulle et libellé accessible.

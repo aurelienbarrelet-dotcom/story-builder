@@ -15,6 +15,13 @@
     --blue-dark: var(--accent-dark);
     --danger: #d32f2f;
     --danger-dark: #b71c1c;
+    --danger-soft: rgba(211, 47, 47, .08);
+    --danger-border: rgba(211, 47, 47, .2);
+    --control-size-sm: 30px;
+    --control-size-md: 36px;
+    --control-radius: 6px;
+    --control-transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+    --focus-ring: 0 0 0 2px var(--accent-ring);
 }
 
 body {
@@ -4511,3 +4518,139 @@ body:not(.reader-mode) .chapter.multi-selected:hover {
 .collection-delete-button:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--accent-ring); }
 .assets-delete-selected, .chapters-delete-selected { padding: 0; color: var(--text-secondary); background: transparent; }
 .assets-delete-selected:hover, .chapters-delete-selected:hover { color: var(--danger); background: rgba(176, 42, 55, .08); }
+
+
+/* Alpha 15 — socle commun des boutons */
+.ui-button,
+.ui-icon-button {
+    appearance: none;
+    border-radius: var(--control-radius);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--control-transition);
+}
+
+.ui-button {
+    display: inline-flex;
+    min-height: var(--control-size-md);
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 13px;
+    border: 1px solid transparent;
+    font-size: 14px;
+}
+
+.ui-button--primary {
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+}
+
+.ui-button--primary:hover:not(:disabled) {
+    border-color: var(--accent-dark);
+    background: var(--accent-dark);
+}
+
+.ui-button--secondary {
+    border-color: var(--panel-border);
+    color: var(--text-primary, #222);
+    background: #fff;
+}
+
+.ui-button--secondary:hover:not(:disabled) {
+    border-color: #b8bec5;
+    background: #f5f5f5;
+}
+
+.ui-button--danger {
+    border-color: var(--danger);
+    color: #fff;
+    background: var(--danger);
+}
+
+.ui-button--danger:hover:not(:disabled) {
+    border-color: var(--danger-dark);
+    background: var(--danger-dark);
+}
+
+.ui-icon-button {
+    display: inline-grid;
+    width: var(--control-size-sm);
+    height: var(--control-size-sm);
+    flex: 0 0 var(--control-size-sm);
+    place-items: center;
+    padding: 0;
+    border: 1px solid transparent;
+    color: var(--text-secondary, #666);
+    background: transparent;
+}
+
+.ui-icon-button svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.ui-icon-button--accent {
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 2px 6px rgba(130, 11, 28, .18);
+}
+
+.ui-icon-button--accent:hover:not(:disabled) {
+    border-color: var(--accent-dark);
+    background: var(--accent-dark);
+    box-shadow: 0 3px 9px rgba(130, 11, 28, .24);
+}
+
+.ui-icon-button--danger:hover:not(:disabled) {
+    border-color: var(--danger-border);
+    color: var(--danger);
+    background: var(--danger-soft);
+}
+
+.ui-button:active:not(:disabled),
+.ui-icon-button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.ui-button:focus-visible,
+.ui-icon-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--focus-ring);
+}
+
+.ui-button:disabled,
+.ui-icon-button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Composants migrés : Images, Chapitres et fenêtre de copie des styles. */
+.collection-add-button,
+.collection-delete-button {
+    border-radius: var(--control-radius);
+    transition: var(--control-transition);
+}
+
+.collection-add-button {
+    width: var(--control-size-sm);
+    height: var(--control-size-sm);
+    flex-basis: var(--control-size-sm);
+}
+
+.collection-delete-button:hover {
+    border-color: var(--danger-border);
+    background: var(--danger-soft);
+    transform: none;
+}
+
+.assets-delete-selected:hover,
+.chapters-delete-selected:hover {
+    background: var(--danger-soft);
+}

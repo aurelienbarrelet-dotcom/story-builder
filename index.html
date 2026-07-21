@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.14</title>
+    <title>Story Builder — 2.0.0-alpha.15</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -48,7 +48,7 @@
             <section class="chapters-list-section" aria-labelledby="chaptersHeading">
                 <div class="panel-header panel-header-compact collection-panel-header">
                     <h2 id="chaptersHeading">Chapitres</h2>
-                    <button id="addChapterButton" class="collection-add-button" type="button" aria-label="Ajouter un chapitre" title="Ajouter un chapitre">+</button>
+                    <button id="addChapterButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Ajouter un chapitre" title="Ajouter un chapitre">+</button>
                 </div>
                 <div id="chapters"></div>
                 <div id="chaptersSelectionBar" class="chapters-selection-bar" aria-live="polite"></div>
@@ -207,7 +207,7 @@
         <aside id="assetsPanel" class="assets-panel">
             <header class="assets-panel-header">
                 <h2>Images</h2>
-                <button id="importAssetsButton" class="collection-add-button assets-import-button" type="button" aria-label="Importer des images" title="Importer des images">+</button>
+                <button id="importAssetsButton" class="ui-icon-button ui-icon-button--accent collection-add-button assets-import-button" type="button" aria-label="Importer des images" title="Importer des images">+</button>
                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
             </header>
             <div id="assetsPanelContent" class="assets-panel-content"></div>
@@ -263,18 +263,18 @@
             <div class="style-clipboard-content">
                 <div class="style-clipboard-target-heading style-clipboard-options-heading">
                     <h3>Éléments à dupliquer</h3>
-                    <button id="selectAllStyleOptionsButton" type="button" class="button button-secondary">Tout sélectionner</button>
+                    <button id="selectAllStyleOptionsButton" type="button" class="ui-button ui-button--secondary">Tout sélectionner</button>
                 </div>
                 <div id="styleClipboardOptions" class="style-clipboard-options"></div>
                 <div class="style-clipboard-target-heading">
                     <h3>Appliquer aux chapitres</h3>
-                    <button id="selectAllStyleTargetsButton" type="button" class="button button-secondary">Tout sélectionner</button>
+                    <button id="selectAllStyleTargetsButton" type="button" class="ui-button ui-button--secondary">Tout sélectionner</button>
                 </div>
                 <div id="styleClipboardTargets" class="style-clipboard-targets"></div>
             </div>
             <footer class="modal-actions">
-                <button id="cancelStyleClipboardButton" class="button button-secondary" type="button">Annuler</button>
-                <button id="applyStyleClipboardButton" class="button button-primary" type="button" disabled>Appliquer les styles</button>
+                <button id="cancelStyleClipboardButton" class="ui-button ui-button--secondary" type="button">Annuler</button>
+                <button id="applyStyleClipboardButton" class="ui-button ui-button--primary" type="button" disabled>Appliquer les styles</button>
             </footer>
         </div>
     </div>

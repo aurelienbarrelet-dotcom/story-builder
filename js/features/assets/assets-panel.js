@@ -144,7 +144,7 @@ export function renderAssetsPanel() {
                 </div>
                 <div class="assets-selection-bar ${selectedCount ? "visible" : ""}" aria-live="polite">
                     <span>${selectedCount} image${selectedCount > 1 ? "s" : ""} sélectionnée${selectedCount > 1 ? "s" : ""}</span>
-                    <button type="button" class="collection-delete-button assets-delete-selected" data-delete-selected aria-label="Supprimer les images sélectionnées" title="Supprimer les images sélectionnées">
+                    <button type="button" class="ui-icon-button ui-icon-button--danger collection-delete-button assets-delete-selected" data-delete-selected aria-label="Supprimer les images sélectionnées" title="Supprimer les images sélectionnées">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
                     </button>
                 </div>
