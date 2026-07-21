@@ -1,7 +1,6 @@
 ﻿[CmdletBinding()]
 param(
-    [switch]$NoPush,
-    [switch]$NoBrowser
+    [switch]$NoPush
 )
 
 Set-StrictMode -Version Latest
@@ -10,21 +9,23 @@ $ErrorActionPreference = "Stop"
 $ScriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path -Parent $ScriptDirectory
 $PatchDirectory = Join-Path $ProjectRoot ".patches"
-$LiveServerUrl = "http://127.0.0.1:5500/index.html"
 
 function Write-Step {
     param([Parameter(Mandatory)][string]$Message)
+
     Write-Host ""
     Write-Host "→ $Message" -ForegroundColor Cyan
 }
 
 function Write-Success {
     param([Parameter(Mandatory)][string]$Message)
+
     Write-Host "✓ $Message" -ForegroundColor Green
 }
 
 function Stop-Script {
     param([Parameter(Mandatory)][string]$Message)
+
     Write-Host ""
     Write-Host "✗ $Message" -ForegroundColor Red
     exit 1
@@ -134,22 +135,6 @@ try {
     }
     else {
         Write-Host "• Push ignoré grâce à l'option -NoPush" -ForegroundColor Yellow
-    }
-
-    if (-not $NoBrowser) {
-        Write-Step "Ouverture de Story Builder"
-
-        try {
-            Start-Process $LiveServerUrl
-            Write-Success "Adresse ouverte : $LiveServerUrl"
-        }
-        catch {
-            Write-Host "⚠ Impossible d'ouvrir automatiquement le navigateur." -ForegroundColor Yellow
-            Write-Host "  Ouvre manuellement : $LiveServerUrl"
-        }
-    }
-    else {
-        Write-Host "• Navigateur ignoré grâce à l'option -NoBrowser" -ForegroundColor Yellow
     }
 
     Write-Host ""
