@@ -4729,3 +4729,61 @@ body:not(.reader-mode) .chapter.multi-selected::before {
     padding-bottom: 5px;
     border-top-color: var(--panel-divider);
 }
+
+
+/* Alpha 17 — densité et hiérarchie des inspecteurs */
+:root {
+    --inspector-gap: 10px;
+    --field-height: 34px;
+}
+.asset-inspector,
+.properties-panel-content,
+.layers-panel-content,
+.view-panel-content,
+.legend-panel-content {
+    padding: 14px;
+}
+.property-module,
+.asset-inspector-section,
+.form-group {
+    margin-bottom: 12px;
+}
+.property-module > summary,
+.asset-inspector h3,
+.form-group > label {
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .015em;
+}
+.property-module > summary {
+    min-height: 36px;
+    padding: 8px 10px;
+}
+.property-module[open] > summary {
+    margin-bottom: 8px;
+}
+.form-group {
+    gap: 5px;
+}
+.form-group input:not([type="checkbox"]):not([type="radio"]),
+.form-group select,
+.panel-text-input,
+.asset-inspector input,
+.asset-inspector select {
+    min-height: var(--field-height);
+    padding: 6px 9px;
+}
+.form-group textarea,
+.asset-inspector textarea {
+    min-height: 76px;
+    padding: 8px 9px;
+    resize: vertical;
+}
+.form-row,
+.panel-actions,
+.asset-inspector-actions {
+    gap: 8px;
+}
+.panel-actions {
+    padding-top: 10px;
+}

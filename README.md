@@ -2,6 +2,15 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.17 — 2026-07-21
+
+- Les inspecteurs et formulaires utilisent une densité plus adaptée à un outil d’édition de bureau.
+- Les libellés, champs, groupes et séparateurs sont harmonisés pour réduire le défilement.
+- Les zones de texte conservent une hauteur confortable tandis que les contrôles simples deviennent plus compacts.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.17`.
+
+---
+
 ### SB-2.0.0-alpha.16 — 2026-07-21
 
 - Les panneaux gagnent une structure plus plate, des en-têtes plus nets et des séparateurs plus discrets.
