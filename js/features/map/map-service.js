@@ -2,7 +2,7 @@ import { MAPBOX_TOKEN_KEY } from "../../core/config.js";
 import { emit, EVENTS } from "../../core/events.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getChapters, getProjectConfig, getSelectedChapterIndex, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
-import { createTransitionTimeline } from "../transitions/transition-timeline.js";
+import { createTransitionTimeline, getTransitionEasingFunction } from "../transitions/transition-timeline.js";
 
 let map = null;
 let baseLayerStyles = new Map();
@@ -169,7 +169,8 @@ export function flyToSelectedChapter(options = {}) {
     const cameraOptions = {
         ...camera,
         duration: options.instant ? 0 : timeline.camera.duration,
-        essential: timeline.camera.essential
+        essential: timeline.camera.essential,
+        easing: getTransitionEasingFunction(timeline.camera.easing)
     };
     if (typeof map[method] === "function") map[method](cameraOptions); else map.flyTo(cameraOptions);
     applySelectedChapterLayerOpacity();
@@ -195,7 +196,8 @@ export function previewSelectedChapterTransition() {
         const cameraOptions = {
             ...targetCamera,
             duration: timeline.camera.duration,
-            essential: timeline.camera.essential
+            essential: timeline.camera.essential,
+            easing: getTransitionEasingFunction(timeline.camera.easing)
         };
         if (targetCamera) {
             if (typeof map[method] === "function") map[method](cameraOptions);

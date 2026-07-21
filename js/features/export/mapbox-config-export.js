@@ -184,7 +184,8 @@ function exportChapter(chapter, index, projectConfig = {}) {
             imageCaption: normalizeText(chapter.imageCaption),
             transition: {
                 duration: Math.max(0, Number(transition.duration) || 0),
-                essential: transition.essential !== false
+                essential: transition.essential !== false,
+                easing: transition.easing || "ease-in-out"
             },
             layerMode: chapter.layerMode === "inherit" ? "inherit" : "snapshot",
             layerTransition: {

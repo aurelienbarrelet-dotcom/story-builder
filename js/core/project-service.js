@@ -128,10 +128,12 @@ function validateLegend(value) {
 function validateTransition(value) {
     const source = value && typeof value === "object" ? value : {};
     const allowedMethods = new Set(["flyTo", "easeTo", "jumpTo"]);
+    const allowedEasings = new Set(["linear", "ease", "ease-in", "ease-out", "ease-in-out"]);
     return {
         method: allowedMethods.has(source.method) ? source.method : "flyTo",
         duration: Math.max(0, Number(source.duration) || 1200),
-        essential: source.essential !== false
+        essential: source.essential !== false,
+        easing: allowedEasings.has(source.easing) ? source.easing : "ease-in-out"
     };
 }
 

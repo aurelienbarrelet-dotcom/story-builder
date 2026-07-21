@@ -1,5 +1,7 @@
 const DEFAULT_CAMERA_DURATION = 1200;
 const DEFAULT_LAYER_DURATION = 600;
+const DEFAULT_EASING = "ease-in-out";
+const ALLOWED_EASINGS = new Set(["linear", "ease", "ease-in", "ease-out", "ease-in-out"]);
 
 export function createTransitionTimeline(chapter) {
     const camera = normalizeCameraTrack(chapter?.transition);
@@ -29,7 +31,8 @@ function normalizeCameraTrack(source = {}) {
         end: duration,
         duration,
         method,
-        essential: source.essential !== false
+        essential: source.essential !== false,
+        easing: ALLOWED_EASINGS.has(source.easing) ? source.easing : DEFAULT_EASING
     });
 }
 
@@ -47,4 +50,13 @@ function normalizeLayerTrack(source = {}) {
         duration,
         enabled
     });
+}
+
+export function getTransitionEasingFunction(name) {
+    const easing = ALLOWED_EASINGS.has(name) ? name : DEFAULT_EASING;
+    if (easing === "linear") return t => t;
+    if (easing === "ease-in") return t => t * t;
+    if (easing === "ease-out") return t => 1 - ((1 - t) * (1 - t));
+    if (easing === "ease") return t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }

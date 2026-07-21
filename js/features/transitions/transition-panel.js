@@ -41,6 +41,17 @@ export function renderTransitionPanel() {
                 <input id="transitionDurationInput" type="number" min="0" step="100" value="${Number(chapter.transition?.duration ?? 1200)}" ${chapter.transition?.method === "jumpTo" ? "disabled" : ""}>
                 <p id="cameraTransitionHelp" class="property-help">${getCameraTransitionHelp(chapter.transition?.method)}</p>
             </div>
+            <div class="property">
+                <label for="transitionEasingInput">Accélération</label>
+                <select id="transitionEasingInput">
+                    <option value="linear" ${chapter.transition?.easing === "linear" ? "selected" : ""}>Linéaire</option>
+                    <option value="ease" ${chapter.transition?.easing === "ease" ? "selected" : ""}>Ease</option>
+                    <option value="ease-in" ${chapter.transition?.easing === "ease-in" ? "selected" : ""}>Ease-in</option>
+                    <option value="ease-out" ${chapter.transition?.easing === "ease-out" ? "selected" : ""}>Ease-out</option>
+                    <option value="ease-in-out" ${!chapter.transition?.easing || chapter.transition?.easing === "ease-in-out" ? "selected" : ""}>Ease-in-out</option>
+                </select>
+                <p class="property-help">Courbe appliquée au mouvement de caméra. Les calques conservent l’interpolation native Mapbox.</p>
+            </div>
             <div class="property transition-toggle-property">
                 <label class="transition-toggle" for="transitionEssentialInput">
                     <input id="transitionEssentialInput" type="checkbox" ${chapter.transition?.essential !== false ? "checked" : ""}>
@@ -94,6 +105,7 @@ function bindTransitionEvents() {
     const transitionMethodInput = document.getElementById("transitionMethodInput");
     const transitionDurationInput = document.getElementById("transitionDurationInput");
     const transitionEssentialInput = document.getElementById("transitionEssentialInput");
+    const transitionEasingInput = document.getElementById("transitionEasingInput");
     const cameraTransitionHelp = document.getElementById("cameraTransitionHelp");
     const layerTransitionEnabledInput = document.getElementById("layerTransitionEnabledInput");
     const layerModeInput = document.getElementById("layerModeInput");
@@ -110,6 +122,7 @@ function bindTransitionEvents() {
     });
     transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
     transitionEssentialInput?.addEventListener("change", () => updateChapterTransition("essential", transitionEssentialInput.checked));
+    transitionEasingInput?.addEventListener("change", () => updateChapterTransition("easing", transitionEasingInput.value));
     layerTransitionEnabledInput?.addEventListener("change", () => {
         const enabled = layerTransitionEnabledInput.checked;
         layerDurationInput.disabled = !enabled;
