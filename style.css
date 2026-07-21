@@ -5747,3 +5747,6 @@ body > .collection-menu { z-index: 1000; }
 .legend-style-mode { display: inline-flex; width: max-content; margin-top: 4px; padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: .02em; }
 .legend-style-mode--linked { color: #255d45; background: #e8f5ee; }
 .legend-style-mode--custom { color: #714d13; background: #fff3d6; }
+
+.transition-preset-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.transition-preset-row .button { min-width: 0; padding-inline: 8px; }
