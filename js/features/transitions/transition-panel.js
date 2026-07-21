@@ -1,4 +1,4 @@
-import { getSelectedChapter, getSelectedSection } from "../../core/store.js";
+import { getSelectedChapter, getSelectedChapters, getSelectedSection } from "../../core/store.js";
 import { getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
     updateChapterLayerMode,
@@ -22,11 +22,23 @@ export function renderTransitionPanel() {
         return;
     }
 
-    const transitionControl = chapter.transition?.control || "automatic";
-    const isAutomatic = transitionControl === "automatic";
-    const isSmoothScroll = transitionControl === "smooth-scroll";
+    const selectedChapters = getSelectedChapters();
+    const selectionCount = selectedChapters.length;
+    const transitionControl = getCommonValue(selectedChapters, item => item.transition?.control || "automatic", "automatic");
+    const transitionMethod = getCommonValue(selectedChapters, item => item.transition?.method || "flyTo", "flyTo");
+    const transitionDuration = getCommonValue(selectedChapters, item => Number(item.transition?.duration ?? 1200), 1200);
+    const transitionSmoothing = getCommonValue(selectedChapters, item => Number(item.transition?.smoothing ?? 0.18), 0.18);
+    const transitionEasing = getCommonValue(selectedChapters, item => item.transition?.easing || "ease-in-out", "ease-in-out");
+    const transitionEssential = getCommonValue(selectedChapters, item => item.transition?.essential !== false, true);
+    const layerTransitionEnabled = getCommonValue(selectedChapters, item => item.layerTransition?.enabled !== false, true);
+    const layerMode = getCommonValue(selectedChapters, item => item.layerMode === "inherit" ? "inherit" : "snapshot", "snapshot");
+    const layerDuration = getCommonValue(selectedChapters, item => Number(item.layerTransition?.duration ?? 600), 600);
+    const layerDelay = getCommonValue(selectedChapters, item => Number(item.layerTransition?.delay ?? 0), 0);
+    const isAutomatic = !transitionControl.mixed && transitionControl.value === "automatic";
+    const isSmoothScroll = !transitionControl.mixed && transitionControl.value === "smooth-scroll";
 
     container.innerHTML = `
+        ${selectionCount > 1 ? `<p class="transition-multi-selection"><strong>${selectionCount} chapitres sélectionnés.</strong> Toute modification ci-dessous sera appliquée à l’ensemble de la sélection.</p>` : ""}
         <section class="transition-panel-section" aria-labelledby="transitionControlTitle">
             <header class="transition-panel-section-header">
                 <h3 id="transitionControlTitle">Déclenchement</h3>
@@ -34,22 +46,22 @@ export function renderTransitionPanel() {
             </header>
             <div class="transition-control-options" role="radiogroup" aria-label="Déclenchement de la transition">
                 <label class="transition-control-option">
-                    <input type="radio" name="transitionControl" value="automatic" ${isAutomatic ? "checked" : ""}>
+                    <input type="radio" name="transitionControl" value="automatic" ${!transitionControl.mixed && transitionControl.value === "automatic" ? "checked" : ""}>
                     <span>Automatique</span>
                 </label>
                 <label class="transition-control-option">
-                    <input type="radio" name="transitionControl" value="scroll" ${transitionControl === "scroll" ? "checked" : ""}>
+                    <input type="radio" name="transitionControl" value="scroll" ${!transitionControl.mixed && transitionControl.value === "scroll" ? "checked" : ""}>
                     <span>Défilement</span>
                 </label>
                 <label class="transition-control-option">
-                    <input type="radio" name="transitionControl" value="smooth-scroll" ${isSmoothScroll ? "checked" : ""}>
+                    <input type="radio" name="transitionControl" value="smooth-scroll" ${!transitionControl.mixed && transitionControl.value === "smooth-scroll" ? "checked" : ""}>
                     <span>Défilement lissé</span>
                 </label>
             </div>
             <p class="property-help">Automatique joue la transition à l’entrée du chapitre. Les modes de défilement suivent la progression du lecteur.</p>
-            <div id="transitionSmoothingProperty" class="property ${isSmoothScroll ? "" : "is-hidden"}">
+            <div id="transitionSmoothingProperty" class="property ${isSmoothScroll || transitionControl.mixed ? "" : "is-hidden"}">
                 <label for="transitionSmoothingInput">Lissage</label>
-                <input id="transitionSmoothingInput" type="range" min="0.04" max="0.5" step="0.01" value="${Number(chapter.transition?.smoothing ?? 0.18)}">
+                <input id="transitionSmoothingInput" type="range" min="0.04" max="0.5" step="0.01" value="${transitionSmoothing.value}">
                 <p class="property-help">Réactivité du mouvement : faible = plus cinématique, forte = plus proche du défilement.</p>
             </div>
         </section>
@@ -62,30 +74,32 @@ export function renderTransitionPanel() {
             <div class="property">
                 <label for="transitionMethodInput">Animation caméra</label>
                 <select id="transitionMethodInput">
-                    <option value="flyTo" ${chapter.transition?.method === "flyTo" ? "selected" : ""}>Vol fluide (flyTo)</option>
-                    <option value="easeTo" ${chapter.transition?.method === "easeTo" ? "selected" : ""}>Déplacement direct (easeTo)</option>
-                    <option value="jumpTo" ${chapter.transition?.method === "jumpTo" ? "selected" : ""}>Sans animation (jumpTo)</option>
+                    ${transitionMethod.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
+                    <option value="flyTo" ${!transitionMethod.mixed && transitionMethod.value === "flyTo" ? "selected" : ""}>Vol fluide (flyTo)</option>
+                    <option value="easeTo" ${!transitionMethod.mixed && transitionMethod.value === "easeTo" ? "selected" : ""}>Déplacement direct (easeTo)</option>
+                    <option value="jumpTo" ${!transitionMethod.mixed && transitionMethod.value === "jumpTo" ? "selected" : ""}>Sans animation (jumpTo)</option>
                 </select>
             </div>
-            <div id="transitionDurationProperty" class="property ${isAutomatic ? "" : "is-hidden"}">
+            <div id="transitionDurationProperty" class="property ${isAutomatic || transitionControl.mixed ? "" : "is-hidden"}">
                 <label for="transitionDurationInput">Durée caméra (ms)</label>
-                <input id="transitionDurationInput" type="number" min="0" step="100" value="${Number(chapter.transition?.duration ?? 1200)}" ${chapter.transition?.method === "jumpTo" ? "disabled" : ""}>
-                <p id="cameraTransitionHelp" class="property-help">${getCameraTransitionHelp(chapter.transition?.method)}</p>
+                <input id="transitionDurationInput" type="number" min="0" step="100" value="${transitionDuration.mixed ? "" : transitionDuration.value}" placeholder="${transitionDuration.mixed ? "Valeurs multiples" : ""}" ${!transitionMethod.mixed && transitionMethod.value === "jumpTo" ? "disabled" : ""}>
+                <p id="cameraTransitionHelp" class="property-help">${transitionMethod.mixed ? "Plusieurs animations de caméra sont sélectionnées." : getCameraTransitionHelp(transitionMethod.value)}</p>
             </div>
             <div class="property">
                 <label for="transitionEasingInput">Accélération</label>
                 <select id="transitionEasingInput">
-                    <option value="linear" ${chapter.transition?.easing === "linear" ? "selected" : ""}>Linéaire</option>
-                    <option value="ease" ${chapter.transition?.easing === "ease" ? "selected" : ""}>Ease</option>
-                    <option value="ease-in" ${chapter.transition?.easing === "ease-in" ? "selected" : ""}>Ease-in</option>
-                    <option value="ease-out" ${chapter.transition?.easing === "ease-out" ? "selected" : ""}>Ease-out</option>
-                    <option value="ease-in-out" ${!chapter.transition?.easing || chapter.transition?.easing === "ease-in-out" ? "selected" : ""}>Ease-in-out</option>
+                    ${transitionEasing.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
+                    <option value="linear" ${!transitionEasing.mixed && transitionEasing.value === "linear" ? "selected" : ""}>Linéaire</option>
+                    <option value="ease" ${!transitionEasing.mixed && transitionEasing.value === "ease" ? "selected" : ""}>Ease</option>
+                    <option value="ease-in" ${!transitionEasing.mixed && transitionEasing.value === "ease-in" ? "selected" : ""}>Ease-in</option>
+                    <option value="ease-out" ${!transitionEasing.mixed && transitionEasing.value === "ease-out" ? "selected" : ""}>Ease-out</option>
+                    <option value="ease-in-out" ${!transitionEasing.mixed && transitionEasing.value === "ease-in-out" ? "selected" : ""}>Ease-in-out</option>
                 </select>
                 <p class="property-help">Courbe appliquée au mouvement de caméra. Les calques conservent l’interpolation native Mapbox.</p>
             </div>
             <div class="property transition-toggle-property">
                 <label class="transition-toggle" for="transitionEssentialInput">
-                    <input id="transitionEssentialInput" type="checkbox" ${chapter.transition?.essential !== false ? "checked" : ""}>
+                    <input id="transitionEssentialInput" type="checkbox" ${!transitionEssential.mixed && transitionEssential.value ? "checked" : ""}>
                     <span>Mouvement essentiel</span>
                 </label>
                 <p class="property-help">Autorise Mapbox à conserver ce déplacement lorsque le système limite les animations.</p>
@@ -99,7 +113,7 @@ export function renderTransitionPanel() {
             </header>
             <div class="property transition-toggle-property">
                 <label class="transition-toggle" for="layerTransitionEnabledInput">
-                    <input id="layerTransitionEnabledInput" type="checkbox" ${chapter.layerTransition?.enabled !== false ? "checked" : ""}>
+                    <input id="layerTransitionEnabledInput" type="checkbox" ${!layerTransitionEnabled.mixed && layerTransitionEnabled.value ? "checked" : ""}>
                     <span>Activer les transitions de calques</span>
                 </label>
                 <p class="property-help">Les propriétés animables évoluent progressivement. La visibilité reste instantanée.</p>
@@ -107,18 +121,19 @@ export function renderTransitionPanel() {
             <div class="property">
                 <label for="layerModeInput">Comportement des calques</label>
                 <select id="layerModeInput">
-                    <option value="snapshot" ${chapter.layerMode !== "inherit" ? "selected" : ""}>État complet</option>
-                    <option value="inherit" ${chapter.layerMode === "inherit" ? "selected" : ""}>Hériter du chapitre précédent</option>
+                    ${layerMode.mixed ? '<option value="" selected disabled>Valeurs multiples</option>' : ""}
+                    <option value="snapshot" ${!layerMode.mixed && layerMode.value === "snapshot" ? "selected" : ""}>État complet</option>
+                    <option value="inherit" ${!layerMode.mixed && layerMode.value === "inherit" ? "selected" : ""}>Hériter du chapitre précédent</option>
                 </select>
             </div>
             <div class="camera-form">
                 <div class="camera-field">
                     <label for="layerDurationInput">Fondu (ms)</label>
-                    <input id="layerDurationInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.duration ?? 600)}" ${chapter.layerTransition?.enabled === false ? "disabled" : ""}>
+                    <input id="layerDurationInput" type="number" min="0" step="100" value="${layerDuration.mixed ? "" : layerDuration.value}" placeholder="${layerDuration.mixed ? "Valeurs multiples" : ""}" ${!layerTransitionEnabled.mixed && !layerTransitionEnabled.value ? "disabled" : ""}>
                 </div>
                 <div class="camera-field">
                     <label for="layerDelayInput">Délai (ms)</label>
-                    <input id="layerDelayInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.delay ?? 0)}" ${chapter.layerTransition?.enabled === false ? "disabled" : ""}>
+                    <input id="layerDelayInput" type="number" min="0" step="100" value="${layerDelay.mixed ? "" : layerDelay.value}" placeholder="${layerDelay.mixed ? "Valeurs multiples" : ""}" ${!layerTransitionEnabled.mixed && !layerTransitionEnabled.value ? "disabled" : ""}>
                 </div>
             </div>
         </section>
@@ -129,6 +144,10 @@ export function renderTransitionPanel() {
         </div>
     `;
 
+    const essentialInput = document.getElementById("transitionEssentialInput");
+    const layerEnabledInput = document.getElementById("layerTransitionEnabledInput");
+    if (essentialInput) essentialInput.indeterminate = transitionEssential.mixed;
+    if (layerEnabledInput) layerEnabledInput.indeterminate = layerTransitionEnabled.mixed;
     bindTransitionEvents();
 }
 
@@ -204,6 +223,15 @@ function bindTransitionEvents() {
             if (transitionPreviewStatus) transitionPreviewStatus.textContent = "Aperçu terminé. Aucun changement n’a été enregistré.";
         }, previewDuration + 250);
     });
+}
+
+function getCommonValue(items, getter, fallback) {
+    if (!items.length) return { value: fallback, mixed: false };
+    const values = items.map(item => getter(item));
+    return {
+        value: values[0] ?? fallback,
+        mixed: values.some(value => value !== values[0])
+    };
 }
 
 function getCameraTransitionHelp(method) {

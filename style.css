@@ -5642,3 +5642,20 @@ body > .collection-menu { z-index: 1000; }
     color: var(--color-text-muted, #667085);
     background: var(--color-surface-subtle, rgba(127, 127, 127, 0.08));
 }
+
+
+/* Alpha 31.3 — édition groupée des transitions */
+.transition-multi-selection {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.transition-multi-selection strong {
+    display: block;
+    margin-bottom: 2px;
+}

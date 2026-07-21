@@ -3,6 +3,7 @@ import {
     getSelectedChapter,
     getSelectedChapterIndex,
     getSelectedChapterIndices,
+    getSelectedChapters,
     getSelectedSection,
     getProjectConfig,
     setSelectionAfterDeletion,
@@ -139,31 +140,38 @@ export function deleteSelectedChapters() {
 }
 
 export function updateChapterTransition(field, value) {
-    const chapter = getSelectedChapter();
-    if (!chapter) return;
-    chapter.transition ??= { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" };
-    chapter.transition[field] = field === "duration"
+    const chapters = getSelectedChapters();
+    if (!chapters.length) return;
+    const normalized = field === "duration"
         ? Math.max(0, Number(value) || 0)
         : field === "smoothing"
             ? Math.min(0.5, Math.max(0.04, Number(value) || 0.18))
             : value;
+    chapters.forEach(chapter => {
+        chapter.transition ??= { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" };
+        chapter.transition[field] = normalized;
+    });
     commitProjectChange();
 }
 
 export function updateChapterLayerMode(value) {
-    const chapter = getSelectedChapter();
-    if (!chapter) return;
-    chapter.layerMode = value === "inherit" ? "inherit" : "snapshot";
+    const chapters = getSelectedChapters();
+    if (!chapters.length) return;
+    const normalized = value === "inherit" ? "inherit" : "snapshot";
+    chapters.forEach(chapter => { chapter.layerMode = normalized; });
     commitProjectChange();
 }
 
 export function updateChapterLayerTransition(field, value) {
-    const chapter = getSelectedChapter();
-    if (!chapter) return;
-    chapter.layerTransition ??= { enabled: true, duration: 600, delay: 0 };
-    chapter.layerTransition[field] = field === "enabled"
+    const chapters = getSelectedChapters();
+    if (!chapters.length) return;
+    const normalized = field === "enabled"
         ? value !== false
         : Math.max(0, Number(value) || 0);
+    chapters.forEach(chapter => {
+        chapter.layerTransition ??= { enabled: true, duration: 600, delay: 0 };
+        chapter.layerTransition[field] = normalized;
+    });
     commitProjectChange();
 }
 

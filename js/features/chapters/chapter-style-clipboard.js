@@ -31,6 +31,7 @@ export function openStyleCopyDialog(chapterId) {
         layerStyles: cloneObject(chapter.layerStyles ?? {}),
         legend: cloneObject(chapter.legend ?? []),
         layerMode: chapter.layerMode ?? "snapshot",
+        transition: cloneObject(chapter.transition ?? { control: "automatic", method: "flyTo", duration: 1200, smoothing: 0.18, essential: true, easing: "ease-in-out" }),
         layerTransition: cloneObject(chapter.layerTransition ?? { enabled: true, duration: 600, delay: 0 })
     };
 
@@ -78,7 +79,8 @@ function renderStyleOptions(container) {
     [
         { value: "layers", label: "Calques", checked: true },
         { value: "legend", label: "Légendes", checked: true },
-        { value: "view", label: "Vue", checked: true }
+        { value: "view", label: "Vue", checked: true },
+        { value: "transitions", label: "Transitions", checked: false }
     ].forEach(option => rows.append(createCheckboxRow({
         className: "style-option-row",
         inputClass: "style-option-checkbox",
@@ -142,7 +144,7 @@ function updateApplyButton() {
     const targetCount = document.querySelectorAll(".style-target-checkbox:checked").length;
     const optionCount = document.querySelectorAll(".style-option-checkbox:checked").length;
     button.disabled = !copiedStyles || targetCount === 0 || optionCount === 0;
-    button.textContent = targetCount > 1 ? `Appliquer à ${targetCount} chapitres` : "Appliquer les styles";
+    button.textContent = targetCount > 1 ? `Appliquer à ${targetCount} chapitres` : "Appliquer";
 }
 
 function toggleAllTargets() {
@@ -193,6 +195,10 @@ function applySelectionsToChapter(chapter, selections) {
     if (selections.has("layers")) {
         chapter.layerOpacity = cloneObject(copiedStyles.layerOpacity);
         chapter.layerStyles = cloneObject(copiedStyles.layerStyles);
+    }
+
+    if (selections.has("transitions")) {
+        chapter.transition = cloneObject(copiedStyles.transition);
         chapter.layerMode = copiedStyles.layerMode;
         chapter.layerTransition = cloneObject(copiedStyles.layerTransition);
     }

@@ -1,4 +1,13 @@
-## SB-2.0.0-alpha.31.2
+## SB-2.0.0-alpha.31.3
+
+### Alpha 31.3 — copie et édition groupée des transitions
+
+- Ajout de l’option **Transitions** à la boîte existante « Copier les styles ».
+- Copie indépendante des réglages de caméra, de déclenchement, de lissage et de transition des calques.
+- Le panneau Transitions applique désormais chaque modification à tous les chapitres sélectionnés.
+- Affichage des valeurs mixtes sans écraser les différences tant qu’un réglage n’est pas modifié.
+- Une modification groupée produit une seule entrée dans l’historique.
+
 
 - Trois modes de déclenchement par chapitre : automatique (par défaut), défilement direct et défilement lissé.
 - Le panneau Transitions masque les réglages sans effet selon le mode choisi.
