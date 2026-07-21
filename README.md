@@ -1,3 +1,8 @@
+## SB-2.0.0-alpha.27.3.2
+
+- Déplace uniquement l’action de réinitialisation des calques en bas du panneau Calques.
+- Aucun changement apporté à la structure, aux filtres, au défilement ou au rendu des calques.
+
 ## SB-2.0.0-alpha.27.3.1
 
 - Restaure intégralement la structure et le comportement du panneau Calques de l’alpha.27.2.

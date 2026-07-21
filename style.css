@@ -5448,3 +5448,11 @@ body > .collection-menu { z-index: 1000; }
 .legend-available-list {
     scrollbar-gutter: stable;
 }
+
+/* Alpha 27.3.2 — action de réinitialisation en bas du panneau Calques */
+.layers-panel-content > .layers-reset-selected {
+    position: sticky;
+    z-index: 2;
+    bottom: 0;
+    margin-top: var(--space-5);
+}
