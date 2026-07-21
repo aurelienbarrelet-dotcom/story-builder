@@ -5136,3 +5136,102 @@ body:not(.reader-mode) .chapter:hover {
     border-top: 1px solid var(--panel-divider);
     background: var(--ui-surface);
 }
+
+/* Alpha 22 — CollectionPanel partagé */
+.collection-panel {
+    --collection-gap: 8px;
+    --collection-card-padding: 8px;
+}
+
+.collection-panel-content,
+.assets-gallery {
+    display: grid;
+    gap: var(--collection-gap);
+    min-height: 0;
+}
+
+.collection-panel .collection-card {
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    transition: var(--ui-transition);
+}
+
+.collection-panel .collection-card:hover {
+    border-color: var(--ui-border-hover);
+    background: var(--ui-surface-hover);
+}
+
+.collection-panel .collection-card.selected,
+.collection-panel .collection-card.multi-selected {
+    border-color: var(--ui-accent);
+    box-shadow: var(--ui-selection-ring);
+}
+
+.collection-card-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.collection-menu-button {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--ui-radius);
+    color: var(--ui-text-muted);
+    background: transparent;
+    cursor: pointer;
+    transition: var(--ui-transition);
+}
+
+.collection-menu-button:hover,
+.collection-menu-button[aria-expanded="true"] {
+    border-color: var(--ui-border);
+    color: var(--ui-text);
+    background: var(--ui-surface-hover);
+}
+
+.collection-menu-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--ui-focus-ring);
+}
+
+.collection-menu {
+    z-index: 30;
+    min-width: 160px;
+    padding: 4px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    box-shadow: 0 10px 30px rgba(23, 27, 31, .16);
+}
+
+.collection-selection-bar {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 38px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 6px 5px 10px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    color: var(--ui-text);
+    background: var(--ui-surface-hover);
+    font-size: 12px;
+}
+
+.collection-selection-bar.visible {
+    display: flex;
+}
+
+.collection-selection-bar[hidden] {
+    display: none !important;
+}

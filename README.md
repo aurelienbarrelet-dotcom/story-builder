@@ -2,6 +2,16 @@
 
 ## Dernières modifications
 
+### SB-2.0.0-alpha.22 — 2026-07-21
+
+- Un module `CollectionPanel` centralise désormais la sélection simple, multiple et par plage pour les collections.
+- Images et Chapitres utilisent la même barre d’actions contextuelle et le même bouton de suppression groupée.
+- Les menus `…` des cartes suivent un comportement commun : ouverture exclusive, fermeture extérieure et attributs ARIA synchronisés.
+- Les panneaux Images et Chapitres exposent une structure HTML commune prête à accueillir les Légendes dans alpha.23.
+- Le titre de l’onglet du navigateur affiche désormais `Story Builder — 2.0.0-alpha.22`.
+
+---
+
 ### SB-2.0.0-alpha.21 — 2026-07-21
 
 - Un socle visuel commun harmonise les champs de texte, recherches, listes, zones de texte et contrôles numériques.

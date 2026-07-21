@@ -2,10 +2,12 @@ import { MAX_IMAGE_SIZE } from "../../core/config.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getProject, getSelectedChapter } from "../../core/store.js";
 import { readFileAsDataUrl } from "../../core/utils.js";
+import {
+    createCollectionSelection,
+    renderCollectionSelectionBar
+} from "../../ui/collection-panel.js";
 
-let selectedAssetId = null;
-let selectedAssetIds = new Set();
-let selectionAnchorId = null;
+const assetSelection = createCollectionSelection();
 
 function getImages() {
     const project = getProject();
@@ -46,7 +48,7 @@ function toggleAssetForChapter(asset) {
 
 function deleteSelectedAssets() {
     const images = getImages();
-    const ids = new Set(selectedAssetIds);
+    const ids = assetSelection.ids;
     if (!ids.size) return;
 
     const label = ids.size > 1 ? `${ids.size} images` : "cette image";
@@ -61,9 +63,7 @@ function deleteSelectedAssets() {
 
     const remaining = images.filter(asset => !ids.has(asset.id));
     images.splice(0, images.length, ...remaining);
-    selectedAssetIds.clear();
-    selectedAssetId = null;
-    selectionAnchorId = null;
+    assetSelection.clear();
     commitProjectChange();
 }
 
@@ -102,17 +102,16 @@ export function renderAssetsPanel() {
 
     const images = getImages();
     const existingIds = new Set(images.map(asset => asset.id));
-    selectedAssetIds = new Set([...selectedAssetIds].filter(id => existingIds.has(id)));
-    if (selectedAssetId && !existingIds.has(selectedAssetId)) selectedAssetId = null;
+    assetSelection.prune(existingIds);
 
-    const selectedAsset = images.find(asset => asset.id === selectedAssetId) ?? null;
-    const selectedCount = selectedAssetIds.size;
+    const selectedAsset = images.find(asset => asset.id === assetSelection.primaryId) ?? null;
+    const selectedCount = assetSelection.count;
 
     const galleryMarkup = images.length ? `
         <div class="assets-grid" role="list" aria-label="Images du projet">
             ${images.map(asset => {
                 const isActive = getSelectedChapter()?.image === asset.data;
-                const isSelected = selectedAssetIds.has(asset.id);
+                const isSelected = assetSelection.has(asset.id);
                 return `
                 <button type="button"
                     class="asset-card ${isSelected ? "selected" : ""} ${isActive ? "active" : ""}"
@@ -142,12 +141,7 @@ export function renderAssetsPanel() {
                 <div class="assets-gallery" aria-label="Galerie d’images">
                     ${galleryMarkup}
                 </div>
-                <div class="assets-selection-bar ${selectedCount ? "visible" : ""}" aria-live="polite">
-                    <span>${selectedCount} image${selectedCount > 1 ? "s" : ""} sélectionnée${selectedCount > 1 ? "s" : ""}</span>
-                    <button type="button" class="ui-icon-button ui-icon-button--danger collection-delete-button assets-delete-selected" data-delete-selected aria-label="Supprimer les images sélectionnées" title="Supprimer les images sélectionnées">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
-                    </button>
-                </div>
+                <div class="collection-selection-bar assets-selection-bar" aria-live="polite" hidden></div>
             </div>
             <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
                 ${inspectorMarkup}
@@ -159,25 +153,7 @@ export function renderAssetsPanel() {
             const assetId = card.dataset.selectAsset;
             const images = getImages();
 
-            if (event.shiftKey && selectionAnchorId) {
-                const anchorIndex = images.findIndex(asset => asset.id === selectionAnchorId);
-                const currentIndex = images.findIndex(asset => asset.id === assetId);
-                if (anchorIndex >= 0 && currentIndex >= 0) {
-                    const [start, end] = [anchorIndex, currentIndex].sort((a, b) => a - b);
-                    selectedAssetIds = new Set(images.slice(start, end + 1).map(asset => asset.id));
-                }
-            } else if (event.ctrlKey || event.metaKey) {
-                if (selectedAssetIds.has(assetId)) selectedAssetIds.delete(assetId);
-                else selectedAssetIds.add(assetId);
-                selectionAnchorId = assetId;
-            } else {
-                selectedAssetIds = new Set([assetId]);
-                selectionAnchorId = assetId;
-            }
-
-            selectedAssetId = selectedAssetIds.has(assetId)
-                ? assetId
-                : [...selectedAssetIds].at(-1) ?? null;
+            assetSelection.select(assetId, images.map(asset => asset.id), event);
             renderAssetsPanel();
         });
 
@@ -185,9 +161,7 @@ export function renderAssetsPanel() {
             event.preventDefault();
             const asset = getImages().find(item => item.id === card.dataset.selectAsset);
             if (!asset) return;
-            selectedAssetId = asset.id;
-            selectedAssetIds = new Set([asset.id]);
-            selectionAnchorId = asset.id;
+            assetSelection.replace([asset.id], asset.id);
             toggleAssetForChapter(asset);
         });
     });
@@ -221,7 +195,13 @@ export function renderAssetsPanel() {
         });
     });
 
-    container.querySelector("[data-delete-selected]")?.addEventListener("click", deleteSelectedAssets);
+    renderCollectionSelectionBar(container.querySelector(".assets-selection-bar"), {
+        count: selectedCount,
+        singular: "image",
+        plural: "images",
+        onDelete: deleteSelectedAssets,
+        deleteLabel: "Supprimer les images sélectionnées"
+    });
 }
 
 async function importImages(files) {
@@ -240,9 +220,7 @@ async function importImages(files) {
             createdAt: new Date().toISOString()
         };
         getImages().push(asset);
-        selectedAssetId = asset.id;
-        selectedAssetIds = new Set([asset.id]);
-        selectionAnchorId = asset.id;
+        assetSelection.replace([asset.id], asset.id);
     }
     commitProjectChange();
 }

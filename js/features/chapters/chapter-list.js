@@ -21,6 +21,11 @@ import {
 } from "./chapter-service.js";
 import { openStyleCopyDialog } from "./chapter-style-clipboard.js";
 import { copySelectedChapters, duplicateSelectedChapters, pasteChapters } from "./chapter-clipboard.js";
+import {
+    bindCollectionMenu,
+    closeCollectionMenus,
+    renderCollectionSelectionBar
+} from "../../ui/collection-panel.js";
 
 
 function getChapterCardLabel(chapter) {
@@ -51,16 +56,13 @@ export function renderChapterList() {
     const selectedIndices = getSelectedChapterIndices();
     const selectionBar = document.getElementById("chaptersSelectionBar");
 
-    if (selectionBar) {
-        const count = selectedIndices.length;
-        selectionBar.className = `chapters-selection-bar ${count ? "visible" : ""}`;
-        selectionBar.innerHTML = count ? `
-            <span>${count} chapitre${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}</span>
-            <button type="button" class="ui-icon-button ui-icon-button--danger collection-delete-button chapters-delete-selected" aria-label="Supprimer les chapitres sélectionnés" title="Supprimer les chapitres sélectionnés">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg>
-            </button>` : "";
-        selectionBar.querySelector(".chapters-delete-selected")?.addEventListener("click", deleteSelectedChapters);
-    }
+    renderCollectionSelectionBar(selectionBar, {
+        count: selectedIndices.length,
+        singular: "chapitre",
+        plural: "chapitres",
+        onDelete: deleteSelectedChapters,
+        deleteLabel: "Supprimer les chapitres sélectionnés"
+    });
 
     container.innerHTML = "";
     generalContainer.innerHTML = "";
@@ -120,10 +122,10 @@ export function renderChapterList() {
         content.querySelector(".chapter-title").textContent = getChapterCardLabel(chapter);
 
         const actions = document.createElement("div");
-        actions.className = "chapter-actions";
+        actions.className = "chapter-actions collection-card-actions";
         actions.innerHTML = `
-            <button class="chapter-menu-button" type="button" aria-label="Actions du chapitre" aria-expanded="false">⋯</button>
-            <div class="chapter-menu" hidden>
+            <button class="chapter-menu-button collection-menu-button" type="button" aria-label="Actions du chapitre" aria-expanded="false">⋯</button>
+            <div class="chapter-menu collection-menu" data-collection-menu hidden>
                 <button type="button" data-action="copy">Copier</button>
                 <button type="button" data-action="paste">Coller après</button>
                 <button type="button" data-action="duplicate">Dupliquer</button>
@@ -133,27 +135,22 @@ export function renderChapterList() {
 
         const menuButton = actions.querySelector(".chapter-menu-button");
         const menu = actions.querySelector(".chapter-menu");
-        menuButton.addEventListener("click", event => {
-            event.stopPropagation();
-            document.querySelectorAll(".chapter-menu").forEach(other => {
-                if (other !== menu) other.hidden = true;
-            });
-            menu.hidden = !menu.hidden;
-            menuButton.setAttribute("aria-expanded", String(!menu.hidden));
-        });
-        menu.addEventListener("click", event => {
-            event.stopPropagation();
-            const action = event.target.dataset.action;
-            if (!isChapterMultiSelected(index)) selectChapter(index);
-            if (action === "copy") copySelectedChapters();
-            if (action === "paste") pasteChapters();
-            if (action === "duplicate") duplicateSelectedChapters();
-            if (action === "copy-styles") openStyleCopyDialog(chapter.id);
-            if (action === "delete") {
-                if (isChapterMultiSelected(index) && document.querySelectorAll(".chapter.multi-selected").length > 1) {
-                    deleteSelectedChapters();
-                } else {
-                    deleteChapterAt(index);
+        bindCollectionMenu({
+            root: item,
+            trigger: menuButton,
+            menu,
+            onAction(action) {
+                if (!isChapterMultiSelected(index)) selectChapter(index);
+                if (action === "copy") copySelectedChapters();
+                if (action === "paste") pasteChapters();
+                if (action === "duplicate") duplicateSelectedChapters();
+                if (action === "copy-styles") openStyleCopyDialog(chapter.id);
+                if (action === "delete") {
+                    if (isChapterMultiSelected(index) && document.querySelectorAll(".chapter.multi-selected").length > 1) {
+                        deleteSelectedChapters();
+                    } else {
+                        deleteChapterAt(index);
+                    }
                 }
             }
         });
@@ -192,8 +189,4 @@ export function renderChapterList() {
     });
 }
 
-document.addEventListener("click", event => {
-    if (!event.target.closest(".chapter-actions")) {
-        document.querySelectorAll(".chapter-menu").forEach(menu => menu.hidden = true);
-    }
-});
+document.addEventListener("click", closeCollectionMenus);
