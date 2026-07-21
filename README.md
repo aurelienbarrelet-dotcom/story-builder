@@ -1,3 +1,13 @@
+## SB-2.0.0-alpha.28.3
+
+### Aperçu manuel des transitions
+
+- Ajout d’un bouton **Aperçu de la transition** dans l’onglet Transitions.
+- L’aperçu replace temporairement la carte sur l’état du chapitre précédent, puis rejoue la caméra et les calques du chapitre sélectionné.
+- Pour le premier chapitre, l’état général du projet sert de point de départ.
+- L’aperçu ne modifie ni le JSON du projet ni l’historique d’annulation.
+- Aucun changement du package de publication.
+
 ## SB-2.0.0-alpha.28.2
 
 ### Contrôle explicite des transitions de calques

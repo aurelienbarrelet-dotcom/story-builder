@@ -4,6 +4,7 @@ import {
     updateChapterLayerTransition,
     updateChapterTransition
 } from "../chapters/chapter-service.js";
+import { previewSelectedChapterTransition } from "../map/map-service.js";
 
 export function renderTransitionPanel() {
     const container = document.getElementById("transitionPanelContent");
@@ -70,6 +71,11 @@ export function renderTransitionPanel() {
                 </div>
             </div>
         </section>
+
+        <div class="transition-preview-bar">
+            <button id="previewTransitionButton" type="button" class="button button-primary">Aperçu de la transition</button>
+            <p id="transitionPreviewStatus" class="property-help" aria-live="polite">Rejoue le passage depuis le chapitre précédent, sans modifier le projet.</p>
+        </div>
     `;
 
     bindTransitionEvents();
@@ -82,6 +88,8 @@ function bindTransitionEvents() {
     const layerModeInput = document.getElementById("layerModeInput");
     const layerDurationInput = document.getElementById("layerDurationInput");
     const layerDelayInput = document.getElementById("layerDelayInput");
+    const previewTransitionButton = document.getElementById("previewTransitionButton");
+    const transitionPreviewStatus = document.getElementById("transitionPreviewStatus");
 
     transitionMethodInput?.addEventListener("change", () => updateChapterTransition("method", transitionMethodInput.value));
     transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
@@ -94,4 +102,15 @@ function bindTransitionEvents() {
     layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
     layerDurationInput?.addEventListener("change", () => updateChapterLayerTransition("duration", layerDurationInput.value));
     layerDelayInput?.addEventListener("change", () => updateChapterLayerTransition("delay", layerDelayInput.value));
+    previewTransitionButton?.addEventListener("click", () => {
+        const started = previewSelectedChapterTransition();
+        if (!started) {
+            transitionPreviewStatus.textContent = "La carte doit être chargée pour lancer l’aperçu.";
+            return;
+        }
+        transitionPreviewStatus.textContent = "Aperçu en cours…";
+        window.setTimeout(() => {
+            if (transitionPreviewStatus) transitionPreviewStatus.textContent = "Aperçu terminé. Aucun changement n’a été enregistré.";
+        }, 1600);
+    });
 }

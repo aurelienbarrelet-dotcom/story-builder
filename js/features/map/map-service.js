@@ -1,7 +1,7 @@
 import { MAPBOX_TOKEN_KEY } from "../../core/config.js";
 import { emit, EVENTS } from "../../core/events.js";
 import { commitProjectChange } from "../../core/project-service.js";
-import { getProjectConfig, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
+import { getChapters, getProjectConfig, getSelectedChapterIndex, getSelectedMapTarget, getSelectedMapTargets, getSelectedSection, getStory } from "../../core/store.js";
 
 let map = null;
 let baseLayerStyles = new Map();
@@ -168,6 +168,40 @@ export function flyToSelectedChapter(options = {}) {
     const cameraOptions = { ...camera, duration: options.instant ? 0 : Number(transition.duration ?? 1200), essential: transition.essential !== false };
     if (typeof map[method] === "function") map[method](cameraOptions); else map.flyTo(cameraOptions);
     applySelectedChapterLayerOpacity();
+}
+
+export function previewSelectedChapterTransition() {
+    if (!map || !map.isStyleLoaded() || getSelectedSection() !== "chapter") return false;
+
+    const chapters = getChapters();
+    const selectedIndex = getSelectedChapterIndex();
+    const chapter = chapters[selectedIndex];
+    if (!chapter) return false;
+
+    const source = selectedIndex > 0 ? chapters[selectedIndex - 1] : getProjectConfig();
+    const sourceCamera = getStoredCamera(source, "desktop");
+    if (sourceCamera) map.jumpTo(sourceCamera);
+    applyLayerState(source, { instant: true });
+
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            const targetCamera = getStoredCamera(chapter, "desktop");
+            const transition = chapter.transition ?? {};
+            const method = transition.method ?? "flyTo";
+            const cameraOptions = {
+                ...targetCamera,
+                duration: Math.max(0, Number(transition.duration) || 0),
+                essential: transition.essential !== false
+            };
+            if (targetCamera) {
+                if (typeof map[method] === "function") map[method](cameraOptions);
+                else map.flyTo(cameraOptions);
+            }
+            applyLayerState(chapter);
+        });
+    });
+
+    return true;
 }
 
 export function updateMapStyle(styleUrl) {
@@ -338,14 +372,19 @@ export function resetSelectedChapterLayerOpacity(layerId) {
 export function applySelectedChapterLayerOpacity() {
     const chapter = getSelectedMapTarget();
     if (!chapter || !map || !map.isStyleLoaded()) return;
+    applyLayerState(chapter);
+}
+
+function applyLayerState(chapter, options = {}) {
+    if (!chapter || !map || !map.isStyleLoaded()) return;
     const layers = getEditableLayers();
     layers.forEach(({ id }) => {
         const layer = map.getLayer(id);
         if (!layer) return;
-        applyLayerTransition(layer, chapter);
+        applyLayerTransition(layer, chapter, options);
         restoreLayer(layer);
         const projectConfig = getProjectConfig();
-        if (getSelectedSection() === "chapter") {
+        if (chapter !== projectConfig) {
             const projectOpacity = projectConfig?.layerOpacity?.[id];
             if (projectOpacity !== undefined && !projectConfig?.layerStyles?.[id]) applyOpacity(layer, projectOpacity);
             applyLayerStyle(layer, projectConfig?.layerStyles?.[id]);
@@ -363,9 +402,9 @@ function applyLayerStyle(layer, style) {
     Object.entries(style.layout ?? {}).forEach(([property, value]) => applyProperty(layer.id, "layout", property, value));
 }
 
-function applyLayerTransition(layer, chapter) {
+function applyLayerTransition(layer, chapter, options = {}) {
     const transition = chapter?.layerTransition ?? { enabled: true, duration: 600, delay: 0 };
-    const enabled = transition.enabled !== false;
+    const enabled = transition.enabled !== false && !options.instant;
     (LAYER_CONTROLS[layer.type]?.opacity ?? []).forEach(property => {
         try {
             map.setPaintProperty(layer.id, `${property}-transition`, {

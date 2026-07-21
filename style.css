@@ -5563,3 +5563,23 @@ body > .collection-menu { z-index: 1000; }
     font-size: 11px;
     line-height: 1.45;
 }
+
+
+/* Alpha 28.3 — aperçu manuel des transitions */
+.transition-preview-bar {
+    position: sticky;
+    bottom: 0;
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6) 0 0;
+    background: linear-gradient(to bottom, transparent, var(--color-surface) var(--space-5));
+}
+
+.transition-preview-bar .button {
+    width: 100%;
+}
+
+.transition-preview-bar .property-help {
+    margin: 0;
+    text-align: center;
+}
