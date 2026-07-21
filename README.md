@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.33.4
+## SB-2.0.0-alpha.33.5
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -607,3 +607,8 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - La transition globale devient explicitement la transition par défaut des calques.
 - Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
 - Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
+
+### 2.0.0-alpha.33.5
+
+- Le sélecteur de calques devient un composant commun configurable : titre, aide, mode simple ou multiple, éléments désactivés et message vide.
+- Les panneaux Légendes et Transitions continuent d’utiliser la même source de calques et les mêmes aperçus dynamiques.

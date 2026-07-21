@@ -4,7 +4,7 @@ import { getCurrentLayerProperty, getEditableLayers } from "../features/map/map-
 let activeDialog = null;
 let activeCleanup = [];
 
-export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = "Ajouter", selectedLayerIds = [], disabledLayerIds = [], filter = null, onConfirm }) {
+export function openLayerPicker({ title = "Ajouter des calques", description = "Sélectionne un ou plusieurs calques.", confirmLabel = "Ajouter", selectedLayerIds = [], disabledLayerIds = [], filter = null, multiple = true, emptyMessage = "Aucun calque ne correspond à la recherche.", onConfirm }) {
     closeLayerPicker();
     const selected = new Set(selectedLayerIds);
     const disabled = new Set(disabledLayerIds);
@@ -14,11 +14,11 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
     backdrop.innerHTML = `
         <section class="layer-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="layerPickerTitle">
             <header class="layer-picker-header">
-                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p>Sélectionne un ou plusieurs calques.</p></div>
+                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div>
                 <button class="ui-icon-button layer-picker-close" type="button" aria-label="Fermer">×</button>
             </header>
             <label class="layer-picker-search"><span class="visually-hidden">Rechercher un calque</span><input class="ui-input" type="search" placeholder="Rechercher un calque…"></label>
-            <div class="layer-picker-list" role="listbox" aria-multiselectable="true"></div>
+            <div class="layer-picker-list" role="listbox" aria-multiselectable="${multiple ? "true" : "false"}"></div>
             <footer class="layer-picker-footer"><span class="layer-picker-count"></span><div><button class="button layer-picker-cancel" type="button">Annuler</button><button class="button button-primary layer-picker-confirm" type="button">${escapeHtml(confirmLabel)}</button></div></footer>
         </section>`;
     document.body.append(backdrop);
@@ -36,17 +36,20 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = 
         list.innerHTML = filtered.length ? filtered.map(layer => {
             const isDisabled = disabled.has(layer.id);
             const isChecked = selected.has(layer.id) || isDisabled;
+            const inputType = multiple ? "checkbox" : "radio";
             return `<label class="layer-picker-row${isDisabled ? " is-disabled" : ""}">
-                <input type="checkbox" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
+                <input type="${inputType}" name="layerPickerSelection" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
                 ${renderLayerPreview(layer)}
                 <span class="layer-picker-copy"><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
                 ${isDisabled ? '<em>Déjà ajouté</em>' : ""}
             </label>`;
-        }).join("") : '<p class="layer-picker-empty">Aucun calque ne correspond à la recherche.</p>';
+        }).join("") : `<p class="layer-picker-empty">${escapeHtml(emptyMessage)}</p>`;
         count.textContent = `${selected.size} sélectionné${selected.size > 1 ? "s" : ""}`;
         confirm.disabled = selected.size === 0;
-        list.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(input => input.addEventListener("change", () => {
+        list.querySelectorAll('input:not(:disabled)').forEach(input => input.addEventListener("change", () => {
+            if (!multiple && input.checked) selected.clear();
             if (input.checked) selected.add(input.value); else selected.delete(input.value);
+            if (!multiple && input.checked) render();
             count.textContent = `${selected.size} sélectionné${selected.size > 1 ? "s" : ""}`;
             confirm.disabled = selected.size === 0;
         }));

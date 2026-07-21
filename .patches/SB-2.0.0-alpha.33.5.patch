@@ -1,0 +1,93 @@
+diff --git a/README.md b/README.md
+index dd7ad3e..69bd6ab 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-## SB-2.0.0-alpha.33.4
++## SB-2.0.0-alpha.33.5
+ 
+ ### Alpha 33.4 — contraste automatique des légendes
+ 
+@@ -607,3 +607,8 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
+ - La transition globale devient explicitement la transition par défaut des calques.
+ - Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
+ - Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
++
++### 2.0.0-alpha.33.5
++
++- Le sélecteur de calques devient un composant commun configurable : titre, aide, mode simple ou multiple, éléments désactivés et message vide.
++- Les panneaux Légendes et Transitions continuent d’utiliser la même source de calques et les mêmes aperçus dynamiques.
+diff --git a/index.html b/index.html
+index c72bb15..4a056e3 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.33.4</title>
++    <title>Story Builder — 2.0.0-alpha.33.5</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 332836c..c2a3217 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.33.4";
++export const APP_VERSION = "2.0.0-alpha.33.5";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/ui/layer-picker.js b/js/ui/layer-picker.js
+index 94f6b01..7b8207f 100644
+--- a/js/ui/layer-picker.js
++++ b/js/ui/layer-picker.js
+@@ -4,7 +4,7 @@ import { getCurrentLayerProperty, getEditableLayers } from "../features/map/map-
+ let activeDialog = null;
+ let activeCleanup = [];
+ 
+-export function openLayerPicker({ title = "Ajouter des calques", confirmLabel = "Ajouter", selectedLayerIds = [], disabledLayerIds = [], filter = null, onConfirm }) {
++export function openLayerPicker({ title = "Ajouter des calques", description = "Sélectionne un ou plusieurs calques.", confirmLabel = "Ajouter", selectedLayerIds = [], disabledLayerIds = [], filter = null, multiple = true, emptyMessage = "Aucun calque ne correspond à la recherche.", onConfirm }) {
+     closeLayerPicker();
+     const selected = new Set(selectedLayerIds);
+     const disabled = new Set(disabledLayerIds);
+@@ -14,11 +14,11 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel =
+     backdrop.innerHTML = `
+         <section class="layer-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="layerPickerTitle">
+             <header class="layer-picker-header">
+-                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p>Sélectionne un ou plusieurs calques.</p></div>
++                <div><h2 id="layerPickerTitle">${escapeHtml(title)}</h2><p>${escapeHtml(description)}</p></div>
+                 <button class="ui-icon-button layer-picker-close" type="button" aria-label="Fermer">×</button>
+             </header>
+             <label class="layer-picker-search"><span class="visually-hidden">Rechercher un calque</span><input class="ui-input" type="search" placeholder="Rechercher un calque…"></label>
+-            <div class="layer-picker-list" role="listbox" aria-multiselectable="true"></div>
++            <div class="layer-picker-list" role="listbox" aria-multiselectable="${multiple ? "true" : "false"}"></div>
+             <footer class="layer-picker-footer"><span class="layer-picker-count"></span><div><button class="button layer-picker-cancel" type="button">Annuler</button><button class="button button-primary layer-picker-confirm" type="button">${escapeHtml(confirmLabel)}</button></div></footer>
+         </section>`;
+     document.body.append(backdrop);
+@@ -36,17 +36,20 @@ export function openLayerPicker({ title = "Ajouter des calques", confirmLabel =
+         list.innerHTML = filtered.length ? filtered.map(layer => {
+             const isDisabled = disabled.has(layer.id);
+             const isChecked = selected.has(layer.id) || isDisabled;
++            const inputType = multiple ? "checkbox" : "radio";
+             return `<label class="layer-picker-row${isDisabled ? " is-disabled" : ""}">
+-                <input type="checkbox" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
++                <input type="${inputType}" name="layerPickerSelection" value="${escapeHtml(layer.id)}" ${isChecked ? "checked" : ""} ${isDisabled ? "disabled" : ""}>
+                 ${renderLayerPreview(layer)}
+                 <span class="layer-picker-copy"><strong>${escapeHtml(layer.label || layer.id)}</strong><small>${escapeHtml(layer.type)} · ${escapeHtml(layer.id)}</small></span>
+                 ${isDisabled ? '<em>Déjà ajouté</em>' : ""}
+             </label>`;
+-        }).join("") : '<p class="layer-picker-empty">Aucun calque ne correspond à la recherche.</p>';
++        }).join("") : `<p class="layer-picker-empty">${escapeHtml(emptyMessage)}</p>`;
+         count.textContent = `${selected.size} sélectionné${selected.size > 1 ? "s" : ""}`;
+         confirm.disabled = selected.size === 0;
+-        list.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(input => input.addEventListener("change", () => {
++        list.querySelectorAll('input:not(:disabled)').forEach(input => input.addEventListener("change", () => {
++            if (!multiple && input.checked) selected.clear();
+             if (input.checked) selected.add(input.value); else selected.delete(input.value);
++            if (!multiple && input.checked) render();
+             count.textContent = `${selected.size} sélectionné${selected.size > 1 ? "s" : ""}`;
+             confirm.disabled = selected.size === 0;
+         }));
