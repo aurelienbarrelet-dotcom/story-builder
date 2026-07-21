@@ -31,6 +31,7 @@ import { setupMapEditorPanel } from "./features/map/map-editor-panel.js";
 import { renderViewPanel, setupViewPanel } from "./features/map/view-panel.js";
 import { setupLayersPanel } from "./features/layers/layers-panel.js";
 import { setupPropertiesPanel } from "./features/properties/properties-panel.js";
+import { renderTransitionPanel } from "./features/transitions/transition-panel.js";
 import { setupReaderMode } from "./features/reader/reader-mode.js";
 import { setupRightPanels } from "./features/layout/right-panels.js";
 import { renderLegendPanel, setupLegendPanel } from "./features/legend/legend-panel.js";
@@ -60,6 +61,7 @@ function renderApplication(options = {}) {
     renderChapterList();
     renderPreview();
     renderViewPanel();
+    renderTransitionPanel();
     renderLegendPanel();
     renderAssetsPanel();
 
@@ -80,6 +82,7 @@ function setupApplicationEvents() {
     on(EVENTS.PROJECT_CHANGED, () => {
         renderChapterList();
         renderPreview();
+        renderTransitionPanel();
         renderLegendPanel();
         renderAssetsPanel();
     });

@@ -1,3 +1,13 @@
+## SB-2.0.0-alpha.28.1
+
+### Panneau Transitions autonome
+
+- Déplacement des réglages de transition hors du panneau Propriétés.
+- Ajout d’un onglet Transitions dans le rail droit, au même niveau que Vue, Calques et Légendes.
+- Conservation des champs existants : animation et durée de caméra, comportement des calques, fondu et délai.
+- Aucun changement du modèle de données `.story.json` ni de la transformation utilisée par l’export de publication.
+- Compatibilité conservée avec les projets existants.
+
 ## SB-2.0.0-alpha.27.4
 
 - Consolide les ajustements UI validés de la série 27.3.x.

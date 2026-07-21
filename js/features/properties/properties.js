@@ -8,10 +8,7 @@ import {
 import {
     updateChapterDescription,
     updateChapterId,
-    updateChapterTitle,
-    updateChapterTransition,
-    updateChapterLayerMode,
-    updateChapterLayerTransition
+    updateChapterTitle
 } from "../chapters/chapter-service.js";
 
 export function renderProperties() {
@@ -67,43 +64,6 @@ export function renderProperties() {
             <span id="descriptionFormatHelp" class="property-help">Sélectionne un mot ou une phrase, puis choisis une mise en forme.</span>
         </div>
 
-        <details class="property-module" data-module-key="transition" open>
-            <summary>
-                <span>Transitions</span>
-                <small>Lecture scrollytelling</small>
-            </summary>
-            <div class="property-module-content">
-                <div class="property">
-                    <label for="transitionMethodInput">Animation caméra</label>
-                    <select id="transitionMethodInput">
-                        <option value="flyTo" ${chapter.transition?.method === "flyTo" ? "selected" : ""}>flyTo</option>
-                        <option value="easeTo" ${chapter.transition?.method === "easeTo" ? "selected" : ""}>easeTo</option>
-                        <option value="jumpTo" ${chapter.transition?.method === "jumpTo" ? "selected" : ""}>jumpTo</option>
-                    </select>
-                </div>
-                <div class="property">
-                    <label for="transitionDurationInput">Durée caméra (ms)</label>
-                    <input id="transitionDurationInput" type="number" min="0" step="100" value="${Number(chapter.transition?.duration ?? 1200)}">
-                </div>
-                <div class="property">
-                    <label for="layerModeInput">Comportement des calques</label>
-                    <select id="layerModeInput">
-                        <option value="snapshot" ${chapter.layerMode !== "inherit" ? "selected" : ""}>État complet</option>
-                        <option value="inherit" ${chapter.layerMode === "inherit" ? "selected" : ""}>Hériter du chapitre précédent</option>
-                    </select>
-                </div>
-                <div class="camera-form">
-                    <div class="camera-field">
-                        <label for="layerDurationInput">Fondu (ms)</label>
-                        <input id="layerDurationInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.duration ?? 600)}">
-                    </div>
-                    <div class="camera-field">
-                        <label for="layerDelayInput">Délai (ms)</label>
-                        <input id="layerDelayInput" type="number" min="0" step="100" value="${Number(chapter.layerTransition?.delay ?? 0)}">
-                    </div>
-                </div>
-            </div>
-        </details>
     `;
 
     bindPropertyEvents();
@@ -112,11 +72,6 @@ export function renderProperties() {
 function bindPropertyEvents() {
     const titleInput = document.getElementById("titleInput");
     const descriptionInput = document.getElementById("descriptionInput");
-    const transitionMethodInput = document.getElementById("transitionMethodInput");
-    const transitionDurationInput = document.getElementById("transitionDurationInput");
-    const layerModeInput = document.getElementById("layerModeInput");
-    const layerDurationInput = document.getElementById("layerDurationInput");
-    const layerDelayInput = document.getElementById("layerDelayInput");
 
     titleInput.addEventListener("input", () => {
         updateChapterTitle(titleInput.value);
@@ -130,23 +85,6 @@ function bindPropertyEvents() {
 
     bindDescriptionFormatting(descriptionInput);
 
-    transitionMethodInput?.addEventListener("change", () => updateChapterTransition("method", transitionMethodInput.value));
-    transitionDurationInput?.addEventListener("change", () => updateChapterTransition("duration", transitionDurationInput.value));
-    layerModeInput?.addEventListener("change", () => updateChapterLayerMode(layerModeInput.value));
-    layerDurationInput?.addEventListener("change", () => updateChapterLayerTransition("duration", layerDurationInput.value));
-    layerDelayInput?.addEventListener("change", () => updateChapterLayerTransition("delay", layerDelayInput.value));
-
-    bindPropertyModuleState();
-}
-
-
-function bindPropertyModuleState() {
-    document.querySelectorAll("[data-module-key]").forEach(module => {
-        const key = `storyBuilderPropertyModule:${module.dataset.moduleKey}`;
-        const saved = localStorage.getItem(key);
-        if (saved !== null) module.open = saved === "true";
-        module.addEventListener("toggle", () => localStorage.setItem(key, String(module.open)));
-    });
 }
 
 function bindDescriptionFormatting(textarea) {

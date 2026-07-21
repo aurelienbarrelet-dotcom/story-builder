@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.27.4</title>
+    <title>Story Builder — 2.0.0-alpha.28.1</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -100,6 +100,7 @@
         <section id="rightPanelsShell" class="right-panels-shell" aria-label="Panneaux d’édition">
         <nav id="rightPanelsRail" class="right-panels-rail" aria-label="Choisir un panneau">
             <button type="button" class="right-panel-rail-button" data-panel="properties" aria-label="Ouvrir Propriétés" title="Propriétés"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="transitionPanel" aria-label="Ouvrir Transitions" title="Transitions"></button>
             <button type="button" class="right-panel-rail-button" data-panel="layersPanel" aria-label="Ouvrir Calques" title="Calques"></button>
             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
@@ -113,6 +114,16 @@
                 <button id="toggleViewPanelButton" class="view-toggle-button" type="button" aria-label="Réduire la colonne Vue" aria-expanded="true" title="Réduire la colonne">›</button>
             </header>
             <div id="viewPanelContent" class="view-panel-content"></div>
+        </aside>
+
+
+        <aside id="transitionPanel" class="properties-panel transition-panel">
+            <header class="properties-panel-header">
+                <div class="properties-panel-title">
+                    <h2>Transitions</h2>
+                </div>
+            </header>
+            <div id="transitionPanelContent" class="properties-panel-content transition-panel-content"></div>
         </aside>
 
         <aside id="layersPanel" class="layers-panel">

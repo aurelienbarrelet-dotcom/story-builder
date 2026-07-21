@@ -5494,3 +5494,41 @@ body > .collection-menu { z-index: 1000; }
     height: 17px;
     fill: currentColor;
 }
+
+
+/* Alpha 28.1 — panneau Transitions autonome */
+.transition-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+}
+
+.transition-panel-section {
+    padding: var(--space-7);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-soft);
+}
+
+.transition-panel-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-bottom: var(--space-7);
+}
+
+.transition-panel-section-header h3 {
+    margin: 0;
+    font-size: 15px;
+}
+
+.transition-panel-section-header span {
+    color: var(--color-text-muted);
+    font-size: var(--space-4);
+}
+
+.transition-panel-section .property:last-child,
+.transition-panel-section .camera-form:last-child {
+    margin-bottom: 0;
+}
