@@ -5659,3 +5659,18 @@ body > .collection-menu { z-index: 1000; }
     display: block;
     margin-bottom: 2px;
 }
+
+
+/* Alpha 33.0 — timeline visuelle des transitions */
+.transition-timeline-section { overflow: hidden; }
+.transition-timeline { position: relative; display: grid; gap: 9px; padding: 24px 0 5px; }
+.transition-timeline-ruler { position: absolute; top: 0; left: 74px; right: 0; display: flex; justify-content: space-between; color: #858b95; font-size: 9px; font-variant-numeric: tabular-nums; }
+.transition-timeline-track { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 10px; }
+.transition-timeline-label { color: #4d535d; font-size: 10px; font-weight: 700; }
+.transition-timeline-rail { position: relative; height: 18px; overflow: hidden; border: 1px solid #dfe2e7; border-radius: 5px; background: repeating-linear-gradient(90deg,#f5f6f8 0,#f5f6f8 calc(25% - 1px),#e5e8ed calc(25% - 1px),#e5e8ed 25%); }
+.transition-timeline-clip { position: absolute; top: 2px; bottom: 2px; min-width: 3px; border-radius: 3px; }
+.transition-timeline-camera { left: 0; width: var(--camera-width); background: #7b3040; }
+.transition-timeline-layers { left: var(--layer-left); width: var(--layer-width); background: #6f7785; }
+.transition-timeline-track.is-disabled { opacity: .42; }
+.transition-timeline-playhead { position: absolute; z-index: 2; top: 20px; bottom: 1px; left: 74px; width: 2px; border-radius: 2px; background: #d54155; pointer-events: none; }
+.transition-timeline-playhead::before { position: absolute; top: -4px; left: 50%; width: 7px; height: 7px; border-radius: 50%; background: inherit; content: ""; transform: translateX(-50%); }

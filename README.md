@@ -1,4 +1,9 @@
-## SB-2.0.0-alpha.31.3
+## SB-2.0.0-alpha.33.0
+
+- Ajoute une timeline visuelle dans le panneau Transitions, avec pistes Caméra et Calques.
+- Représente graphiquement la durée caméra, le délai et le fondu des calques.
+- Anime la tête de lecture pendant l’aperçu sans modifier le format du projet.
+
 
 ### Alpha 31.3 — copie et édition groupée des transitions
 

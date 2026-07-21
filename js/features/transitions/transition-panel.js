@@ -1,5 +1,5 @@
 import { getSelectedChapter, getSelectedChapters, getSelectedSection } from "../../core/store.js";
-import { getTransitionTimelineDuration } from "./transition-timeline.js";
+import { createTransitionTimeline, getTransitionTimelineDuration } from "./transition-timeline.js";
 import {
     updateChapterLayerMode,
     updateChapterLayerTransition,
@@ -39,6 +39,7 @@ export function renderTransitionPanel() {
 
     container.innerHTML = `
         ${selectionCount > 1 ? `<p class="transition-multi-selection"><strong>${selectionCount} chapitres sélectionnés.</strong> Toute modification ci-dessous sera appliquée à l’ensemble de la sélection.</p>` : ""}
+        ${renderTransitionTimeline(chapter, selectionCount > 1)}
         <section class="transition-panel-section" aria-labelledby="transitionControlTitle">
             <header class="transition-panel-section-header">
                 <h3 id="transitionControlTitle">Déclenchement</h3>
@@ -167,6 +168,7 @@ function bindTransitionEvents() {
     const layerDelayInput = document.getElementById("layerDelayInput");
     const previewTransitionButton = document.getElementById("previewTransitionButton");
     const transitionPreviewStatus = document.getElementById("transitionPreviewStatus");
+    const timelinePlayhead = document.getElementById("transitionTimelinePlayhead");
 
     transitionControlInputs.forEach(input => input.addEventListener("change", () => {
         if (!input.checked) return;
@@ -215,6 +217,7 @@ function bindTransitionEvents() {
         previewTransitionButton.disabled = true;
         previewTransitionButton.textContent = "Lecture en cours…";
         transitionPreviewStatus.textContent = getPreviewRunningDescription(control, previewDuration);
+        animateTimelinePlayhead(timelinePlayhead, previewDuration);
 
         window.setTimeout(() => {
             if (!previewTransitionButton?.isConnected) return;
@@ -264,4 +267,62 @@ function getPreviewRunningDescription(control, duration) {
 function formatDuration(duration) {
     if (duration < 1000) return `${Math.round(duration)} ms`;
     return `${(duration / 1000).toFixed(duration % 1000 === 0 ? 0 : 1)} s`;
+}
+
+
+function renderTransitionTimeline(chapter, mixedSelection) {
+    if (mixedSelection) {
+        return `
+            <section class="transition-panel-section transition-timeline-section" aria-labelledby="transitionTimelineTitle">
+                <header class="transition-panel-section-header">
+                    <h3 id="transitionTimelineTitle">Timeline</h3>
+                    <span>Valeurs multiples</span>
+                </header>
+                <p class="property-help">Sélectionne un seul chapitre pour visualiser précisément ses pistes caméra et calques.</p>
+            </section>`;
+    }
+
+    const timeline = createTransitionTimeline(chapter);
+    const total = Math.max(timeline.duration, 1);
+    const cameraWidth = Math.max(0, timeline.camera.duration / total * 100);
+    const layerLeft = Math.max(0, timeline.layers.start / total * 100);
+    const layerWidth = Math.max(0, timeline.layers.duration / total * 100);
+    const middle = total / 2;
+
+    return `
+        <section class="transition-panel-section transition-timeline-section" aria-labelledby="transitionTimelineTitle">
+            <header class="transition-panel-section-header">
+                <h3 id="transitionTimelineTitle">Timeline</h3>
+                <span>${formatDuration(timeline.duration)}</span>
+            </header>
+            <div class="transition-timeline" style="--camera-width:${cameraWidth}%;--layer-left:${layerLeft}%;--layer-width:${layerWidth}%">
+                <div class="transition-timeline-ruler" aria-hidden="true">
+                    <span>0</span><span>${formatDuration(middle)}</span><span>${formatDuration(total)}</span>
+                </div>
+                <div class="transition-timeline-track">
+                    <span class="transition-timeline-label">Caméra</span>
+                    <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-camera"></span></div>
+                </div>
+                <div class="transition-timeline-track ${timeline.layers.enabled ? "" : "is-disabled"}">
+                    <span class="transition-timeline-label">Calques</span>
+                    <div class="transition-timeline-rail"><span class="transition-timeline-clip transition-timeline-layers"></span></div>
+                </div>
+                <span id="transitionTimelinePlayhead" class="transition-timeline-playhead" aria-hidden="true"></span>
+            </div>
+            <p class="property-help">La caméra part immédiatement. La piste Calques reflète son délai et son fondu.</p>
+        </section>`;
+}
+
+function animateTimelinePlayhead(playhead, duration) {
+    if (!playhead) return;
+    playhead.getAnimations().forEach(animation => animation.cancel());
+    playhead.style.transform = "translateX(0)";
+    if (duration <= 0) {
+        playhead.style.transform = "translateX(calc(100% - 2px))";
+        return;
+    }
+    playhead.animate(
+        [{ left: "74px" }, { left: "100%" }],
+        { duration, easing: "linear", fill: "forwards" }
+    );
 }
