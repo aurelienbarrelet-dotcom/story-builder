@@ -137,6 +137,22 @@ try {
         Write-Host "• Push ignoré grâce à l'option -NoPush" -ForegroundColor Yellow
     }
 
+    Write-Step "Nettoyage du dossier .patches"
+
+    if (Test-Path -LiteralPath $PatchDirectory -PathType Container) {
+        Get-ChildItem `
+            -LiteralPath $PatchDirectory `
+            -Force |
+            ForEach-Object {
+                Remove-Item `
+                    -LiteralPath $_.FullName `
+                    -Recurse `
+                    -Force
+            }
+    }
+
+    Write-Success "Contenu du dossier .patches supprimé"
+
     Write-Host ""
     Write-Host "========================================" -ForegroundColor DarkRed
     Write-Host " Mise à jour terminée " -ForegroundColor Green

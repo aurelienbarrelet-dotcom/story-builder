@@ -21,10 +21,10 @@
     --color-neutral-700: #555;
     --color-neutral-800: #444;
     --panel-border: var(--color-border);
-    --accent: #820b1c;
-    --accent-dark: #650816;
-    --accent-soft: #f6e9ec;
-    --accent-ring: rgba(130, 11, 28, .16);
+    --accent: #000000;
+    --accent-dark: #1a1a1a;
+    --accent-soft: #f2f2f2;
+    --accent-ring: rgba(0,0,0,.16);
     --danger: #d32f2f;
     --danger-dark: #b71c1c;
     --danger-soft: rgba(211, 47, 47, .08);
