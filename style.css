@@ -5941,9 +5941,3 @@ body > .collection-menu { z-index: 1000; }
     margin: 0;
     overflow-wrap: anywhere;
 }
-
-.assets-instance-editor {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--panel-border, #d4d7da);
-}

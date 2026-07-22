@@ -105,6 +105,7 @@
             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
             <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Enrichissements" title="Enrichissements"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="models3dPanel" aria-label="Ouvrir Objets 3D" title="Objets 3D"></button>
         </nav>
         <aside id="viewPanel" class="view-panel">
             <header class="view-panel-header">
@@ -204,6 +205,15 @@
                 <input id="assetsFileInput" type="file" accept="image/*,.glb,model/gltf-binary" multiple hidden>
             </header>
             <div id="assetsPanelContent" class="assets-panel-content"></div>
+        </aside>
+
+        <aside id="models3dPanel" class="properties-panel models3d-panel">
+            <header class="properties-panel-header">
+                <div class="properties-panel-title">
+                    <h2>Objets 3D</h2>
+                </div>
+            </header>
+            <div id="model3dInstanceEditor" class="properties-panel-content models3d-instance-editor" aria-live="polite"></div>
         </aside>
 
         <aside id="properties" class="properties-panel">

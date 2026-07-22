@@ -7,7 +7,6 @@ import {
     createCollectionSelection,
     renderCollectionSelectionBar
 } from "../../ui/collection-panel.js";
-import { renderInstanceEditor } from "../models3d/models3d-instance-panel.js";
 import { beginModelPlacement, removeInstancesForModel } from "../models3d/models3d-map.js";
 
 const MAX_MODEL_SIZE = 100 * 1024 * 1024;
@@ -152,7 +151,6 @@ function renderModelInspector(model) {
             </dl>
             <div class="asset-editor-actions">
                 <button type="button" class="button button-primary models3d-action--place" data-place-model="${model.id}">Placer sur la carte</button>
-                <button type="button" class="button" data-duplicate-model="${model.id}">Dupliquer</button>
                 <button type="button" class="button button-danger" data-delete-model="${model.id}">Supprimer</button>
             </div>
         </section>`;
@@ -218,12 +216,10 @@ export function renderAssetsPanel() {
             </div>
             <aside class="asset-inspector" aria-label="Inspecteur du média sélectionné">
                 ${inspectorMarkup}
-                <div id="model3dInstanceEditor" class="models3d-instance-editor assets-instance-editor" aria-live="polite"></div>
             </aside>
         </div>`;
 
     renderModelPreviews();
-    renderInstanceEditor();
 
     container.querySelectorAll("[data-select-media]").forEach(card => {
         card.addEventListener("click", event => {
@@ -275,17 +271,6 @@ export function renderAssetsPanel() {
             if (!beginModelPlacement(button.dataset.placeModel)) {
                 alert("Initialisez la carte Mapbox avant de placer un modèle.");
             }
-        });
-    });
-
-    container.querySelectorAll("[data-duplicate-model]").forEach(button => {
-        button.addEventListener("click", () => {
-            const model = getModels().find(item => item.id === button.dataset.duplicateModel);
-            if (!model) return;
-            const copy = { ...model, id: crypto.randomUUID(), name: createCopyName(model.name || "modèle.glb") };
-            getModels().push(copy);
-            assetSelection.replace([getAssetKey("model", copy.id)], getAssetKey("model", copy.id));
-            commitProjectChange();
         });
     });
 
@@ -393,13 +378,6 @@ function createGlbObjectUrl(model) {
 function releasePreviewUrls() {
     previewUrls.forEach(url => URL.revokeObjectURL(url));
     previewUrls.clear();
-}
-
-function createCopyName(name) {
-    const suffix = " — copie";
-    const extensionIndex = name.toLowerCase().lastIndexOf(".glb");
-    if (extensionIndex < 0) return `${name}${suffix}`;
-    return `${name.slice(0, extensionIndex)}${suffix}${name.slice(extensionIndex)}`;
 }
 
 function formatFileSize(bytes) {
