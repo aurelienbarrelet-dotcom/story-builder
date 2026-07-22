@@ -1,0 +1,298 @@
+diff --git a/README.md b/README.md
+index 2b453ff..457d7ff 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+-## SB-2.0.0-alpha.34.3.0
++## SB-2.0.0-alpha.34.3.1
+ 
+-### 2.0.0-alpha.34.3.0
++### 2.0.0-alpha.34.3.1
+ 
+ - Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
+ - Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.
+diff --git a/index.html b/index.html
+index febfda5..1e62575 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.0</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.1</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index 2b80ffb..14ee552 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.0";
++export const APP_VERSION = "2.0.0-alpha.34.3.1";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index 9f89feb..ce77f85 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -1,11 +1,17 @@
++import * as THREE from "https://esm.sh/three@0.180.0";
++import { GLTFLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
+ import { emit, EVENTS, on } from "../../core/events.js";
+ import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
+ import { getMapInstance } from "../map/map-service.js";
+ 
++const LAYER_ID = "story-builder-models3d-editor";
+ let placementModelId = null;
+ let boundMap = null;
+-let markerRecords = [];
++let renderer = null;
++let renderEntries = [];
++let objectUrls = [];
++let renderRevision = 0;
+ 
+ export function setupModels3dMap() {
+     on(EVENTS.MAP_STYLE_READY, () => {
+@@ -24,7 +30,6 @@ export function setupModels3dMap() {
+ export function beginModelPlacement(modelId) {
+     const map = getMapInstance();
+     if (!map || !modelId) return false;
+-
+     bindMapClickHandler();
+     placementModelId = modelId;
+     setPlacementCursor(true);
+@@ -45,32 +50,99 @@ export function removeInstancesForModel(modelId) {
+         if (instances[index]?.modelId === modelId) instances.splice(index, 1);
+     }
+     if (placementModelId === modelId) cancelModelPlacement();
++    renderModelInstances();
+ }
+ 
+ export function renderModelInstances() {
+-    clearMarkers();
+-
+     const map = getMapInstance();
+-    if (!map || !window.mapboxgl) return;
++    if (!map?.getStyle?.()) return;
++    const revision = ++renderRevision;
++    removeEditorLayer(map);
++    releaseObjectUrls();
++    renderEntries = [];
++
++    const customLayer = {
++        id: LAYER_ID,
++        type: "custom",
++        renderingMode: "3d",
++        onAdd(currentMap, gl) {
++            renderer = new THREE.WebGLRenderer({
++                canvas: currentMap.getCanvas(),
++                context: gl,
++                antialias: true
++            });
++            renderer.autoClear = false;
++            loadRenderEntries(revision).then(() => currentMap.triggerRepaint());
++        },
++        render(gl, matrix) {
++            if (!renderer || revision !== renderRevision) return;
++            const mapMatrix = new THREE.Matrix4().fromArray(matrix);
++            const camera = new THREE.Camera();
++            renderer.resetState();
++            for (const entry of renderEntries) {
++                const transform = entry.transform;
++                const localMatrix = new THREE.Matrix4()
++                    .makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
++                    .scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale))
++                    .multiply(new THREE.Matrix4().makeRotationX(transform.rotateX))
++                    .multiply(new THREE.Matrix4().makeRotationY(transform.rotateY))
++                    .multiply(new THREE.Matrix4().makeRotationZ(transform.rotateZ));
++                camera.projectionMatrix = mapMatrix.clone().multiply(localMatrix);
++                renderer.render(entry.scene, camera);
++            }
++            renderer.resetState();
++            map.triggerRepaint();
++        },
++        onRemove() {
++            renderer?.dispose();
++            renderer = null;
++            releaseObjectUrls();
++            renderEntries = [];
++        }
++    };
+ 
++    try {
++        map.addLayer(customLayer);
++    } catch (error) {
++        console.warn("Impossible d’ajouter le calque des modèles 3D à l’éditeur.", error);
++    }
++}
++
++async function loadRenderEntries(revision) {
+     const models = new Map(getModelLibrary().map(model => [model.id, model]));
++    const loader = new GLTFLoader();
+     for (const instance of getInstanceLibrary()) {
++        if (revision !== renderRevision) return;
+         const model = models.get(instance?.modelId);
+         const longitude = Number(instance?.longitude);
+         const latitude = Number(instance?.latitude);
+         if (!model || !Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
+-
+-        const element = createMarkerElement(model);
+-        const popup = new window.mapboxgl.Popup({ offset: 30 }).setHTML(
+-            `<strong>${escapeHtml(model.name || "Modèle 3D")}</strong><br>` +
+-            `${longitude.toFixed(6)}, ${latitude.toFixed(6)}`
+-        );
+-        const marker = new window.mapboxgl.Marker({ element, anchor: "bottom" })
+-            .setLngLat([longitude, latitude])
+-            .setPopup(popup)
+-            .addTo(map);
+-
+-        markerRecords.push({ marker, url: element.dataset.previewUrl || "" });
++        try {
++            const gltf = await loader.loadAsync(createGlbObjectUrl(model));
++            if (revision !== renderRevision) return;
++            const root = gltf.scene || gltf.scenes?.[0];
++            if (!root) continue;
++            fitModelToGround(root);
++            const rotation = Array.isArray(instance.rotation) ? instance.rotation : [0, 0, 0];
++            const altitude = Number(instance.altitude) || 0;
++            const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
++            const userScale = Number(instance.scale) || 1;
++            renderEntries.push({
++                instanceId: instance.id,
++                scene: createScene(root),
++                transform: {
++                    translateX: mercator.x,
++                    translateY: mercator.y,
++                    translateZ: mercator.z,
++                    rotateX: Math.PI / 2 + degreesToRadians(rotation[0]),
++                    rotateY: degreesToRadians(rotation[1]),
++                    rotateZ: degreesToRadians(rotation[2]),
++                    scale: mercator.meterInMercatorCoordinateUnits() * userScale
++                }
++            });
++        } catch (error) {
++            console.warn("Impossible de charger un modèle 3D dans l’éditeur.", error);
++        }
+     }
+ }
+ 
+@@ -83,14 +155,12 @@ function bindMapClickHandler() {
+ 
+ function handleMapClick(event) {
+     if (!placementModelId) return;
+-
+     const project = getProject();
+     const model = getModelLibrary().find(candidate => candidate.id === placementModelId);
+     if (!project || !model) {
+         cancelModelPlacement();
+         return;
+     }
+-
+     project.models3dInstances ??= [];
+     project.models3dInstances.push({
+         id: crypto.randomUUID(),
+@@ -101,53 +171,41 @@ function handleMapClick(event) {
+         rotation: [0, 0, 0],
+         scale: 1
+     });
+-
+     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+     saveProjectLocally();
+     cancelModelPlacement();
+     renderModelInstances();
+ }
+ 
+-function createMarkerElement(model) {
+-    const marker = document.createElement("button");
+-    marker.type = "button";
+-    marker.className = "models3d-map-marker";
+-    marker.title = model.name || "Modèle 3D";
+-    marker.setAttribute("aria-label", `Afficher ${model.name || "le modèle 3D"}`);
+-
+-    try {
+-        const viewer = document.createElement("model-viewer");
+-        viewer.className = "models3d-map-marker-viewer";
+-        viewer.setAttribute("interaction-prompt", "none");
+-        viewer.setAttribute("camera-orbit", "35deg 70deg auto");
+-        viewer.setAttribute("disable-zoom", "");
+-        viewer.setAttribute("alt", "");
+-        const url = createGlbObjectUrl(model);
+-        marker.dataset.previewUrl = url;
+-        viewer.src = url;
+-        marker.append(viewer);
+-    } catch {
+-        const fallback = document.createElement("span");
+-        fallback.className = "models3d-map-marker-viewer";
+-        fallback.textContent = "3D";
+-        fallback.setAttribute("aria-hidden", "true");
+-        marker.append(fallback);
+-    }
++function createScene(root) {
++    const scene = new THREE.Scene();
++    scene.add(root);
++    scene.add(new THREE.HemisphereLight(0xffffff, 0x6b7280, 1.35));
++    const sun = new THREE.DirectionalLight(0xffffff, 1.55);
++    sun.position.set(30, -20, 50);
++    scene.add(sun);
++    return scene;
++}
+ 
+-    return marker;
++function fitModelToGround(root) {
++    const bounds = new THREE.Box3().setFromObject(root);
++    if (bounds.isEmpty()) return;
++    const center = bounds.getCenter(new THREE.Vector3());
++    root.position.x -= center.x;
++    root.position.y -= bounds.min.y;
++    root.position.z -= center.z;
+ }
+ 
+-function clearMarkers() {
+-    for (const record of markerRecords) {
+-        record.marker.remove();
+-        if (record.url) URL.revokeObjectURL(record.url);
++function removeEditorLayer(map) {
++    try {
++        if (map.getLayer?.(LAYER_ID)) map.removeLayer(LAYER_ID);
++    } catch (error) {
++        console.debug("Nettoyage du calque 3D différé.", error);
+     }
+-    markerRecords = [];
+ }
+ 
+ function setPlacementCursor(active) {
+-    const canvas = getMapInstance()?.getCanvas?.();
+-    canvas?.classList.toggle("models3d-placement-cursor", active);
++    getMapInstance()?.getCanvas?.()?.classList.toggle("models3d-placement-cursor", active);
+ }
+ 
+ function getModelLibrary() {
+@@ -170,14 +228,16 @@ function createGlbObjectUrl(model) {
+     const binary = atob(model.data);
+     const bytes = new Uint8Array(binary.length);
+     for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+-    return URL.createObjectURL(new Blob([bytes], { type: model.mimeType || "model/gltf-binary" }));
++    const url = URL.createObjectURL(new Blob([bytes], { type: model.mimeType || "model/gltf-binary" }));
++    objectUrls.push(url);
++    return url;
++}
++
++function releaseObjectUrls() {
++    objectUrls.forEach(url => URL.revokeObjectURL(url));
++    objectUrls = [];
+ }
+ 
+-function escapeHtml(value) {
+-    return String(value)
+-        .replaceAll("&", "&amp;")
+-        .replaceAll("<", "&lt;")
+-        .replaceAll(">", "&gt;")
+-        .replaceAll('"', "&quot;")
+-        .replaceAll("'", "&#039;");
++function degreesToRadians(value) {
++    return Number(value || 0) * Math.PI / 180;
+ }
