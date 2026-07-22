@@ -1,6 +1,11 @@
-## SB-2.0.0-alpha.34.2.9
+## SB-2.0.0-alpha.34.3.0
 
-### 2.0.0-alpha.34.2.9
+### 2.0.0-alpha.34.3.0
+
+- Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
+- Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.
+- Utilise une échelle exprimée en mètres et pose automatiquement la base du modèle sur son altitude.
+- Conserve les paramètres `altitude`, `rotation` et `scale` de chaque instance.
 
 - Correctif du chargement global de l’application après 34.2.8.
 - Ajout du module de placement 3D manquant.

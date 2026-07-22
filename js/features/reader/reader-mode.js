@@ -251,86 +251,157 @@ function createReaderModels3dScript(project) {
     const instances = Array.isArray(project?.models3dInstances) ? project.models3dInstances : [];
     const payload = JSON.stringify({ models, instances });
 
-    return `<script id="story-builder-models3d-reader">
-        (function () {
-            const payload = ${escapeClosingScript(payload)};
-            const objectUrls = [];
-            const markerRecords = [];
+    return `<script type="module" id="story-builder-models3d-reader">
+        import * as THREE from "https://esm.sh/three@0.180.0";
+        import { GLTFLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
 
-            function createObjectUrl(model) {
-                if (!model || model.encoding !== "base64" || !model.data) return "";
-                const binary = atob(model.data);
-                const bytes = new Uint8Array(binary.length);
-                for (let index = 0; index < binary.length; index += 1) {
-                    bytes[index] = binary.charCodeAt(index);
+        const payload = ${escapeClosingScript(payload)};
+        const objectUrls = [];
+        const renderEntries = [];
+        let renderer = null;
+
+        function createObjectUrl(model) {
+            if (!model || model.encoding !== "base64" || !model.data) return "";
+            const binary = atob(model.data);
+            const bytes = new Uint8Array(binary.length);
+            for (let index = 0; index < binary.length; index += 1) {
+                bytes[index] = binary.charCodeAt(index);
+            }
+            const url = URL.createObjectURL(new Blob([bytes], {
+                type: model.mimeType || "model/gltf-binary"
+            }));
+            objectUrls.push(url);
+            return url;
+        }
+
+        function degreesToRadians(value) {
+            return Number(value || 0) * Math.PI / 180;
+        }
+
+        function createScene(root) {
+            const scene = new THREE.Scene();
+            scene.add(root);
+            scene.add(new THREE.HemisphereLight(0xffffff, 0x6b7280, 1.35));
+
+            const sun = new THREE.DirectionalLight(0xffffff, 1.55);
+            sun.position.set(30, -20, 50);
+            scene.add(sun);
+            return scene;
+        }
+
+        function fitModelToGround(root) {
+            const bounds = new THREE.Box3().setFromObject(root);
+            if (bounds.isEmpty()) return;
+
+            const center = bounds.getCenter(new THREE.Vector3());
+            root.position.x -= center.x;
+            root.position.y -= bounds.min.y;
+            root.position.z -= center.z;
+        }
+
+        async function loadEntries() {
+            const modelsById = new Map((payload.models || []).map(model => [model.id, model]));
+            const loader = new GLTFLoader();
+
+            for (const instance of payload.instances || []) {
+                const model = modelsById.get(instance && instance.modelId);
+                const longitude = Number(instance && instance.longitude);
+                const latitude = Number(instance && instance.latitude);
+                const altitude = Number(instance && instance.altitude) || 0;
+                if (!model || !Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
+
+                try {
+                    const gltf = await loader.loadAsync(createObjectUrl(model));
+                    const root = gltf.scene || gltf.scenes?.[0];
+                    if (!root) continue;
+
+                    fitModelToGround(root);
+                    const rotation = Array.isArray(instance.rotation) ? instance.rotation : [0, 0, 0];
+                    const mercator = mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
+                    const meterScale = mercator.meterInMercatorCoordinateUnits();
+                    const userScale = Number(instance.scale) || 1;
+
+                    renderEntries.push({
+                        scene: createScene(root),
+                        transform: {
+                            translateX: mercator.x,
+                            translateY: mercator.y,
+                            translateZ: mercator.z,
+                            rotateX: Math.PI / 2 + degreesToRadians(rotation[0]),
+                            rotateY: degreesToRadians(rotation[1]),
+                            rotateZ: degreesToRadians(rotation[2]),
+                            scale: meterScale * userScale
+                        }
+                    });
+                } catch (error) {
+                    console.warn("Impossible de charger un modèle 3D dans le lecteur.", error);
                 }
-                const url = URL.createObjectURL(new Blob([bytes], {
-                    type: model.mimeType || "model/gltf-binary"
-                }));
-                objectUrls.push(url);
-                return url;
             }
+        }
 
-            function createMarkerElement(model) {
-                const element = document.createElement("div");
-                element.className = "story-builder-reader-model3d";
-                element.title = model.name || "Modèle 3D";
-                element.style.cssText = [
-                    "width:96px",
-                    "height:96px",
-                    "border-radius:14px",
-                    "overflow:hidden",
-                    "background:rgba(255,255,255,.92)",
-                    "border:1px solid rgba(15,23,42,.22)",
-                    "box-shadow:0 8px 24px rgba(15,23,42,.24)",
-                    "pointer-events:auto"
-                ].join(";");
+        const customLayer = {
+            id: "story-builder-models3d",
+            type: "custom",
+            renderingMode: "3d",
+            onAdd(currentMap, gl) {
+                renderer = new THREE.WebGLRenderer({
+                    canvas: currentMap.getCanvas(),
+                    context: gl,
+                    antialias: true
+                });
+                renderer.autoClear = false;
+                loadEntries().then(() => currentMap.triggerRepaint());
+            },
+            render(gl, matrix) {
+                if (!renderer || renderEntries.length === 0) return;
 
-                const viewer = document.createElement("model-viewer");
-                viewer.src = createObjectUrl(model);
-                viewer.alt = model.name || "Modèle 3D";
-                viewer.setAttribute("camera-controls", "");
-                viewer.setAttribute("auto-rotate", "");
-                viewer.setAttribute("interaction-prompt", "none");
-                viewer.setAttribute("shadow-intensity", "1");
-                viewer.style.cssText = "display:block;width:100%;height:100%;background:transparent";
-                element.append(viewer);
-                return element;
-            }
+                const mapMatrix = new THREE.Matrix4().fromArray(matrix);
+                const camera = new THREE.Camera();
 
-            function renderModels() {
-                if (!window.map || !window.mapboxgl) return;
-                const modelsById = new Map((payload.models || []).map(model => [model.id, model]));
+                for (const entry of renderEntries) {
+                    const transform = entry.transform;
+                    const localMatrix = new THREE.Matrix4()
+                        .makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
+                        .scale(new THREE.Vector3(transform.scale, -transform.scale, transform.scale))
+                        .multiply(new THREE.Matrix4().makeRotationX(transform.rotateX))
+                        .multiply(new THREE.Matrix4().makeRotationY(transform.rotateY))
+                        .multiply(new THREE.Matrix4().makeRotationZ(transform.rotateZ));
 
-                for (const instance of payload.instances || []) {
-                    const model = modelsById.get(instance && instance.modelId);
-                    const longitude = Number(instance && instance.longitude);
-                    const latitude = Number(instance && instance.latitude);
-                    if (!model || !Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
-
-                    const marker = new mapboxgl.Marker({
-                        element: createMarkerElement(model),
-                        anchor: "bottom"
-                    }).setLngLat([longitude, latitude]).addTo(map);
-                    markerRecords.push(marker);
+                    camera.projectionMatrix = mapMatrix.clone().multiply(localMatrix);
+                    renderer.resetState();
+                    renderer.render(entry.scene, camera);
                 }
+
+                map.triggerRepaint();
+            },
+            onRemove() {
+                renderer?.dispose();
+                renderer = null;
+                renderEntries.length = 0;
+            }
+        };
+
+        function installLayer() {
+            if (!window.map || !window.mapboxgl) {
+                setTimeout(installLayer, 50);
+                return;
             }
 
-            function start() {
-                if (!window.map) {
-                    setTimeout(start, 50);
-                    return;
-                }
-                if (map.loaded()) renderModels();
-                else map.once("load", renderModels);
-            }
+            const addLayer = () => {
+                if (!map.getLayer(customLayer.id)) map.addLayer(customLayer);
+            };
 
-            window.addEventListener("beforeunload", function () {
-                markerRecords.forEach(marker => marker.remove());
-                objectUrls.forEach(url => URL.revokeObjectURL(url));
-            }, { once: true });
+            if (map.loaded()) addLayer();
+            else map.once("load", addLayer);
 
-            start();
-        })();
+            map.on("style.load", addLayer);
+        }
+
+        window.addEventListener("beforeunload", () => {
+            if (window.map?.getLayer(customLayer.id)) window.map.removeLayer(customLayer.id);
+            objectUrls.forEach(url => URL.revokeObjectURL(url));
+        }, { once: true });
+
+        installLayer();
     <\/script>`;
 }
