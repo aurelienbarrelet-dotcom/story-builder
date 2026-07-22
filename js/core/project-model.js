@@ -21,6 +21,7 @@ export function createProject(story, options = {}) {
         story: cloneObject(story),
         assets: {
             images: [],
+            models: [],
             icons: [],
             fonts: []
         }

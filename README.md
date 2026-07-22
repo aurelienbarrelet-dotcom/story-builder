@@ -1,4 +1,10 @@
-## SB-2.0.0-alpha.34.1
+## SB-2.0.0-alpha.34.2
+
+- Nouveau panneau de droite « Objets & animations ».
+- Import de modèles 3D GLB/glTF dans la bibliothèque du projet (20 Mo maximum par fichier).
+- Catalogue visible des couches Mapbox `model` et `line`.
+- Synthèse des animations enregistrées dans `story.motions`.
+
 
 ### Alpha 33.4 — contraste automatique des légendes
 

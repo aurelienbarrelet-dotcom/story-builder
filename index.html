@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.34.1</title>
+    <title>Story Builder — 2.0.0-alpha.34.2</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -105,6 +105,7 @@
             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
             <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Images" title="Images"></button>
+            <button type="button" class="right-panel-rail-button" data-panel="objectsPanel" aria-label="Ouvrir Objets et animations" title="Objets & animations"></button>
         </nav>
         <aside id="viewPanel" class="view-panel">
             <header class="view-panel-header">
@@ -204,6 +205,18 @@
                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
             </header>
             <div id="assetsPanelContent" class="assets-panel-content"></div>
+        </aside>
+
+        <aside id="objectsPanel" class="objects-panel collection-panel" data-collection="models">
+            <header class="objects-panel-header collection-panel-header">
+                <div>
+                    <h2>Objets & animations</h2>
+                    <p>Modèles 3D et trajectoires du projet</p>
+                </div>
+                <button id="importModelsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Importer des modèles 3D" title="Importer des modèles 3D">+</button>
+                <input id="modelsFileInput" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" multiple hidden>
+            </header>
+            <div id="objectsPanelContent" class="objects-panel-content"></div>
         </aside>
 
         <aside id="properties" class="properties-panel">

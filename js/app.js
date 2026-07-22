@@ -40,6 +40,7 @@ import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
 import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
 import { setupMotionManager } from "./features/motion/motion-manager.js";
+import { renderObjectsPanel, setupObjectsPanel } from "./features/objects/objects-panel.js";
 
 const ELEMENT_IDS = Object.freeze({
     addChapterButton: "addChapterButton",
@@ -65,6 +66,7 @@ function renderApplication(options = {}) {
     renderTransitionPanel();
     renderLegendPanel();
     renderAssetsPanel();
+    renderObjectsPanel();
 
     if (!options.preserveProperties) {
         renderProperties();
@@ -86,6 +88,7 @@ function setupApplicationEvents() {
         renderTransitionPanel();
         renderLegendPanel();
         renderAssetsPanel();
+        renderObjectsPanel();
     });
 
     on(EVENTS.PROJECT_REPLACED, ({ reason } = {}) => {
@@ -234,6 +237,7 @@ function startApplication() {
     setupRightPanels();
     setupLegendPanel();
     setupAssetsPanel();
+    setupObjectsPanel();
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();
