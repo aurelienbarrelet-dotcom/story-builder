@@ -42,6 +42,7 @@ import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-pa
 import { setupMotionManager } from "./features/motion/motion-manager.js";
 import { setupModels3dPanel } from "./features/models3d/models3d-panel.js";
 import { setupModels3dMap } from "./features/models3d/models3d-map.js";
+import { setupModels3dInstancePanel } from "./features/models3d/models3d-instance-panel.js";
 
 const ELEMENT_IDS = Object.freeze({
     addChapterButton: "addChapterButton",
@@ -238,6 +239,7 @@ function startApplication() {
     setupAssetsPanel();
     setupModels3dPanel();
     setupModels3dMap();
+    setupModels3dInstancePanel();
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();

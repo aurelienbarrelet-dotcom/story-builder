@@ -1,0 +1,238 @@
+diff --git a/README.md b/README.md
+index 457d7ff..c237efc 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+-## SB-2.0.0-alpha.34.3.1
++## SB-2.0.0-alpha.34.3.2
+ 
+-### 2.0.0-alpha.34.3.1
++### 2.0.0-alpha.34.3.2
+ 
+ - Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
+ - Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.
+diff --git a/index.html b/index.html
+index 1e62575..c431da9 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.1</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.2</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -220,6 +220,7 @@
+                     <p class="models3d-drop-zone-label">ou déposez vos fichiers .glb ici</p>
+                 </div>
+                 <p class="models3d-help">Les modèles importés sont intégrés à la sauvegarde du projet et affichés ci-dessous.</p>
++                <div id="model3dInstanceEditor" class="models3d-instance-editor" aria-live="polite"></div>
+                 <div id="model3dSelection" class="models3d-selection" aria-live="polite">
+                     <p class="panel-empty-state">Aucun modèle sélectionné.</p>
+                 </div>
+diff --git a/js/app.js b/js/app.js
+index 26ca13c..00f7590 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -42,6 +42,7 @@ import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-pa
+ import { setupMotionManager } from "./features/motion/motion-manager.js";
+ import { setupModels3dPanel } from "./features/models3d/models3d-panel.js";
+ import { setupModels3dMap } from "./features/models3d/models3d-map.js";
++import { setupModels3dInstancePanel } from "./features/models3d/models3d-instance-panel.js";
+ 
+ const ELEMENT_IDS = Object.freeze({
+     addChapterButton: "addChapterButton",
+@@ -238,6 +239,7 @@ function startApplication() {
+     setupAssetsPanel();
+     setupModels3dPanel();
+     setupModels3dMap();
++    setupModels3dInstancePanel();
+     setupChapterStyleClipboard();
+     setupProductivityShortcuts();
+     setupReaderMode();
+diff --git a/js/core/config.js b/js/core/config.js
+index 14ee552..ec0725d 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.1";
++export const APP_VERSION = "2.0.0-alpha.34.3.2";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/core/events.js b/js/core/events.js
+index bd724d3..c166536 100644
+--- a/js/core/events.js
++++ b/js/core/events.js
+@@ -13,7 +13,8 @@ export const EVENTS = Object.freeze({
+     HISTORY_CHANGED: "history:changed",
+     CLIPBOARD_CHANGED: "clipboard:changed",
+     LAYER_SELECTION_CHANGED: "layer-selection:changed",
+-    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed"
++    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed",
++    MODEL3D_INSTANCE_SELECTED: "model3d:instance-selected"
+ });
+ 
+ export function on(eventName, callback) {
+diff --git a/js/features/models3d/models3d-instance-panel.js b/js/features/models3d/models3d-instance-panel.js
+new file mode 100644
+index 0000000..2ebf2af
+--- /dev/null
++++ b/js/features/models3d/models3d-instance-panel.js
+@@ -0,0 +1,44 @@
++import { EVENTS, on } from "../../core/events.js";
++import { getProject } from "../../core/store.js";
++import { getSelectedModelInstanceId, selectModelInstance } from "./models3d-map.js";
++
++export function setupModels3dInstancePanel() {
++    on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
++    on(EVENTS.PROJECT_REPLACED, () => {
++        selectModelInstance(null);
++        renderInstanceEditor();
++    });
++    renderInstanceEditor();
++}
++
++export function renderInstanceEditor() {
++    const container = document.getElementById("model3dInstanceEditor");
++    if (!container) return;
++    container.replaceChildren();
++    const project = getProject();
++    const instance = project?.models3dInstances?.find(item => item.id === getSelectedModelInstanceId());
++    if (!instance) return;
++    const model = project?.assets?.models?.find(item => item.id === instance.modelId);
++
++    const card = document.createElement("section");
++    card.className = "models3d-instance-card";
++    const heading = document.createElement("h3");
++    heading.textContent = model?.name || "Instance 3D";
++    const hint = document.createElement("p");
++    hint.textContent = "Instance sélectionnée sur la carte";
++    const details = document.createElement("dl");
++    details.className = "models3d-instance-details";
++    appendDetail(details, "Longitude", Number(instance.longitude).toFixed(6));
++    appendDetail(details, "Latitude", Number(instance.latitude).toFixed(6));
++    appendDetail(details, "Altitude", `${Number(instance.altitude || 0).toFixed(2)} m`);
++    card.append(heading, hint, details);
++    container.append(card);
++}
++
++function appendDetail(list, label, value) {
++    const term = document.createElement("dt");
++    term.textContent = label;
++    const description = document.createElement("dd");
++    description.textContent = value;
++    list.append(term, description);
++}
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index ce77f85..8e2e9b3 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -12,6 +12,7 @@ let renderer = null;
+ let renderEntries = [];
+ let objectUrls = [];
+ let renderRevision = 0;
++let selectedInstanceId = null;
+ 
+ export function setupModels3dMap() {
+     on(EVENTS.MAP_STYLE_READY, () => {
+@@ -44,12 +45,28 @@ export function cancelModelPlacement() {
+     emit(EVENTS.MODEL3D_PLACEMENT_CHANGED, { active: false, modelId: null });
+ }
+ 
++export function getSelectedModelInstanceId() {
++    return selectedInstanceId;
++}
++
++export function selectModelInstance(instanceId) {
++    const nextId = getInstanceLibrary().some(instance => instance.id === instanceId) ? instanceId : null;
++    if (selectedInstanceId === nextId) return;
++    selectedInstanceId = nextId;
++    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId });
++    renderModelInstances();
++}
++
+ export function removeInstancesForModel(modelId) {
+     const instances = getInstanceLibrary();
+     for (let index = instances.length - 1; index >= 0; index -= 1) {
+         if (instances[index]?.modelId === modelId) instances.splice(index, 1);
+     }
+     if (placementModelId === modelId) cancelModelPlacement();
++    if (!getInstanceLibrary().some(instance => instance.id === selectedInstanceId)) {
++        selectedInstanceId = null;
++        emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: null });
++    }
+     renderModelInstances();
+ }
+ 
+@@ -127,9 +144,16 @@ async function loadRenderEntries(revision) {
+             const altitude = Number(instance.altitude) || 0;
+             const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
+             const userScale = Number(instance.scale) || 1;
++            const scene = createScene(root);
++            if (instance.id === selectedInstanceId) {
++                const helper = new THREE.BoxHelper(root, 0x2563eb);
++                helper.material.depthTest = false;
++                helper.renderOrder = 1000;
++                scene.add(helper);
++            }
+             renderEntries.push({
+                 instanceId: instance.id,
+-                scene: createScene(root),
++                scene,
+                 transform: {
+                     translateX: mercator.x,
+                     translateY: mercator.y,
+@@ -154,7 +178,10 @@ function bindMapClickHandler() {
+ }
+ 
+ function handleMapClick(event) {
+-    if (!placementModelId) return;
++    if (!placementModelId) {
++        selectNearestInstance(event);
++        return;
++    }
+     const project = getProject();
+     const model = getModelLibrary().find(candidate => candidate.id === placementModelId);
+     if (!project || !model) {
+@@ -241,3 +268,22 @@ function releaseObjectUrls() {
+ function degreesToRadians(value) {
+     return Number(value || 0) * Math.PI / 180;
+ }
++
++function selectNearestInstance(event) {
++    const map = getMapInstance();
++    if (!map || !event?.point) return;
++    let nearestId = null;
++    let nearestDistance = 38;
++    for (const instance of getInstanceLibrary()) {
++        const longitude = Number(instance?.longitude);
++        const latitude = Number(instance?.latitude);
++        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
++        const point = map.project([longitude, latitude]);
++        const distance = Math.hypot(point.x - event.point.x, point.y - event.point.y);
++        if (distance < nearestDistance) {
++            nearestDistance = distance;
++            nearestId = instance.id;
++        }
++    }
++    selectModelInstance(nearestId);
++}
+diff --git a/style.css b/style.css
+index eca41e5..c5bcb25 100644
+--- a/style.css
++++ b/style.css
+@@ -5867,3 +5867,11 @@ body > .collection-menu { z-index: 1000; }
+ .models3d-map-marker { width: 58px; height: 70px; padding: 0; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 5px 5px rgb(0 0 0 / 28%)); }
+ .models3d-map-marker::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-color, #2563eb); border: 2px solid white; transform: translateX(-50%); box-shadow: 0 1px 4px rgb(0 0 0 / 35%); }
+ .models3d-map-marker-viewer { display: block; width: 58px; height: 58px; border-radius: 10px; background: rgb(255 255 255 / 88%); pointer-events: none; }
++
++.models3d-instance-editor:empty { display: none; }
++.models3d-instance-card { margin-bottom: var(--space-5); padding: var(--space-4); border: 2px solid var(--accent-color, #2563eb); border-radius: var(--control-radius); background: color-mix(in srgb, var(--accent-color, #2563eb) 6%, white); }
++.models3d-instance-card h3 { margin: 0 0 var(--space-2); font-size: 14px; }
++.models3d-instance-card p { margin: 0 0 var(--space-4); color: var(--text-secondary, #667085); font-size: 12px; }
++.models3d-instance-details { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); margin: 0; font-size: 12px; }
++.models3d-instance-details dt { font-weight: 700; color: var(--text-secondary, #667085); }
++.models3d-instance-details dd { margin: 0; text-align: right; }

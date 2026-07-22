@@ -12,6 +12,7 @@ let renderer = null;
 let renderEntries = [];
 let objectUrls = [];
 let renderRevision = 0;
+let selectedInstanceId = null;
 
 export function setupModels3dMap() {
     on(EVENTS.MAP_STYLE_READY, () => {
@@ -44,12 +45,28 @@ export function cancelModelPlacement() {
     emit(EVENTS.MODEL3D_PLACEMENT_CHANGED, { active: false, modelId: null });
 }
 
+export function getSelectedModelInstanceId() {
+    return selectedInstanceId;
+}
+
+export function selectModelInstance(instanceId) {
+    const nextId = getInstanceLibrary().some(instance => instance.id === instanceId) ? instanceId : null;
+    if (selectedInstanceId === nextId) return;
+    selectedInstanceId = nextId;
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId });
+    renderModelInstances();
+}
+
 export function removeInstancesForModel(modelId) {
     const instances = getInstanceLibrary();
     for (let index = instances.length - 1; index >= 0; index -= 1) {
         if (instances[index]?.modelId === modelId) instances.splice(index, 1);
     }
     if (placementModelId === modelId) cancelModelPlacement();
+    if (!getInstanceLibrary().some(instance => instance.id === selectedInstanceId)) {
+        selectedInstanceId = null;
+        emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: null });
+    }
     renderModelInstances();
 }
 
@@ -127,9 +144,16 @@ async function loadRenderEntries(revision) {
             const altitude = Number(instance.altitude) || 0;
             const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
             const userScale = Number(instance.scale) || 1;
+            const scene = createScene(root);
+            if (instance.id === selectedInstanceId) {
+                const helper = new THREE.BoxHelper(root, 0x2563eb);
+                helper.material.depthTest = false;
+                helper.renderOrder = 1000;
+                scene.add(helper);
+            }
             renderEntries.push({
                 instanceId: instance.id,
-                scene: createScene(root),
+                scene,
                 transform: {
                     translateX: mercator.x,
                     translateY: mercator.y,
@@ -154,7 +178,10 @@ function bindMapClickHandler() {
 }
 
 function handleMapClick(event) {
-    if (!placementModelId) return;
+    if (!placementModelId) {
+        selectNearestInstance(event);
+        return;
+    }
     const project = getProject();
     const model = getModelLibrary().find(candidate => candidate.id === placementModelId);
     if (!project || !model) {
@@ -240,4 +267,23 @@ function releaseObjectUrls() {
 
 function degreesToRadians(value) {
     return Number(value || 0) * Math.PI / 180;
+}
+
+function selectNearestInstance(event) {
+    const map = getMapInstance();
+    if (!map || !event?.point) return;
+    let nearestId = null;
+    let nearestDistance = 38;
+    for (const instance of getInstanceLibrary()) {
+        const longitude = Number(instance?.longitude);
+        const latitude = Number(instance?.latitude);
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
+        const point = map.project([longitude, latitude]);
+        const distance = Math.hypot(point.x - event.point.x, point.y - event.point.y);
+        if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestId = instance.id;
+        }
+    }
+    selectModelInstance(nearestId);
 }

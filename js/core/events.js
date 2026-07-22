@@ -13,7 +13,8 @@ export const EVENTS = Object.freeze({
     HISTORY_CHANGED: "history:changed",
     CLIPBOARD_CHANGED: "clipboard:changed",
     LAYER_SELECTION_CHANGED: "layer-selection:changed",
-    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed"
+    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed",
+    MODEL3D_INSTANCE_SELECTED: "model3d:instance-selected"
 });
 
 export function on(eventName, callback) {
