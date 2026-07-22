@@ -11,35 +11,12 @@ export function setupModels3dPanel() {
     const fileInput = document.getElementById("model3dFileInput");
     if (!importButton || !fileInput) return;
 
-    const dropZone = document.getElementById("model3dDropZone");
-
     importButton.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async () => {
         const files = [...(fileInput.files ?? [])];
         fileInput.value = "";
         await importGlbFiles(files);
     });
-
-    if (dropZone) {
-        ["dragenter", "dragover"].forEach(eventName => {
-            dropZone.addEventListener(eventName, event => {
-                event.preventDefault();
-                if (!containsFiles(event)) return;
-                dropZone.classList.add("models3d-drop-zone--active");
-                if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
-            });
-        });
-        ["dragleave", "drop"].forEach(eventName => {
-            dropZone.addEventListener(eventName, event => {
-                event.preventDefault();
-                dropZone.classList.remove("models3d-drop-zone--active");
-            });
-        });
-        dropZone.addEventListener("drop", async event => {
-            if (!containsFiles(event)) return;
-            await importGlbFiles([...(event.dataTransfer?.files ?? [])]);
-        });
-    }
 
     on(EVENTS.PROJECT_REPLACED, () => renderModels());
     on(EVENTS.MODEL3D_PLACEMENT_CHANGED, ({ active, modelId }) => updatePlacementButtons(active, modelId));
@@ -70,10 +47,6 @@ async function importGlbFiles(files) {
     }
 }
 
-function containsFiles(event) {
-    return [...(event.dataTransfer?.types ?? [])].includes("Files");
-}
-
 function getModelLibrary() {
     const project = getProject();
     if (!project) return [];
@@ -100,9 +73,9 @@ function readFileAsBase64(file) {
     });
 }
 
-function renderModels(errorMessage = "") {
+export function renderModels(errorMessage = "") {
     releasePreviewUrls();
-    const container = document.getElementById("model3dSelection");
+    const container = document.getElementById("assetsModel3dLibrary");
     if (!container) return;
     container.replaceChildren();
     if (errorMessage) {

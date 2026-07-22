@@ -2,6 +2,7 @@ import { MAX_IMAGE_SIZE } from "../../core/config.js";
 import { commitProjectChange } from "../../core/project-service.js";
 import { getProject, getSelectedChapter } from "../../core/store.js";
 import { readFileAsDataUrl } from "../../core/utils.js";
+import { renderModels } from "../models3d/models3d-panel.js";
 import {
     createCollectionSelection,
     renderCollectionSelectionBar
@@ -136,17 +137,27 @@ export function renderAssetsPanel() {
         </section>`;
 
     container.innerHTML = `
-        <div class="assets-workspace">
-            <div class="assets-gallery-column">
-                <div class="assets-gallery" aria-label="Galerie d’images">
-                    ${galleryMarkup}
+        <section class="assets-library-section" aria-labelledby="assetsImagesTitle">
+            <h3 id="assetsImagesTitle" class="assets-library-title">Images</h3>
+            <div class="assets-workspace">
+                <div class="assets-gallery-column">
+                    <div class="assets-gallery" aria-label="Galerie d’images">
+                        ${galleryMarkup}
+                    </div>
+                    <div class="collection-selection-bar assets-selection-bar" aria-live="polite" hidden></div>
                 </div>
-                <div class="collection-selection-bar assets-selection-bar" aria-live="polite" hidden></div>
+                <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
+                    ${inspectorMarkup}
+                </aside>
             </div>
-            <aside class="asset-inspector" aria-label="Propriétés de l’image sélectionnée">
-                ${inspectorMarkup}
-            </aside>
-        </div>`;
+        </section>
+        <section class="assets-library-section assets-model-library" aria-labelledby="assetsModelsTitle">
+            <h3 id="assetsModelsTitle" class="assets-library-title">Modèles 3D</h3>
+            <p class="models3d-help">Les modèles GLB sont des ressources du projet. Vous pouvez les prévisualiser, les renommer, les dupliquer, les supprimer ou les placer sur la carte.</p>
+            <div id="assetsModel3dLibrary" class="models3d-selection" aria-live="polite"></div>
+        </section>`;
+
+    renderModels();
 
     container.querySelectorAll("[data-select-asset]").forEach(card => {
         card.addEventListener("click", event => {

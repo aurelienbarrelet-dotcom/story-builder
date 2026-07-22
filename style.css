@@ -5901,3 +5901,29 @@ body > .collection-menu { z-index: 1000; }
 .models3d-object-list { display:grid; gap:var(--space-1); max-height:180px; overflow:auto; }
 .models3d-object-row { width:100%; padding:8px 10px; border:1px solid var(--panel-border,#d4d7da); border-radius:6px; background:white; text-align:left; cursor:pointer; }
 .models3d-object-row.is-selected { border-color:var(--accent-color,#2563eb); background:color-mix(in srgb,var(--accent-color,#2563eb) 8%,white); }
+
+/* Enrichissements : bibliothèque de ressources */
+.assets-import-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.assets-import-button--model {
+    width: auto;
+    min-width: 2.35rem;
+    padding-inline: 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.assets-library-section + .assets-library-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-color, rgba(127, 127, 127, 0.25));
+}
+
+.assets-library-title {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+}
