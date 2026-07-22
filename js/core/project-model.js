@@ -22,7 +22,8 @@ export function createProject(story, options = {}) {
         assets: {
             images: [],
             icons: [],
-            fonts: []
+            fonts: [],
+            models: []
         }
     };
 }

@@ -11,6 +11,7 @@ export function validateProjectDocument(project) {
     if (!project.settings || typeof project.settings !== "object") throw new Error("Les paramètres du projet sont manquants.");
     if (!project.story || typeof project.story !== "object") throw new Error("Le contenu story est manquant.");
     if (!project.assets || typeof project.assets !== "object") throw new Error("Le registre des ressources est manquant.");
+    if (project.assets.models !== undefined && !Array.isArray(project.assets.models)) throw new Error("La bibliothèque de modèles 3D est invalide.");
     if (!Array.isArray(project.story.chapters)) throw new Error("Les chapitres sont invalides.");
     if (project.story.motions !== undefined && !Array.isArray(project.story.motions)) throw new Error("Les trajectoires sont invalides.");
 

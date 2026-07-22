@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.2
+## SB-2.0.0-alpha.34.2.3
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -651,3 +651,10 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Validation du format `.glb`, du fichier vide et d’une limite temporaire de 100 Mo.
 - Affichage du nom, de la taille, du type MIME et de l’état du fichier sélectionné.
 - Le modèle reste uniquement en mémoire : il n’est pas encore enregistré dans le JSON du projet.
+
+
+### 2.0.0-alpha.34.2.3
+
+- Les modèles GLB importés sont encodés en Base64 et stockés dans `project.assets.models`.
+- Les modèles sont inclus dans le fichier unique `.story.json` et restaurés à son ouverture.
+- Plusieurs modèles peuvent être conservés dans la bibliothèque du projet.

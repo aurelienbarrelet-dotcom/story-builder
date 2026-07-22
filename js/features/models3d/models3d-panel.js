@@ -1,11 +1,12 @@
-const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
+import { emit, EVENTS, on } from "../../core/events.js";
+import { saveProjectLocally } from "../../core/project-service.js";
+import { getProject } from "../../core/store.js";
 
-let selectedModelFile = null;
+const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
 
 export function setupModels3dPanel() {
     const importButton = document.getElementById("importModel3dButton");
     const fileInput = document.getElementById("model3dFileInput");
-
     if (!importButton || !fileInput) return;
 
     importButton.addEventListener("click", () => fileInput.click());
@@ -13,38 +14,59 @@ export function setupModels3dPanel() {
         const file = fileInput.files?.[0];
         fileInput.value = "";
         if (!file) return;
-
         try {
             validateGlbFile(file);
-            await file.arrayBuffer();
-            selectedModelFile = file;
-            renderSelection();
+            const data = await readFileAsBase64(file);
+            getModelLibrary().push({
+                id: crypto.randomUUID(),
+                name: file.name,
+                mimeType: file.type || "model/gltf-binary",
+                size: file.size,
+                encoding: "base64",
+                data
+            });
+            emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+            saveProjectLocally();
+            renderModels();
         } catch (error) {
-            selectedModelFile = null;
-            renderSelection(error instanceof Error ? error.message : "Impossible de lire ce fichier.");
+            renderModels(error instanceof Error ? error.message : "Impossible de lire ce fichier.");
         }
     });
+
+    on(EVENTS.PROJECT_REPLACED, () => renderModels());
+    renderModels();
+}
+
+function getModelLibrary() {
+    const project = getProject();
+    if (!project) return [];
+    project.assets ??= { images: [], icons: [], fonts: [] };
+    project.assets.models ??= [];
+    return project.assets.models;
 }
 
 function validateGlbFile(file) {
-    const isGlb = file.name.toLowerCase().endsWith(".glb");
-    if (!isGlb) {
-        throw new Error("Sélectionnez un fichier au format GLB.");
-    }
-    if (file.size === 0) {
-        throw new Error("Le fichier sélectionné est vide.");
-    }
-    if (file.size > MAX_PREVIEW_SIZE_BYTES) {
-        throw new Error("Le fichier dépasse la limite temporaire de 100 Mo.");
-    }
+    if (!file.name.toLowerCase().endsWith(".glb")) throw new Error("Sélectionnez un fichier au format GLB.");
+    if (file.size === 0) throw new Error("Le fichier sélectionné est vide.");
+    if (file.size > MAX_PREVIEW_SIZE_BYTES) throw new Error("Le fichier dépasse la limite temporaire de 100 Mo.");
 }
 
-function renderSelection(errorMessage = "") {
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+            const result = String(reader.result ?? "");
+            resolve(result.includes(",") ? result.slice(result.indexOf(",") + 1) : result);
+        });
+        reader.addEventListener("error", () => reject(reader.error ?? new Error("Lecture impossible.")));
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderModels(errorMessage = "") {
     const container = document.getElementById("model3dSelection");
     if (!container) return;
-
     container.replaceChildren();
-
     if (errorMessage) {
         const message = document.createElement("p");
         message.className = "models3d-message models3d-message--error";
@@ -52,22 +74,23 @@ function renderSelection(errorMessage = "") {
         container.append(message);
         return;
     }
-
-    if (!selectedModelFile) {
+    const models = getModelLibrary();
+    if (!models.length) {
         const empty = document.createElement("p");
         empty.className = "panel-empty-state";
-        empty.textContent = "Aucun modèle sélectionné.";
+        empty.textContent = "Aucun modèle importé.";
         container.append(empty);
         return;
     }
-
-    const details = document.createElement("dl");
-    details.className = "models3d-file-details";
-    appendDetail(details, "Nom", selectedModelFile.name);
-    appendDetail(details, "Taille", formatFileSize(selectedModelFile.size));
-    appendDetail(details, "Type", selectedModelFile.type || "model/gltf-binary");
-    appendDetail(details, "État", "Fichier chargé en mémoire");
-    container.append(details);
+    models.forEach(model => {
+        const details = document.createElement("dl");
+        details.className = "models3d-file-details";
+        appendDetail(details, "Nom", model.name);
+        appendDetail(details, "Taille", formatFileSize(Number(model.size) || 0));
+        appendDetail(details, "Type", model.mimeType || "model/gltf-binary");
+        appendDetail(details, "État", "Inclus dans la sauvegarde JSON");
+        container.append(details);
+    });
 }
 
 function appendDetail(list, label, value) {
