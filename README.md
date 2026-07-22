@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.10
+## SB-2.0.0-alpha.34.3.11
 
-### 2.0.0-alpha.34.3.10
+### 2.0.0-alpha.34.3.11
+
+- Ajout d’une liste recherchable des objets 3D placés.
 
 - Ajout de la suppression, de la visibilité et du verrouillage des instances.
 

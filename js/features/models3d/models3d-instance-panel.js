@@ -17,7 +17,37 @@ export function renderInstanceEditor() {
     if (!container) return;
     container.replaceChildren();
     const project = getProject();
-    const instance = project?.models3dInstances?.find(item => item.id === getSelectedModelInstanceId());
+    const instances = Array.isArray(project?.models3dInstances) ? project.models3dInstances : [];
+    const browser = document.createElement("section");
+    browser.className = "models3d-object-browser";
+    const browserTitle = document.createElement("h3");
+    browserTitle.textContent = `Objets placés (${instances.length})`;
+    const search = document.createElement("input");
+    search.type = "search";
+    search.placeholder = "Rechercher un objet";
+    const list = document.createElement("div");
+    list.className = "models3d-object-list";
+    const renderList = () => {
+        list.replaceChildren();
+        const query = search.value.trim().toLowerCase();
+        instances.forEach((item, index) => {
+            const source = project?.assets?.models?.find(model => model.id === item.modelId);
+            const name = item.name || source?.name || `Objet ${index + 1}`;
+            if (query && !name.toLowerCase().includes(query)) return;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "models3d-object-row";
+            button.classList.toggle("is-selected", item.id === getSelectedModelInstanceId());
+            button.textContent = `${item.visible === false ? "○" : "●"} ${name}`;
+            button.addEventListener("click", () => selectModelInstance(item.id));
+            list.append(button);
+        });
+    };
+    search.addEventListener("input", renderList);
+    browser.append(browserTitle, search, list);
+    container.append(browser);
+    renderList();
+    const instance = instances.find(item => item.id === getSelectedModelInstanceId());
     if (!instance) return;
     const model = project?.assets?.models?.find(item => item.id === instance.modelId);
 

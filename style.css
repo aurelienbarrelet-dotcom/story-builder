@@ -5895,3 +5895,9 @@ body > .collection-menu { z-index: 1000; }
 .models3d-animation-editor { grid-template-columns: 1fr; }
 
 .models3d-state-editor { grid-template-columns: 1fr 1fr; }
+
+.models3d-object-browser { display:grid; gap:var(--space-3); margin-bottom:var(--space-4); }
+.models3d-object-browser h3 { margin:0; font-size:13px; }
+.models3d-object-list { display:grid; gap:var(--space-1); max-height:180px; overflow:auto; }
+.models3d-object-row { width:100%; padding:8px 10px; border:1px solid var(--panel-border,#d4d7da); border-radius:6px; background:white; text-align:left; cursor:pointer; }
+.models3d-object-row.is-selected { border-color:var(--accent-color,#2563eb); background:color-mix(in srgb,var(--accent-color,#2563eb) 8%,white); }
