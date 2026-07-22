@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.5
+## SB-2.0.0-alpha.34.2.6
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -673,3 +673,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Affiche les dimensions du modèle après son chargement dans l’aperçu.
 - Analyse le bloc JSON du GLB pour compter les maillages, matériaux et animations.
 - Indique clairement lorsque une métadonnée ne peut pas être déterminée.
+
+
+### 2.0.0-alpha.34.2.6
+
+- Ajoute les actions **Renommer**, **Dupliquer** et **Supprimer** à chaque modèle 3D.
+- La duplication réutilise les mêmes données GLB embarquées tout en créant un nouvel identifiant.
+- Toute modification met immédiatement à jour le projet local et marque le projet comme modifié.
+- La suppression demande une confirmation avant de retirer le modèle de `project.assets.models`.

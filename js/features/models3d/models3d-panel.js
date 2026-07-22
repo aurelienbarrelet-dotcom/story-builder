@@ -105,9 +105,80 @@ function renderModels(errorMessage = "") {
             materialsValue,
             animationsValue
         });
-        card.append(preview, details);
+        const actions = createModelActions(model);
+        card.append(preview, details, actions);
         container.append(card);
     });
+}
+
+
+function createModelActions(model) {
+    const actions = document.createElement("div");
+    actions.className = "models3d-card-actions";
+
+    const renameButton = createActionButton("Renommer", "Renommer ce modèle");
+    renameButton.addEventListener("click", () => renameModel(model));
+
+    const duplicateButton = createActionButton("Dupliquer", "Dupliquer ce modèle");
+    duplicateButton.addEventListener("click", () => duplicateModel(model));
+
+    const deleteButton = createActionButton("Supprimer", "Supprimer ce modèle", "models3d-action--danger");
+    deleteButton.addEventListener("click", () => deleteModel(model));
+
+    actions.append(renameButton, duplicateButton, deleteButton);
+    return actions;
+}
+
+function createActionButton(label, title, extraClass = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `ui-button ui-button--secondary models3d-action ${extraClass}`.trim();
+    button.textContent = label;
+    button.title = title;
+    return button;
+}
+
+function renameModel(model) {
+    const currentName = model.name || "modèle.glb";
+    const requestedName = window.prompt("Nouveau nom du modèle :", currentName);
+    if (requestedName === null) return;
+    const name = requestedName.trim();
+    if (!name || name === currentName) return;
+    model.name = name;
+    commitModelLibraryChange();
+}
+
+function duplicateModel(model) {
+    const copy = {
+        ...model,
+        id: crypto.randomUUID(),
+        name: createCopyName(model.name || "modèle.glb")
+    };
+    getModelLibrary().push(copy);
+    commitModelLibraryChange();
+}
+
+function deleteModel(model) {
+    const confirmed = window.confirm(`Supprimer définitivement « ${model.name || "ce modèle"} » du projet ?`);
+    if (!confirmed) return;
+    const models = getModelLibrary();
+    const index = models.findIndex(candidate => candidate.id === model.id);
+    if (index < 0) return;
+    models.splice(index, 1);
+    commitModelLibraryChange();
+}
+
+function createCopyName(name) {
+    const suffix = " — copie";
+    const extensionIndex = name.toLowerCase().lastIndexOf(".glb");
+    if (extensionIndex < 0) return `${name}${suffix}`;
+    return `${name.slice(0, extensionIndex)}${suffix}${name.slice(extensionIndex)}`;
+}
+
+function commitModelLibraryChange() {
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    renderModels();
 }
 
 function createModelPreview(model, metadataElements) {
