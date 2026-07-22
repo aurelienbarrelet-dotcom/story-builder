@@ -1,6 +1,6 @@
 import { EVENTS, on } from "../../core/events.js";
 import { getProject } from "../../core/store.js";
-import { getSelectedModelInstanceId, selectModelInstance } from "./models3d-map.js";
+import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
 
 export function setupModels3dInstancePanel() {
     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
@@ -31,7 +31,17 @@ export function renderInstanceEditor() {
     appendDetail(details, "Longitude", Number(instance.longitude).toFixed(6));
     appendDetail(details, "Latitude", Number(instance.latitude).toFixed(6));
     appendDetail(details, "Altitude", `${Number(instance.altitude || 0).toFixed(2)} m`);
-    card.append(heading, hint, details);
+    const moveButton = document.createElement("button");
+    moveButton.type = "button";
+    moveButton.className = "ui-button ui-button--secondary models3d-instance-move";
+    const moving = isSelectedInstanceMoveModeActive();
+    moveButton.textContent = moving ? "Terminer le déplacement" : "Déplacer sur la carte";
+    moveButton.setAttribute("aria-pressed", String(moving));
+    moveButton.addEventListener("click", () => {
+        setSelectedInstanceMoveMode(!isSelectedInstanceMoveModeActive());
+        renderInstanceEditor();
+    });
+    card.append(heading, hint, details, moveButton);
     container.append(card);
 }
 

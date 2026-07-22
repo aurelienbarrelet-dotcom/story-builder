@@ -13,6 +13,8 @@ let renderEntries = [];
 let objectUrls = [];
 let renderRevision = 0;
 let selectedInstanceId = null;
+let moveModeActive = false;
+let draggingInstance = false;
 
 export function setupModels3dMap() {
     on(EVENTS.MAP_STYLE_READY, () => {
@@ -53,8 +55,21 @@ export function selectModelInstance(instanceId) {
     const nextId = getInstanceLibrary().some(instance => instance.id === instanceId) ? instanceId : null;
     if (selectedInstanceId === nextId) return;
     selectedInstanceId = nextId;
-    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId });
+    if (!selectedInstanceId) setSelectedInstanceMoveMode(false);
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
     renderModelInstances();
+}
+
+export function setSelectedInstanceMoveMode(active) {
+    moveModeActive = Boolean(active && selectedInstanceId);
+    draggingInstance = false;
+    const map = getMapInstance();
+    map?.getCanvas?.()?.classList.toggle("models3d-move-cursor", moveModeActive);
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
+}
+
+export function isSelectedInstanceMoveModeActive() {
+    return moveModeActive;
 }
 
 export function removeInstancesForModel(modelId) {
@@ -175,9 +190,13 @@ function bindMapClickHandler() {
     if (!map || map === boundMap) return;
     boundMap = map;
     map.on("click", handleMapClick);
+    map.on("mousedown", handleMoveStart);
+    map.on("mousemove", handleMoveDrag);
+    map.on("mouseup", handleMoveEnd);
 }
 
 function handleMapClick(event) {
+    if (draggingInstance) return;
     if (!placementModelId) {
         selectNearestInstance(event);
         return;
@@ -286,4 +305,35 @@ function selectNearestInstance(event) {
         }
     }
     selectModelInstance(nearestId);
+}
+
+function handleMoveStart(event) {
+    if (!moveModeActive || !selectedInstanceId) return;
+    const instance = getInstanceLibrary().find(item => item.id === selectedInstanceId);
+    if (!instance) return;
+    const map = getMapInstance();
+    const point = map.project([Number(instance.longitude), Number(instance.latitude)]);
+    if (Math.hypot(point.x - event.point.x, point.y - event.point.y) > 45) return;
+    draggingInstance = true;
+    map.dragPan?.disable();
+    event.preventDefault?.();
+}
+
+function handleMoveDrag(event) {
+    if (!draggingInstance || !selectedInstanceId) return;
+    const instance = getInstanceLibrary().find(item => item.id === selectedInstanceId);
+    if (!instance) return;
+    instance.longitude = Number(event.lngLat.lng);
+    instance.latitude = Number(event.lngLat.lat);
+    renderModelInstances();
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
+}
+
+function handleMoveEnd() {
+    if (!draggingInstance) return;
+    draggingInstance = false;
+    getMapInstance()?.dragPan?.enable();
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
 }
