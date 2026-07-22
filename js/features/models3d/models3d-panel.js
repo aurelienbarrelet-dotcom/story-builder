@@ -88,21 +88,29 @@ function renderModels(errorMessage = "") {
         const card = document.createElement("article");
         card.className = "models3d-card";
 
-        const preview = createModelPreview(model);
-        card.append(preview);
-
         const details = document.createElement("dl");
         details.className = "models3d-file-details";
         appendDetail(details, "Nom", model.name);
         appendDetail(details, "Taille", formatFileSize(Number(model.size) || 0));
         appendDetail(details, "Type", model.mimeType || "model/gltf-binary");
         appendDetail(details, "État", "Inclus dans la sauvegarde JSON");
-        card.append(details);
+        const dimensionsValue = appendDetail(details, "Dimensions", "Analyse…");
+        const meshesValue = appendDetail(details, "Maillages", "Analyse…");
+        const materialsValue = appendDetail(details, "Matériaux", "Analyse…");
+        const animationsValue = appendDetail(details, "Animations", "Analyse…");
+
+        const preview = createModelPreview(model, {
+            dimensionsValue,
+            meshesValue,
+            materialsValue,
+            animationsValue
+        });
+        card.append(preview, details);
         container.append(card);
     });
 }
 
-function createModelPreview(model) {
+function createModelPreview(model, metadataElements) {
     const preview = document.createElement("model-viewer");
     preview.className = "models3d-preview";
     preview.setAttribute("camera-controls", "");
@@ -116,13 +124,18 @@ function createModelPreview(model) {
         const url = createGlbObjectUrl(model);
         previewUrls.add(url);
         preview.src = url;
+        updateStructuralMetadata(model, metadataElements);
     } catch (error) {
         preview.classList.add("models3d-preview--error");
         preview.textContent = error instanceof Error ? error.message : "Aperçu indisponible.";
     }
+    preview.addEventListener("load", () => {
+        updateDimensionsMetadata(preview, metadataElements.dimensionsValue);
+    }, { once: true });
     preview.addEventListener("error", () => {
         preview.classList.add("models3d-preview--error");
         preview.textContent = "Impossible d’afficher ce modèle GLB.";
+        metadataElements.dimensionsValue.textContent = "Indisponibles";
     }, { once: true });
     return preview;
 }
@@ -136,6 +149,53 @@ function createGlbObjectUrl(model) {
     return URL.createObjectURL(blob);
 }
 
+function updateStructuralMetadata(model, elements) {
+    try {
+        const gltf = readGlbJson(model);
+        elements.meshesValue.textContent = formatCount(gltf.meshes?.length ?? 0, "maillage");
+        elements.materialsValue.textContent = formatCount(gltf.materials?.length ?? 0, "matériau", "matériaux");
+        elements.animationsValue.textContent = formatCount(gltf.animations?.length ?? 0, "animation");
+    } catch {
+        elements.meshesValue.textContent = "Indisponible";
+        elements.materialsValue.textContent = "Indisponibles";
+        elements.animationsValue.textContent = "Indisponibles";
+    }
+}
+
+function updateDimensionsMetadata(preview, element) {
+    try {
+        const dimensions = preview.getDimensions();
+        element.textContent = [dimensions.x, dimensions.y, dimensions.z]
+            .map(value => formatDimension(value))
+            .join(" × ");
+    } catch {
+        element.textContent = "Indisponibles";
+    }
+}
+
+function readGlbJson(model) {
+    if (model.encoding !== "base64" || !model.data) throw new Error("Données GLB indisponibles.");
+    const binary = atob(model.data);
+    if (binary.length < 20 || binary.slice(0, 4) !== "glTF") throw new Error("En-tête GLB invalide.");
+    const view = new DataView(new ArrayBuffer(8));
+    const header = new Uint8Array(view.buffer);
+    for (let index = 0; index < 8; index += 1) header[index] = binary.charCodeAt(12 + index);
+    const chunkLength = view.getUint32(0, true);
+    const chunkType = view.getUint32(4, true);
+    if (chunkType !== 0x4E4F534A || 20 + chunkLength > binary.length) throw new Error("Bloc JSON GLB invalide.");
+    const jsonText = binary.slice(20, 20 + chunkLength).replace(/\u0000+$/g, "").trimEnd();
+    return JSON.parse(jsonText);
+}
+
+function formatDimension(value) {
+    if (!Number.isFinite(value)) return "—";
+    return `${value.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} m`;
+}
+
+function formatCount(count, singular, plural = `${singular}s`) {
+    return `${count.toLocaleString("fr-FR")} ${count > 1 ? plural : singular}`;
+}
+
 function releasePreviewUrls() {
     previewUrls.forEach(url => URL.revokeObjectURL(url));
     previewUrls.clear();
@@ -147,6 +207,7 @@ function appendDetail(list, label, value) {
     const description = document.createElement("dd");
     description.textContent = value;
     list.append(term, description);
+    return description;
 }
 
 function formatFileSize(bytes) {

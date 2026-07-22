@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.4
+## SB-2.0.0-alpha.34.2.5
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -666,3 +666,10 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Permet la rotation, le zoom et la rotation automatique grâce au composant `model-viewer`.
 - Reconstruit temporairement le GLB depuis les données Base64 du projet, sans créer de fichier externe.
 - Libère les URL temporaires à chaque rafraîchissement du panneau.
+
+
+### 2.0.0-alpha.34.2.5
+
+- Affiche les dimensions du modèle après son chargement dans l’aperçu.
+- Analyse le bloc JSON du GLB pour compter les maillages, matériaux et animations.
+- Indique clairement lorsque une métadonnée ne peut pas être déterminée.
