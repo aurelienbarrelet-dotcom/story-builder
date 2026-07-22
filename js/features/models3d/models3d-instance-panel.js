@@ -1,11 +1,19 @@
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
-import { deleteSelectedModelInstance, duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
+import { deleteModelInstances, deleteSelectedModelInstance, duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
+import { createCollectionSelection, renderCollectionSelectionBar } from "../../ui/collection-panel.js";
+
+const objectSelection = createCollectionSelection();
 
 export function setupModels3dInstancePanel() {
-    on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
+    on(EVENTS.MODEL3D_INSTANCE_SELECTED, ({ instanceId } = {}) => {
+        if (instanceId && objectSelection.primaryId !== instanceId) objectSelection.replace([instanceId], instanceId);
+        if (!instanceId && objectSelection.count <= 1) objectSelection.clear();
+        renderInstanceEditor();
+    });
     on(EVENTS.PROJECT_REPLACED, () => {
+        objectSelection.clear();
         selectModelInstance(null);
         renderInstanceEditor();
     });
@@ -15,12 +23,24 @@ export function setupModels3dInstancePanel() {
 export function renderInstanceEditor() {
     const list = document.getElementById("model3dObjectList");
     const inspector = document.getElementById("model3dObjectInspector");
+    const selectionBar = document.getElementById("model3dSelectionBar");
     if (!list || !inspector) return;
 
     list.replaceChildren();
     inspector.replaceChildren();
     const project = getProject();
     const instances = Array.isArray(project?.models3dInstances) ? project.models3dInstances : [];
+    const orderedIds = instances.map(item => item.id);
+    objectSelection.prune(orderedIds);
+    const selectedInstanceId = getSelectedModelInstanceId();
+    if (selectedInstanceId && !objectSelection.has(selectedInstanceId)) objectSelection.replace([selectedInstanceId], selectedInstanceId);
+    renderCollectionSelectionBar(selectionBar, {
+        count: objectSelection.count,
+        singular: "objet",
+        plural: "objets",
+        deleteLabel: "Supprimer les objets 3D sélectionnés",
+        onDelete: deleteSelectedObjects
+    });
 
     if (!instances.length) {
         const empty = document.createElement("p");
@@ -34,7 +54,9 @@ export function renderInstanceEditor() {
             const button = document.createElement("button");
             button.type = "button";
             button.className = "models3d-object-row";
-            button.classList.toggle("is-selected", item.id === getSelectedModelInstanceId());
+            button.classList.toggle("is-selected", item.id === selectedInstanceId);
+            button.classList.toggle("multi-selected", objectSelection.has(item.id));
+            button.setAttribute("aria-pressed", String(objectSelection.has(item.id)));
 
             const status = document.createElement("span");
             status.className = "models3d-object-status";
@@ -45,12 +67,16 @@ export function renderInstanceEditor() {
             label.className = "models3d-object-name";
             label.textContent = name;
             button.append(status, label);
-            button.addEventListener("click", () => selectModelInstance(item.id));
+            button.addEventListener("click", event => {
+                const primaryId = objectSelection.select(item.id, orderedIds, event);
+                selectModelInstance(primaryId);
+                renderInstanceEditor();
+            });
             list.append(button);
         });
     }
 
-    const instance = instances.find(item => item.id === getSelectedModelInstanceId());
+    const instance = instances.find(item => item.id === selectedInstanceId);
     if (!instance) {
         const empty = document.createElement("section");
         empty.className = "models3d-inspector-empty";
@@ -65,7 +91,9 @@ export function renderInstanceEditor() {
     const heading = document.createElement("h3");
     heading.textContent = model?.name || "Instance 3D";
     const hint = document.createElement("p");
-    hint.textContent = "Instance sélectionnée sur la carte";
+    hint.textContent = objectSelection.count > 1
+        ? `${objectSelection.count} objets sélectionnés · propriétés de l’objet principal`
+        : "Objet sélectionné";
     const details = document.createElement("dl");
     details.className = "models3d-instance-details";
     appendDetail(details, "Longitude", Number(instance.longitude).toFixed(6));
@@ -205,9 +233,26 @@ export function renderInstanceEditor() {
     deleteButton.type = "button";
     deleteButton.className = "ui-button ui-button--secondary models3d-action--danger";
     deleteButton.textContent = "Supprimer l’instance";
-    deleteButton.addEventListener("click", () => { if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance(); });
+    deleteButton.addEventListener("click", () => {
+        if (objectSelection.count > 1) {
+            deleteSelectedObjects();
+            return;
+        }
+        if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance();
+    });
     card.append(heading, hint, details, moveButton, duplicateButton, deleteButton, stateEditor, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
     inspector.append(card);
+}
+
+function deleteSelectedObjects() {
+    const count = objectSelection.count;
+    if (!count) return;
+    const label = count > 1 ? `${count} objets 3D` : "cet objet 3D";
+    if (!window.confirm(`Supprimer ${label} ?`)) return;
+    deleteModelInstances(objectSelection.ids);
+    objectSelection.clear();
+    selectModelInstance(null);
+    renderInstanceEditor();
 }
 
 function appendDetail(list, label, value) {

@@ -92,6 +92,27 @@ export function snapSelectedInstanceToTerrain() {
 }
 
 
+export function deleteModelInstances(instanceIds) {
+    const ids = instanceIds instanceof Set ? instanceIds : new Set(instanceIds || []);
+    if (!ids.size) return 0;
+    const instances = getInstanceLibrary();
+    const initialCount = instances.length;
+    for (let index = instances.length - 1; index >= 0; index -= 1) {
+        if (ids.has(instances[index]?.id)) instances.splice(index, 1);
+    }
+    const deletedCount = initialCount - instances.length;
+    if (!deletedCount) return 0;
+    if (ids.has(selectedInstanceId)) {
+        selectedInstanceId = null;
+        setSelectedInstanceMoveMode(false);
+    }
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
+    renderModelInstances();
+    return deletedCount;
+}
+
 export function deleteSelectedModelInstance() {
     const instances = getInstanceLibrary();
     const index = instances.findIndex(item => item.id === selectedInstanceId);

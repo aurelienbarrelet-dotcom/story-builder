@@ -208,14 +208,17 @@
         </aside>
 
         <aside id="models3dPanel" class="properties-panel models3d-panel">
-            <header class="properties-panel-header">
+            <header class="properties-panel-header collection-panel-header">
                 <div class="properties-panel-title">
                     <h2>Objets 3D</h2>
                 </div>
             </header>
             <div id="model3dInstanceEditor" class="properties-panel-content models3d-instance-editor" aria-live="polite">
                 <div class="models3d-workspace">
-                    <div id="model3dObjectList" class="models3d-object-list" aria-label="Objets 3D placés"></div>
+                    <section class="models3d-object-browser-pane collection-panel" aria-label="Objets 3D placés">
+                        <div id="model3dObjectList" class="models3d-object-list collection-panel-content"></div>
+                        <div id="model3dSelectionBar" class="collection-selection-bar models3d-selection-bar" aria-live="polite" hidden></div>
+                    </section>
                     <aside id="model3dObjectInspector" class="models3d-object-inspector" aria-label="Propriétés de l’objet 3D sélectionné"></aside>
                 </div>
             </div>

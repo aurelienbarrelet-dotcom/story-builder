@@ -1,0 +1,299 @@
+diff --git a/index.html b/index.html
+index 6a694dd..99bb824 100644
+--- a/index.html
++++ b/index.html
+@@ -208,14 +208,17 @@
+         </aside>
+ 
+         <aside id="models3dPanel" class="properties-panel models3d-panel">
+-            <header class="properties-panel-header">
++            <header class="properties-panel-header collection-panel-header">
+                 <div class="properties-panel-title">
+                     <h2>Objets 3D</h2>
+                 </div>
+             </header>
+             <div id="model3dInstanceEditor" class="properties-panel-content models3d-instance-editor" aria-live="polite">
+                 <div class="models3d-workspace">
+-                    <div id="model3dObjectList" class="models3d-object-list" aria-label="Objets 3D placés"></div>
++                    <section class="models3d-object-browser-pane collection-panel" aria-label="Objets 3D placés">
++                        <div id="model3dObjectList" class="models3d-object-list collection-panel-content"></div>
++                        <div id="model3dSelectionBar" class="collection-selection-bar models3d-selection-bar" aria-live="polite" hidden></div>
++                    </section>
+                     <aside id="model3dObjectInspector" class="models3d-object-inspector" aria-label="Propriétés de l’objet 3D sélectionné"></aside>
+                 </div>
+             </div>
+diff --git a/js/features/models3d/models3d-instance-panel.js b/js/features/models3d/models3d-instance-panel.js
+index d91ae67..04a5e3a 100644
+--- a/js/features/models3d/models3d-instance-panel.js
++++ b/js/features/models3d/models3d-instance-panel.js
+@@ -1,11 +1,19 @@
+ import { emit, EVENTS, on } from "../../core/events.js";
+ import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
+-import { deleteSelectedModelInstance, duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
++import { deleteModelInstances, deleteSelectedModelInstance, duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
++import { createCollectionSelection, renderCollectionSelectionBar } from "../../ui/collection-panel.js";
++
++const objectSelection = createCollectionSelection();
+ 
+ export function setupModels3dInstancePanel() {
+-    on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
++    on(EVENTS.MODEL3D_INSTANCE_SELECTED, ({ instanceId } = {}) => {
++        if (instanceId && objectSelection.primaryId !== instanceId) objectSelection.replace([instanceId], instanceId);
++        if (!instanceId && objectSelection.count <= 1) objectSelection.clear();
++        renderInstanceEditor();
++    });
+     on(EVENTS.PROJECT_REPLACED, () => {
++        objectSelection.clear();
+         selectModelInstance(null);
+         renderInstanceEditor();
+     });
+@@ -15,12 +23,24 @@ export function setupModels3dInstancePanel() {
+ export function renderInstanceEditor() {
+     const list = document.getElementById("model3dObjectList");
+     const inspector = document.getElementById("model3dObjectInspector");
++    const selectionBar = document.getElementById("model3dSelectionBar");
+     if (!list || !inspector) return;
+ 
+     list.replaceChildren();
+     inspector.replaceChildren();
+     const project = getProject();
+     const instances = Array.isArray(project?.models3dInstances) ? project.models3dInstances : [];
++    const orderedIds = instances.map(item => item.id);
++    objectSelection.prune(orderedIds);
++    const selectedInstanceId = getSelectedModelInstanceId();
++    if (selectedInstanceId && !objectSelection.has(selectedInstanceId)) objectSelection.replace([selectedInstanceId], selectedInstanceId);
++    renderCollectionSelectionBar(selectionBar, {
++        count: objectSelection.count,
++        singular: "objet",
++        plural: "objets",
++        deleteLabel: "Supprimer les objets 3D sélectionnés",
++        onDelete: deleteSelectedObjects
++    });
+ 
+     if (!instances.length) {
+         const empty = document.createElement("p");
+@@ -34,7 +54,9 @@ export function renderInstanceEditor() {
+             const button = document.createElement("button");
+             button.type = "button";
+             button.className = "models3d-object-row";
+-            button.classList.toggle("is-selected", item.id === getSelectedModelInstanceId());
++            button.classList.toggle("is-selected", item.id === selectedInstanceId);
++            button.classList.toggle("multi-selected", objectSelection.has(item.id));
++            button.setAttribute("aria-pressed", String(objectSelection.has(item.id)));
+ 
+             const status = document.createElement("span");
+             status.className = "models3d-object-status";
+@@ -45,12 +67,16 @@ export function renderInstanceEditor() {
+             label.className = "models3d-object-name";
+             label.textContent = name;
+             button.append(status, label);
+-            button.addEventListener("click", () => selectModelInstance(item.id));
++            button.addEventListener("click", event => {
++                const primaryId = objectSelection.select(item.id, orderedIds, event);
++                selectModelInstance(primaryId);
++                renderInstanceEditor();
++            });
+             list.append(button);
+         });
+     }
+ 
+-    const instance = instances.find(item => item.id === getSelectedModelInstanceId());
++    const instance = instances.find(item => item.id === selectedInstanceId);
+     if (!instance) {
+         const empty = document.createElement("section");
+         empty.className = "models3d-inspector-empty";
+@@ -65,7 +91,9 @@ export function renderInstanceEditor() {
+     const heading = document.createElement("h3");
+     heading.textContent = model?.name || "Instance 3D";
+     const hint = document.createElement("p");
+-    hint.textContent = "Instance sélectionnée sur la carte";
++    hint.textContent = objectSelection.count > 1
++        ? `${objectSelection.count} objets sélectionnés · propriétés de l’objet principal`
++        : "Objet sélectionné";
+     const details = document.createElement("dl");
+     details.className = "models3d-instance-details";
+     appendDetail(details, "Longitude", Number(instance.longitude).toFixed(6));
+@@ -205,11 +233,28 @@ export function renderInstanceEditor() {
+     deleteButton.type = "button";
+     deleteButton.className = "ui-button ui-button--secondary models3d-action--danger";
+     deleteButton.textContent = "Supprimer l’instance";
+-    deleteButton.addEventListener("click", () => { if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance(); });
++    deleteButton.addEventListener("click", () => {
++        if (objectSelection.count > 1) {
++            deleteSelectedObjects();
++            return;
++        }
++        if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance();
++    });
+     card.append(heading, hint, details, moveButton, duplicateButton, deleteButton, stateEditor, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
+     inspector.append(card);
+ }
+ 
++function deleteSelectedObjects() {
++    const count = objectSelection.count;
++    if (!count) return;
++    const label = count > 1 ? `${count} objets 3D` : "cet objet 3D";
++    if (!window.confirm(`Supprimer ${label} ?`)) return;
++    deleteModelInstances(objectSelection.ids);
++    objectSelection.clear();
++    selectModelInstance(null);
++    renderInstanceEditor();
++}
++
+ function appendDetail(list, label, value) {
+     const term = document.createElement("dt");
+     term.textContent = label;
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index 7e12fb0..7a66fac 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -92,6 +92,27 @@ export function snapSelectedInstanceToTerrain() {
+ }
+ 
+ 
++export function deleteModelInstances(instanceIds) {
++    const ids = instanceIds instanceof Set ? instanceIds : new Set(instanceIds || []);
++    if (!ids.size) return 0;
++    const instances = getInstanceLibrary();
++    const initialCount = instances.length;
++    for (let index = instances.length - 1; index >= 0; index -= 1) {
++        if (ids.has(instances[index]?.id)) instances.splice(index, 1);
++    }
++    const deletedCount = initialCount - instances.length;
++    if (!deletedCount) return 0;
++    if (ids.has(selectedInstanceId)) {
++        selectedInstanceId = null;
++        setSelectedInstanceMoveMode(false);
++    }
++    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
++    saveProjectLocally();
++    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
++    renderModelInstances();
++    return deletedCount;
++}
++
+ export function deleteSelectedModelInstance() {
+     const instances = getInstanceLibrary();
+     const index = instances.findIndex(item => item.id === selectedInstanceId);
+diff --git a/style.css b/style.css
+index c216f64..eb14edf 100644
+--- a/style.css
++++ b/style.css
+@@ -6045,3 +6045,116 @@ main.models3d-panel-open .right-panels-shell {
+         grid-template-columns: minmax(190px, .8fr) minmax(0, 1.2fr);
+     }
+ }
++
++/* Alpha 34.3.18 — sélection multiple et harmonisation du panneau Objets 3D */
++.models3d-object-browser-pane {
++    min-width: 0;
++    min-height: 0;
++    display: flex;
++    flex-direction: column;
++    overflow: hidden;
++    background: var(--right-panel-bg);
++}
++
++.models3d-object-list {
++    flex: 1;
++    min-height: 0;
++}
++
++.models3d-selection-bar {
++    flex: 0 0 auto;
++    margin: 0 var(--right-panel-padding) var(--right-panel-padding);
++}
++
++.models3d-object-row {
++    position: relative;
++    min-height: 48px;
++    border-color: transparent;
++    border-radius: var(--space-3);
++    background: var(--color-surface);
++    color: var(--text-primary);
++    font: inherit;
++    transition: background-color var(--duration-standard) ease, border-color var(--duration-standard) ease, box-shadow var(--duration-standard) ease;
++}
++
++.models3d-object-row:hover {
++    border-color: var(--panel-border);
++    background: var(--color-surface-soft);
++}
++
++.models3d-object-row.multi-selected,
++.models3d-object-row.is-selected {
++    border-color: var(--accent);
++    background: color-mix(in srgb, var(--accent) 9%, var(--color-surface));
++    box-shadow: inset 3px 0 0 var(--accent);
++}
++
++.models3d-object-row.is-selected {
++    box-shadow: inset 3px 0 0 var(--accent), 0 0 0 1px var(--accent-ring);
++}
++
++.models3d-object-status {
++    width: 8px;
++    height: 8px;
++    overflow: hidden;
++    border-radius: 50%;
++    color: transparent;
++    background: var(--accent);
++}
++
++.models3d-object-name {
++    font-size: 13px;
++    font-weight: 650;
++    line-height: 1.35;
++}
++
++.models3d-object-inspector {
++    color: var(--text-primary);
++}
++
++.models3d-instance-card {
++    padding: 0;
++    border: 0;
++    border-radius: 0;
++    background: transparent;
++}
++
++.models3d-instance-card > h3 {
++    margin: 0 0 var(--space-1);
++    font-size: 16px;
++    font-weight: 700;
++    line-height: 1.3;
++}
++
++.models3d-instance-card > p {
++    margin-bottom: var(--space-5);
++    color: var(--text-secondary);
++    font-size: 12px;
++}
++
++.models3d-instance-card > .ui-button {
++    min-height: 36px;
++    border-radius: var(--control-radius);
++    font-size: 12px;
++    font-weight: 650;
++}
++
++.models3d-transform-editor {
++    margin-top: var(--space-5);
++    padding: var(--space-4);
++    border-color: var(--panel-border);
++    border-radius: var(--space-3);
++    background: var(--color-surface);
++}
++
++.models3d-transform-editor legend {
++    color: var(--text-primary);
++    font-size: 12px;
++    font-weight: 700;
++}
++
++.models3d-transform-field,
++.models3d-terrain-follow {
++    color: var(--text-secondary);
++    font-family: inherit;
++}
