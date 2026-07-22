@@ -5854,10 +5854,16 @@ body > .collection-menu { z-index: 1000; }
 .models3d-file-details { display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr); gap: var(--space-3) var(--space-5); margin: 0; padding: var(--space-5); border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); background: var(--color-surface, #f4f5f6); }
 .models3d-file-details dt { font-size: 12px; font-weight: 700; color: var(--text-secondary, #667085); }
 .models3d-file-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 12px; color: var(--text-primary, #1d2939); }
-.models3d-card-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.models3d-card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 .models3d-action { min-width: 0; padding-inline: var(--space-2); }
 .models3d-action--danger { color: var(--danger, #b42318); border-color: currentColor; }
 .models3d-action--danger:hover { background: #fff1f0; }
 @media (max-width: 420px) { .models3d-card-actions { grid-template-columns: 1fr; } }
 .models3d-message { margin: 0; padding: var(--space-4); border-radius: var(--control-radius); font-size: 12px; line-height: 1.45; }
 .models3d-message--error { border: var(--border-width) solid var(--danger, #d92d20); color: var(--danger, #b42318); background: #fff1f0; }
+
+.models3d-action--active { grid-column: 1 / -1; border-color: var(--accent-color, #2563eb); color: var(--accent-color, #2563eb); background: color-mix(in srgb, var(--accent-color, #2563eb) 8%, white); }
+.models3d-placement-cursor { cursor: crosshair !important; }
+.models3d-map-marker { width: 58px; height: 70px; padding: 0; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 5px 5px rgb(0 0 0 / 28%)); }
+.models3d-map-marker::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-color, #2563eb); border: 2px solid white; transform: translateX(-50%); box-shadow: 0 1px 4px rgb(0 0 0 / 35%); }
+.models3d-map-marker-viewer { display: block; width: 58px; height: 58px; border-radius: 10px; background: rgb(255 255 255 / 88%); pointer-events: none; }

@@ -1,6 +1,7 @@
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
+import { beginModelPlacement, removeInstancesForModel, renderModelInstances } from "./models3d-map.js";
 
 const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
 const previewUrls = new Set();
@@ -41,6 +42,7 @@ export function setupModels3dPanel() {
     }
 
     on(EVENTS.PROJECT_REPLACED, () => renderModels());
+    on(EVENTS.MODEL3D_PLACEMENT_CHANGED, ({ active, modelId }) => updatePlacementButtons(active, modelId));
     renderModels();
 }
 
@@ -150,6 +152,16 @@ function createModelActions(model) {
     const actions = document.createElement("div");
     actions.className = "models3d-card-actions";
 
+    const placeButton = createActionButton("Placer", "Placer ce modèle sur la carte", "models3d-action--place");
+    placeButton.dataset.modelId = model.id;
+    placeButton.addEventListener("click", () => {
+        if (!beginModelPlacement(model.id)) {
+            renderModels("Initialisez la carte Mapbox avant de placer un modèle.");
+            return;
+        }
+        updatePlacementButtons(true, model.id);
+    });
+
     const renameButton = createActionButton("Renommer", "Renommer ce modèle");
     renameButton.addEventListener("click", () => renameModel(model));
 
@@ -159,8 +171,17 @@ function createModelActions(model) {
     const deleteButton = createActionButton("Supprimer", "Supprimer ce modèle", "models3d-action--danger");
     deleteButton.addEventListener("click", () => deleteModel(model));
 
-    actions.append(renameButton, duplicateButton, deleteButton);
+    actions.append(placeButton, renameButton, duplicateButton, deleteButton);
     return actions;
+}
+
+function updatePlacementButtons(active, modelId) {
+    document.querySelectorAll(".models3d-action--place").forEach(button => {
+        const selected = active && button.dataset.modelId === modelId;
+        button.classList.toggle("models3d-action--active", selected);
+        button.textContent = selected ? "Cliquez sur la carte…" : "Placer";
+        button.setAttribute("aria-pressed", String(selected));
+    });
 }
 
 function createActionButton(label, title, extraClass = "") {
@@ -199,6 +220,7 @@ function deleteModel(model) {
     const index = models.findIndex(candidate => candidate.id === model.id);
     if (index < 0) return;
     models.splice(index, 1);
+    removeInstancesForModel(model.id);
     commitModelLibraryChange();
 }
 
@@ -213,6 +235,7 @@ function commitModelLibraryChange() {
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
     saveProjectLocally();
     renderModels();
+    renderModelInstances();
 }
 
 function createModelPreview(model, metadataElements) {

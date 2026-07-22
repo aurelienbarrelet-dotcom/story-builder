@@ -1,0 +1,170 @@
+diff --git a/README.md b/README.md
+index 360f8e2..fe30e84 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,11 @@
+-## SB-2.0.0-alpha.34.2.7
++## SB-2.0.0-alpha.34.2.8
++
++### 2.0.0-alpha.34.2.8
++
++- Placement d’un modèle GLB sur la carte par clic.
++- Les instances référencent le modèle embarqué par son identifiant sans dupliquer les données.
++- Prévisualisation cartographique des instances avec coordonnées enregistrées dans le projet.
++
+ 
+ ### Alpha 33.4 — contraste automatique des légendes
+ 
+diff --git a/index.html b/index.html
+index f9b2f0f..1a3d53e 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.2.7</title>
++    <title>Story Builder — 2.0.0-alpha.34.2.8</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/app.js b/js/app.js
+index 01d9d73..26ca13c 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -41,6 +41,7 @@ import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, p
+ import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
+ import { setupMotionManager } from "./features/motion/motion-manager.js";
+ import { setupModels3dPanel } from "./features/models3d/models3d-panel.js";
++import { setupModels3dMap } from "./features/models3d/models3d-map.js";
+ 
+ const ELEMENT_IDS = Object.freeze({
+     addChapterButton: "addChapterButton",
+@@ -236,6 +237,7 @@ function startApplication() {
+     setupLegendPanel();
+     setupAssetsPanel();
+     setupModels3dPanel();
++    setupModels3dMap();
+     setupChapterStyleClipboard();
+     setupProductivityShortcuts();
+     setupReaderMode();
+diff --git a/js/core/config.js b/js/core/config.js
+index e394d00..063cceb 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.2.7";
++export const APP_VERSION = "2.0.0-alpha.34.2.8";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/core/events.js b/js/core/events.js
+index b3998d6..bd724d3 100644
+--- a/js/core/events.js
++++ b/js/core/events.js
+@@ -12,7 +12,8 @@ export const EVENTS = Object.freeze({
+     READER_MODE_CHANGED: "reader-mode:changed",
+     HISTORY_CHANGED: "history:changed",
+     CLIPBOARD_CHANGED: "clipboard:changed",
+-    LAYER_SELECTION_CHANGED: "layer-selection:changed"
++    LAYER_SELECTION_CHANGED: "layer-selection:changed",
++    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed"
+ });
+ 
+ export function on(eventName, callback) {
+diff --git a/js/features/models3d/models3d-panel.js b/js/features/models3d/models3d-panel.js
+index 386065a..a9960cc 100644
+--- a/js/features/models3d/models3d-panel.js
++++ b/js/features/models3d/models3d-panel.js
+@@ -1,6 +1,7 @@
+ import { emit, EVENTS, on } from "../../core/events.js";
+ import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
++import { beginModelPlacement, removeInstancesForModel, renderModelInstances } from "./models3d-map.js";
+ 
+ const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
+ const previewUrls = new Set();
+@@ -41,6 +42,7 @@ export function setupModels3dPanel() {
+     }
+ 
+     on(EVENTS.PROJECT_REPLACED, () => renderModels());
++    on(EVENTS.MODEL3D_PLACEMENT_CHANGED, ({ active, modelId }) => updatePlacementButtons(active, modelId));
+     renderModels();
+ }
+ 
+@@ -150,6 +152,16 @@ function createModelActions(model) {
+     const actions = document.createElement("div");
+     actions.className = "models3d-card-actions";
+ 
++    const placeButton = createActionButton("Placer", "Placer ce modèle sur la carte", "models3d-action--place");
++    placeButton.dataset.modelId = model.id;
++    placeButton.addEventListener("click", () => {
++        if (!beginModelPlacement(model.id)) {
++            renderModels("Initialisez la carte Mapbox avant de placer un modèle.");
++            return;
++        }
++        updatePlacementButtons(true, model.id);
++    });
++
+     const renameButton = createActionButton("Renommer", "Renommer ce modèle");
+     renameButton.addEventListener("click", () => renameModel(model));
+ 
+@@ -159,10 +171,19 @@ function createModelActions(model) {
+     const deleteButton = createActionButton("Supprimer", "Supprimer ce modèle", "models3d-action--danger");
+     deleteButton.addEventListener("click", () => deleteModel(model));
+ 
+-    actions.append(renameButton, duplicateButton, deleteButton);
++    actions.append(placeButton, renameButton, duplicateButton, deleteButton);
+     return actions;
+ }
+ 
++function updatePlacementButtons(active, modelId) {
++    document.querySelectorAll(".models3d-action--place").forEach(button => {
++        const selected = active && button.dataset.modelId === modelId;
++        button.classList.toggle("models3d-action--active", selected);
++        button.textContent = selected ? "Cliquez sur la carte…" : "Placer";
++        button.setAttribute("aria-pressed", String(selected));
++    });
++}
++
+ function createActionButton(label, title, extraClass = "") {
+     const button = document.createElement("button");
+     button.type = "button";
+@@ -199,6 +220,7 @@ function deleteModel(model) {
+     const index = models.findIndex(candidate => candidate.id === model.id);
+     if (index < 0) return;
+     models.splice(index, 1);
++    removeInstancesForModel(model.id);
+     commitModelLibraryChange();
+ }
+ 
+@@ -213,6 +235,7 @@ function commitModelLibraryChange() {
+     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+     saveProjectLocally();
+     renderModels();
++    renderModelInstances();
+ }
+ 
+ function createModelPreview(model, metadataElements) {
+diff --git a/style.css b/style.css
+index bad9a21..eca41e5 100644
+--- a/style.css
++++ b/style.css
+@@ -5854,10 +5854,16 @@ body > .collection-menu { z-index: 1000; }
+ .models3d-file-details { display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr); gap: var(--space-3) var(--space-5); margin: 0; padding: var(--space-5); border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); background: var(--color-surface, #f4f5f6); }
+ .models3d-file-details dt { font-size: 12px; font-weight: 700; color: var(--text-secondary, #667085); }
+ .models3d-file-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 12px; color: var(--text-primary, #1d2939); }
+-.models3d-card-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
++.models3d-card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+ .models3d-action { min-width: 0; padding-inline: var(--space-2); }
+ .models3d-action--danger { color: var(--danger, #b42318); border-color: currentColor; }
+ .models3d-action--danger:hover { background: #fff1f0; }
+ @media (max-width: 420px) { .models3d-card-actions { grid-template-columns: 1fr; } }
+ .models3d-message { margin: 0; padding: var(--space-4); border-radius: var(--control-radius); font-size: 12px; line-height: 1.45; }
+ .models3d-message--error { border: var(--border-width) solid var(--danger, #d92d20); color: var(--danger, #b42318); background: #fff1f0; }
++
++.models3d-action--active { grid-column: 1 / -1; border-color: var(--accent-color, #2563eb); color: var(--accent-color, #2563eb); background: color-mix(in srgb, var(--accent-color, #2563eb) 8%, white); }
++.models3d-placement-cursor { cursor: crosshair !important; }
++.models3d-map-marker { width: 58px; height: 70px; padding: 0; border: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 5px 5px rgb(0 0 0 / 28%)); }
++.models3d-map-marker::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-color, #2563eb); border: 2px solid white; transform: translateX(-50%); box-shadow: 0 1px 4px rgb(0 0 0 / 35%); }
++.models3d-map-marker-viewer { display: block; width: 58px; height: 58px; border-radius: 10px; background: rgb(255 255 255 / 88%); pointer-events: none; }

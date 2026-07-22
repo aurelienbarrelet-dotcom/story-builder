@@ -12,7 +12,8 @@ export const EVENTS = Object.freeze({
     READER_MODE_CHANGED: "reader-mode:changed",
     HISTORY_CHANGED: "history:changed",
     CLIPBOARD_CHANGED: "clipboard:changed",
-    LAYER_SELECTION_CHANGED: "layer-selection:changed"
+    LAYER_SELECTION_CHANGED: "layer-selection:changed",
+    MODEL3D_PLACEMENT_CHANGED: "model3d:placement-changed"
 });
 
 export function on(eventName, callback) {

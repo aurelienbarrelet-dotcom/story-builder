@@ -41,6 +41,7 @@ import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, p
 import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
 import { setupMotionManager } from "./features/motion/motion-manager.js";
 import { setupModels3dPanel } from "./features/models3d/models3d-panel.js";
+import { setupModels3dMap } from "./features/models3d/models3d-map.js";
 
 const ELEMENT_IDS = Object.freeze({
     addChapterButton: "addChapterButton",
@@ -236,6 +237,7 @@ function startApplication() {
     setupLegendPanel();
     setupAssetsPanel();
     setupModels3dPanel();
+    setupModels3dMap();
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();

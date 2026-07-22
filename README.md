@@ -1,4 +1,11 @@
-## SB-2.0.0-alpha.34.2.7
+## SB-2.0.0-alpha.34.2.8
+
+### 2.0.0-alpha.34.2.8
+
+- Placement d’un modèle GLB sur la carte par clic.
+- Les instances référencent le modèle embarqué par son identifiant sans dupliquer les données.
+- Prévisualisation cartographique des instances avec coordonnées enregistrées dans le projet.
+
 
 ### Alpha 33.4 — contraste automatique des légendes
 
