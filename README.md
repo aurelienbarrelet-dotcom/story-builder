@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.1
+## SB-2.0.0-alpha.34.2.2
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -643,3 +643,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Ajout d’une entrée **Modèles 3D** dans le rail des panneaux de droite.
 - Ajout d’un panneau vide dédié, sans modification du format de projet ni de la carte Mapbox.
 - Cette étape prépare l’interface d’import GLB prévue pour la version suivante.
+
+
+### 2.0.0-alpha.34.2.2
+
+- Ajout du bouton **Importer un modèle GLB** dans le panneau Modèles 3D.
+- Validation du format `.glb`, du fichier vide et d’une limite temporaire de 100 Mo.
+- Affichage du nom, de la taille, du type MIME et de l’état du fichier sélectionné.
+- Le modèle reste uniquement en mémoire : il n’est pas encore enregistré dans le JSON du projet.

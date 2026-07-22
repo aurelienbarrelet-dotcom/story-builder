@@ -40,6 +40,7 @@ import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
 import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
 import { setupMotionManager } from "./features/motion/motion-manager.js";
+import { setupModels3dPanel } from "./features/models3d/models3d-panel.js";
 
 const ELEMENT_IDS = Object.freeze({
     addChapterButton: "addChapterButton",
@@ -234,6 +235,7 @@ function startApplication() {
     setupRightPanels();
     setupLegendPanel();
     setupAssetsPanel();
+    setupModels3dPanel();
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();
