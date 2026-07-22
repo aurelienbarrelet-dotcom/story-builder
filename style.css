@@ -5883,3 +5883,5 @@ body > .collection-menu { z-index: 1000; }
 .models3d-transform-editor legend { padding: 0 var(--space-2); font-size: 12px; font-weight: 700; }
 .models3d-transform-field { display: grid; gap: var(--space-1); min-width: 0; font-size: 11px !important; }
 .models3d-transform-field input { min-width: 0; padding-inline: var(--space-2) !important; }
+
+.models3d-scale-editor { grid-template-columns: 1fr; }

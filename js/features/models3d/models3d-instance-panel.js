@@ -55,7 +55,15 @@ export function renderInstanceEditor() {
             commitInstanceChange();
         }));
     });
-    card.append(heading, hint, details, moveButton, rotationEditor);
+    const scaleEditor = document.createElement("fieldset");
+    scaleEditor.className = "models3d-transform-editor models3d-scale-editor";
+    const scaleLegend = document.createElement("legend");
+    scaleLegend.textContent = "Échelle";
+    scaleEditor.append(scaleLegend, createNumberField("Facteur uniforme", Number(instance.scale) || 1, 0.01, 1000, 0.1, value => {
+        instance.scale = value;
+        commitInstanceChange();
+    }));
+    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor);
     container.append(card);
 }
 
