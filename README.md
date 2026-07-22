@@ -1,6 +1,6 @@
-## SB-2.0.0-alpha.34.2.8.1
+## SB-2.0.0-alpha.34.2.9
 
-### 2.0.0-alpha.34.2.8.1
+### 2.0.0-alpha.34.2.9
 
 - Correctif du chargement global de l’application après 34.2.8.
 - Ajout du module de placement 3D manquant.
