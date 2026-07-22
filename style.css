@@ -5941,3 +5941,107 @@ body > .collection-menu { z-index: 1000; }
     margin: 0;
     overflow-wrap: anywhere;
 }
+
+/* Alpha 34.3.17 — Objets 3D en double colonne */
+main.models3d-panel-open {
+    grid-template-columns: 260px minmax(380px, 1fr) minmax(752px, 752px) !important;
+}
+
+main.models3d-panel-open .right-panels-shell {
+    width: 752px;
+    min-width: 752px;
+}
+
+.models3d-instance-editor {
+    padding: 0;
+    overflow: hidden;
+}
+
+.models3d-workspace {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+}
+
+.models3d-object-list {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    max-height: none;
+    min-width: 0;
+    overflow-y: auto;
+    padding: var(--right-panel-padding);
+}
+
+.models3d-object-inspector {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--right-panel-padding);
+    border-left: var(--border-width) solid var(--panel-border);
+    background: var(--color-surface-soft);
+}
+
+.models3d-object-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 42px;
+    padding: 9px 11px;
+}
+
+.models3d-object-status {
+    color: var(--accent-color, #2563eb);
+    font-size: 11px;
+}
+
+.models3d-object-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.models3d-object-empty,
+.models3d-inspector-empty {
+    margin: 0;
+    color: var(--text-secondary, #667085);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.models3d-inspector-empty h3 {
+    margin: 0 0 var(--space-2);
+    color: var(--text-primary, #1d2939);
+    font-size: 16px;
+}
+
+.models3d-inspector-empty p { margin: 0; }
+.models3d-instance-card { margin-bottom: 0; }
+
+@media (max-width: 1450px) {
+    main.models3d-panel-open {
+        grid-template-columns: 230px minmax(340px, 1fr) minmax(692px, 692px) !important;
+    }
+
+    main.models3d-panel-open .right-panels-shell {
+        width: 692px;
+        min-width: 692px;
+    }
+}
+
+@media (max-width: 1100px) {
+    main.models3d-panel-open {
+        grid-template-columns: 220px minmax(300px, 1fr) minmax(580px, 580px) !important;
+    }
+
+    main.models3d-panel-open .right-panels-shell {
+        width: 580px;
+        min-width: 580px;
+    }
+
+    .models3d-workspace {
+        grid-template-columns: minmax(190px, .8fr) minmax(0, 1.2fr);
+    }
+}

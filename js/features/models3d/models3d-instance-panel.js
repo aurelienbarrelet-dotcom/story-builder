@@ -13,42 +13,51 @@ export function setupModels3dInstancePanel() {
 }
 
 export function renderInstanceEditor() {
-    const container = document.getElementById("model3dInstanceEditor");
-    if (!container) return;
-    container.replaceChildren();
+    const list = document.getElementById("model3dObjectList");
+    const inspector = document.getElementById("model3dObjectInspector");
+    if (!list || !inspector) return;
+
+    list.replaceChildren();
+    inspector.replaceChildren();
     const project = getProject();
     const instances = Array.isArray(project?.models3dInstances) ? project.models3dInstances : [];
-    const browser = document.createElement("section");
-    browser.className = "models3d-object-browser";
-    const browserTitle = document.createElement("h3");
-    browserTitle.textContent = `Objets placés (${instances.length})`;
-    const search = document.createElement("input");
-    search.type = "search";
-    search.placeholder = "Rechercher un objet";
-    const list = document.createElement("div");
-    list.className = "models3d-object-list";
-    const renderList = () => {
-        list.replaceChildren();
-        const query = search.value.trim().toLowerCase();
+
+    if (!instances.length) {
+        const empty = document.createElement("p");
+        empty.className = "models3d-object-empty";
+        empty.textContent = "Aucun objet 3D placé sur la carte.";
+        list.append(empty);
+    } else {
         instances.forEach((item, index) => {
             const source = project?.assets?.models?.find(model => model.id === item.modelId);
             const name = item.name || source?.name || `Objet ${index + 1}`;
-            if (query && !name.toLowerCase().includes(query)) return;
             const button = document.createElement("button");
             button.type = "button";
             button.className = "models3d-object-row";
             button.classList.toggle("is-selected", item.id === getSelectedModelInstanceId());
-            button.textContent = `${item.visible === false ? "○" : "●"} ${name}`;
+
+            const status = document.createElement("span");
+            status.className = "models3d-object-status";
+            status.textContent = item.visible === false ? "○" : "●";
+            status.setAttribute("aria-hidden", "true");
+
+            const label = document.createElement("span");
+            label.className = "models3d-object-name";
+            label.textContent = name;
+            button.append(status, label);
             button.addEventListener("click", () => selectModelInstance(item.id));
             list.append(button);
         });
-    };
-    search.addEventListener("input", renderList);
-    browser.append(browserTitle, search, list);
-    container.append(browser);
-    renderList();
+    }
+
     const instance = instances.find(item => item.id === getSelectedModelInstanceId());
-    if (!instance) return;
+    if (!instance) {
+        const empty = document.createElement("section");
+        empty.className = "models3d-inspector-empty";
+        empty.innerHTML = "<h3>Aucun objet sélectionné</h3><p>Sélectionne un objet dans la liste ou directement sur la carte pour modifier ses propriétés.</p>";
+        inspector.append(empty);
+        return;
+    }
     const model = project?.assets?.models?.find(item => item.id === instance.modelId);
 
     const card = document.createElement("section");
@@ -198,7 +207,7 @@ export function renderInstanceEditor() {
     deleteButton.textContent = "Supprimer l’instance";
     deleteButton.addEventListener("click", () => { if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance(); });
     card.append(heading, hint, details, moveButton, duplicateButton, deleteButton, stateEditor, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
-    container.append(card);
+    inspector.append(card);
 }
 
 function appendDetail(list, label, value) {

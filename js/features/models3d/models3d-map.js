@@ -272,8 +272,9 @@ function handleMapClick(event) {
         return;
     }
     project.models3dInstances ??= [];
+    const instanceId = crypto.randomUUID();
     project.models3dInstances.push({
-        id: crypto.randomUUID(),
+        id: instanceId,
         modelId: placementModelId,
         longitude: Number(event.lngLat.lng),
         latitude: Number(event.lngLat.lat),
@@ -284,7 +285,7 @@ function handleMapClick(event) {
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
     saveProjectLocally();
     cancelModelPlacement();
-    renderModelInstances();
+    selectModelInstance(instanceId);
 }
 
 function createScene(root, instance = {}) {

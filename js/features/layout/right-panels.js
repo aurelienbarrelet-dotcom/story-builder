@@ -73,6 +73,7 @@ function applyState() {
 
     const main = document.querySelector("main");
     main?.classList.toggle("assets-panel-open", activePanelId === "assetsPanel");
+    main?.classList.toggle("models3d-panel-open", activePanelId === "models3dPanel");
 
     window.dispatchEvent(new Event("resize"));
 }
