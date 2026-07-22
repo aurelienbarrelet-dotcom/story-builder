@@ -1,7 +1,7 @@
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
-import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
+import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
 
 export function setupModels3dInstancePanel() {
     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
@@ -63,7 +63,49 @@ export function renderInstanceEditor() {
         instance.scale = value;
         commitInstanceChange();
     }));
-    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor);
+    const terrainEditor = document.createElement("fieldset");
+    terrainEditor.className = "models3d-transform-editor models3d-terrain-editor";
+    const terrainLegend = document.createElement("legend");
+    terrainLegend.textContent = "Altitude et terrain";
+    const altitudeField = createNumberField("Altitude (m)", Number(instance.altitude) || 0, -12000, 100000, 0.1, value => {
+        instance.altitude = value;
+        instance.snapToTerrain = false;
+        commitInstanceChange();
+        renderInstanceEditor();
+    });
+    const snapButton = document.createElement("button");
+    snapButton.type = "button";
+    snapButton.className = "ui-button ui-button--secondary";
+    snapButton.textContent = instance.snapToTerrain ? "Recalculer sur le terrain" : "Poser sur le terrain";
+    snapButton.addEventListener("click", () => {
+        const result = snapSelectedInstanceToTerrain();
+        if (!result.ok) window.alert(result.message);
+        renderInstanceEditor();
+    });
+    const followLabel = document.createElement("label");
+    followLabel.className = "models3d-terrain-follow";
+    const followInput = document.createElement("input");
+    followInput.type = "checkbox";
+    followInput.checked = Boolean(instance.snapToTerrain);
+    followInput.addEventListener("change", () => {
+        instance.snapToTerrain = followInput.checked;
+        if (followInput.checked) {
+            const result = snapSelectedInstanceToTerrain();
+            if (!result.ok) {
+                instance.snapToTerrain = false;
+                followInput.checked = false;
+                window.alert(result.message);
+            }
+        } else {
+            commitInstanceChange();
+        }
+        renderInstanceEditor();
+    });
+    const followText = document.createElement("span");
+    followText.textContent = "Suivre le relief pendant le déplacement";
+    followLabel.append(followInput, followText);
+    terrainEditor.append(terrainLegend, altitudeField, snapButton, followLabel);
+    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor);
     container.append(card);
 }
 

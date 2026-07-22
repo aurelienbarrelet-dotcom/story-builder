@@ -72,6 +72,23 @@ export function isSelectedInstanceMoveModeActive() {
     return moveModeActive;
 }
 
+export function snapSelectedInstanceToTerrain() {
+    const map = getMapInstance();
+    const instance = getInstanceLibrary().find(item => item.id === selectedInstanceId);
+    if (!map || !instance) return { ok: false, message: "Aucune instance sélectionnée." };
+    const elevation = map.queryTerrainElevation?.([Number(instance.longitude), Number(instance.latitude)], { exaggerated: false });
+    if (!Number.isFinite(elevation)) {
+        return { ok: false, message: "Le style Mapbox actuel ne fournit pas d’élévation de terrain." };
+    }
+    instance.altitude = elevation;
+    instance.snapToTerrain = true;
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    renderModelInstances();
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
+    return { ok: true, elevation };
+}
+
 export function removeInstancesForModel(modelId) {
     const instances = getInstanceLibrary();
     for (let index = instances.length - 1; index >= 0; index -= 1) {
@@ -325,6 +342,10 @@ function handleMoveDrag(event) {
     if (!instance) return;
     instance.longitude = Number(event.lngLat.lng);
     instance.latitude = Number(event.lngLat.lat);
+    if (instance.snapToTerrain) {
+        const elevation = getMapInstance()?.queryTerrainElevation?.([instance.longitude, instance.latitude], { exaggerated: false });
+        if (Number.isFinite(elevation)) instance.altitude = elevation;
+    }
     renderModelInstances();
     emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });
 }
