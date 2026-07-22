@@ -1,0 +1,161 @@
+diff --git a/README.md b/README.md
+index 1b8c317..793ab90 100644
+--- a/README.md
++++ b/README.md
+@@ -1,4 +1,4 @@
+-## SB-2.0.0-alpha.34.2.3
++## SB-2.0.0-alpha.34.2.4
+ 
+ ### Alpha 33.4 — contraste automatique des légendes
+ 
+@@ -658,3 +658,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
+ - Les modèles GLB importés sont encodés en Base64 et stockés dans `project.assets.models`.
+ - Les modèles sont inclus dans le fichier unique `.story.json` et restaurés à son ouverture.
+ - Plusieurs modèles peuvent être conservés dans la bibliothèque du projet.
++
++
++### 2.0.0-alpha.34.2.4
++
++- Ajoute un aperçu interactif au-dessus des informations de chaque modèle GLB.
++- Permet la rotation, le zoom et la rotation automatique grâce au composant `model-viewer`.
++- Reconstruit temporairement le GLB depuis les données Base64 du projet, sans créer de fichier externe.
++- Libère les URL temporaires à chaque rafraîchissement du panneau.
+diff --git a/index.html b/index.html
+index b377517..6ab1761 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.2.3</title>
++    <title>Story Builder — 2.0.0-alpha.34.2.4</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -216,7 +216,7 @@
+             <div class="properties-panel-content models3d-panel-content">
+                 <button id="importModel3dButton" class="ui-button ui-button--primary models3d-import-button" type="button">Importer un modèle GLB</button>
+                 <input id="model3dFileInput" type="file" accept=".glb,model/gltf-binary" hidden>
+-                <p class="models3d-help">Le fichier est lu temporairement en mémoire. Il ne sera pas encore ajouté à la sauvegarde du projet.</p>
++                <p class="models3d-help">Les modèles importés sont intégrés à la sauvegarde du projet et affichés ci-dessous.</p>
+                 <div id="model3dSelection" class="models3d-selection" aria-live="polite">
+                     <p class="panel-empty-state">Aucun modèle sélectionné.</p>
+                 </div>
+@@ -289,6 +289,7 @@
+         </div>
+     </div>
+ 
++    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+     <script type="module" src="js/app.js"></script>
+ </body>
+diff --git a/js/core/config.js b/js/core/config.js
+index 9d6ba83..32995fe 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.2.3";
++export const APP_VERSION = "2.0.0-alpha.34.2.4";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/models3d/models3d-panel.js b/js/features/models3d/models3d-panel.js
+index fbb8056..bb02170 100644
+--- a/js/features/models3d/models3d-panel.js
++++ b/js/features/models3d/models3d-panel.js
+@@ -3,6 +3,7 @@ import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
+ 
+ const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
++const previewUrls = new Set();
+ 
+ export function setupModels3dPanel() {
+     const importButton = document.getElementById("importModel3dButton");
+@@ -64,6 +65,7 @@ function readFileAsBase64(file) {
+ }
+ 
+ function renderModels(errorMessage = "") {
++    releasePreviewUrls();
+     const container = document.getElementById("model3dSelection");
+     if (!container) return;
+     container.replaceChildren();
+@@ -83,16 +85,62 @@ function renderModels(errorMessage = "") {
+         return;
+     }
+     models.forEach(model => {
++        const card = document.createElement("article");
++        card.className = "models3d-card";
++
++        const preview = createModelPreview(model);
++        card.append(preview);
++
+         const details = document.createElement("dl");
+         details.className = "models3d-file-details";
+         appendDetail(details, "Nom", model.name);
+         appendDetail(details, "Taille", formatFileSize(Number(model.size) || 0));
+         appendDetail(details, "Type", model.mimeType || "model/gltf-binary");
+         appendDetail(details, "État", "Inclus dans la sauvegarde JSON");
+-        container.append(details);
++        card.append(details);
++        container.append(card);
+     });
+ }
+ 
++function createModelPreview(model) {
++    const preview = document.createElement("model-viewer");
++    preview.className = "models3d-preview";
++    preview.setAttribute("camera-controls", "");
++    preview.setAttribute("auto-rotate", "");
++    preview.setAttribute("interaction-prompt", "none");
++    preview.setAttribute("shadow-intensity", "0.8");
++    preview.setAttribute("environment-image", "neutral");
++    preview.setAttribute("alt", `Aperçu 3D de ${model.name || "ce modèle"}`);
++
++    try {
++        const url = createGlbObjectUrl(model);
++        previewUrls.add(url);
++        preview.src = url;
++    } catch (error) {
++        preview.classList.add("models3d-preview--error");
++        preview.textContent = error instanceof Error ? error.message : "Aperçu indisponible.";
++    }
++    preview.addEventListener("error", () => {
++        preview.classList.add("models3d-preview--error");
++        preview.textContent = "Impossible d’afficher ce modèle GLB.";
++    }, { once: true });
++    return preview;
++}
++
++function createGlbObjectUrl(model) {
++    if (model.encoding !== "base64" || !model.data) throw new Error("Données GLB indisponibles.");
++    const binary = atob(model.data);
++    const bytes = new Uint8Array(binary.length);
++    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
++    const blob = new Blob([bytes], { type: model.mimeType || "model/gltf-binary" });
++    return URL.createObjectURL(blob);
++}
++
++function releasePreviewUrls() {
++    previewUrls.forEach(url => URL.revokeObjectURL(url));
++    previewUrls.clear();
++}
++
+ function appendDetail(list, label, value) {
+     const term = document.createElement("dt");
+     term.textContent = label;
+diff --git a/style.css b/style.css
+index 102e673..4307891 100644
+--- a/style.css
++++ b/style.css
+@@ -5844,6 +5844,10 @@ body > .collection-menu { z-index: 1000; }
+ .models3d-import-button { width: 100%; }
+ .models3d-help { margin: 0; color: var(--text-secondary, #667085); font-size: 12px; line-height: 1.5; }
+ .models3d-selection { min-width: 0; }
++.models3d-card { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }
++.models3d-card:last-child { margin-bottom: 0; }
++.models3d-preview { display: block; width: 100%; height: 220px; border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); background: linear-gradient(135deg, var(--color-surface, #f4f5f6), #ffffff); overflow: hidden; }
++.models3d-preview--error { display: grid; place-items: center; padding: var(--space-5); box-sizing: border-box; color: var(--danger, #b42318); font-size: 12px; text-align: center; }
+ .models3d-file-details { display: grid; grid-template-columns: minmax(72px, auto) minmax(0, 1fr); gap: var(--space-3) var(--space-5); margin: 0; padding: var(--space-5); border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); background: var(--color-surface, #f4f5f6); }
+ .models3d-file-details dt { font-size: 12px; font-weight: 700; color: var(--text-secondary, #667085); }
+ .models3d-file-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 12px; color: var(--text-primary, #1d2939); }

@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.3
+## SB-2.0.0-alpha.34.2.4
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -658,3 +658,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Les modèles GLB importés sont encodés en Base64 et stockés dans `project.assets.models`.
 - Les modèles sont inclus dans le fichier unique `.story.json` et restaurés à son ouverture.
 - Plusieurs modèles peuvent être conservés dans la bibliothèque du projet.
+
+
+### 2.0.0-alpha.34.2.4
+
+- Ajoute un aperçu interactif au-dessus des informations de chaque modèle GLB.
+- Permet la rotation, le zoom et la rotation automatique grâce au composant `model-viewer`.
+- Reconstruit temporairement le GLB depuis les données Base64 du projet, sans créer de fichier externe.
+- Libère les URL temporaires à chaque rafraîchissement du panneau.

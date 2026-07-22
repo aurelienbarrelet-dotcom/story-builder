@@ -3,6 +3,7 @@ import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
 
 const MAX_PREVIEW_SIZE_BYTES = 100 * 1024 * 1024;
+const previewUrls = new Set();
 
 export function setupModels3dPanel() {
     const importButton = document.getElementById("importModel3dButton");
@@ -64,6 +65,7 @@ function readFileAsBase64(file) {
 }
 
 function renderModels(errorMessage = "") {
+    releasePreviewUrls();
     const container = document.getElementById("model3dSelection");
     if (!container) return;
     container.replaceChildren();
@@ -83,14 +85,60 @@ function renderModels(errorMessage = "") {
         return;
     }
     models.forEach(model => {
+        const card = document.createElement("article");
+        card.className = "models3d-card";
+
+        const preview = createModelPreview(model);
+        card.append(preview);
+
         const details = document.createElement("dl");
         details.className = "models3d-file-details";
         appendDetail(details, "Nom", model.name);
         appendDetail(details, "Taille", formatFileSize(Number(model.size) || 0));
         appendDetail(details, "Type", model.mimeType || "model/gltf-binary");
         appendDetail(details, "État", "Inclus dans la sauvegarde JSON");
-        container.append(details);
+        card.append(details);
+        container.append(card);
     });
+}
+
+function createModelPreview(model) {
+    const preview = document.createElement("model-viewer");
+    preview.className = "models3d-preview";
+    preview.setAttribute("camera-controls", "");
+    preview.setAttribute("auto-rotate", "");
+    preview.setAttribute("interaction-prompt", "none");
+    preview.setAttribute("shadow-intensity", "0.8");
+    preview.setAttribute("environment-image", "neutral");
+    preview.setAttribute("alt", `Aperçu 3D de ${model.name || "ce modèle"}`);
+
+    try {
+        const url = createGlbObjectUrl(model);
+        previewUrls.add(url);
+        preview.src = url;
+    } catch (error) {
+        preview.classList.add("models3d-preview--error");
+        preview.textContent = error instanceof Error ? error.message : "Aperçu indisponible.";
+    }
+    preview.addEventListener("error", () => {
+        preview.classList.add("models3d-preview--error");
+        preview.textContent = "Impossible d’afficher ce modèle GLB.";
+    }, { once: true });
+    return preview;
+}
+
+function createGlbObjectUrl(model) {
+    if (model.encoding !== "base64" || !model.data) throw new Error("Données GLB indisponibles.");
+    const binary = atob(model.data);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    const blob = new Blob([bytes], { type: model.mimeType || "model/gltf-binary" });
+    return URL.createObjectURL(blob);
+}
+
+function releasePreviewUrls() {
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    previewUrls.clear();
 }
 
 function appendDetail(list, label, value) {
