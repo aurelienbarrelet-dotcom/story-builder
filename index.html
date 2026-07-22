@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Builder — 2.0.0-alpha.34.2.6</title>
+    <title>Story Builder — 2.0.0-alpha.34.2.7</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -214,8 +214,11 @@
                 </div>
             </header>
             <div class="properties-panel-content models3d-panel-content">
-                <button id="importModel3dButton" class="ui-button ui-button--primary models3d-import-button" type="button">Importer un modèle GLB</button>
-                <input id="model3dFileInput" type="file" accept=".glb,model/gltf-binary" hidden>
+                <div id="model3dDropZone" class="models3d-drop-zone">
+                    <button id="importModel3dButton" class="ui-button ui-button--primary models3d-import-button" type="button">Importer des modèles GLB</button>
+                    <input id="model3dFileInput" type="file" accept=".glb,model/gltf-binary" multiple hidden>
+                    <p class="models3d-drop-zone-label">ou déposez vos fichiers .glb ici</p>
+                </div>
                 <p class="models3d-help">Les modèles importés sont intégrés à la sauvegarde du projet et affichés ci-dessous.</p>
                 <div id="model3dSelection" class="models3d-selection" aria-live="polite">
                     <p class="panel-empty-state">Aucun modèle sélectionné.</p>

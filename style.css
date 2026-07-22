@@ -5842,6 +5842,9 @@ body > .collection-menu { z-index: 1000; }
 /* Alpha 34.2.2 — sélection temporaire d’un modèle GLB */
 .models3d-panel-content { display: grid; align-content: start; gap: var(--space-5); }
 .models3d-import-button { width: 100%; }
+.models3d-drop-zone { display: grid; gap: var(--space-3); padding: var(--space-4); border: 2px dashed var(--panel-border, #d4d7da); border-radius: var(--control-radius); background: var(--color-surface, #f4f5f6); transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease; }
+.models3d-drop-zone--active { border-color: var(--accent-color, #2563eb); background: color-mix(in srgb, var(--accent-color, #2563eb) 8%, white); transform: translateY(-1px); }
+.models3d-drop-zone-label { margin: 0; color: var(--text-secondary, #667085); font-size: 12px; text-align: center; pointer-events: none; }
 .models3d-help { margin: 0; color: var(--text-secondary, #667085); font-size: 12px; line-height: 1.5; }
 .models3d-selection { min-width: 0; }
 .models3d-card { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }

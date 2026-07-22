@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.2.6
+## SB-2.0.0-alpha.34.2.7
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -681,3 +681,11 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - La duplication réutilise les mêmes données GLB embarquées tout en créant un nouvel identifiant.
 - Toute modification met immédiatement à jour le projet local et marque le projet comme modifié.
 - La suppression demande une confirmation avant de retirer le modèle de `project.assets.models`.
+
+
+### 2.0.0-alpha.34.2.7
+
+- Ajoute une zone de glisser-déposer dans le panneau **Modèles 3D**.
+- Permet d’importer plusieurs fichiers `.glb` en une seule opération, par sélection ou dépôt.
+- Valide chaque fichier avant de l’intégrer à `project.assets.models`.
+- Conserve l’encodage Base64 et le format de sauvegarde unique `.story.json`.

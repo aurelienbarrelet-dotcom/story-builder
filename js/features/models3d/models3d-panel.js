@@ -10,32 +10,66 @@ export function setupModels3dPanel() {
     const fileInput = document.getElementById("model3dFileInput");
     if (!importButton || !fileInput) return;
 
+    const dropZone = document.getElementById("model3dDropZone");
+
     importButton.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async () => {
-        const file = fileInput.files?.[0];
+        const files = [...(fileInput.files ?? [])];
         fileInput.value = "";
-        if (!file) return;
-        try {
+        await importGlbFiles(files);
+    });
+
+    if (dropZone) {
+        ["dragenter", "dragover"].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                if (!containsFiles(event)) return;
+                dropZone.classList.add("models3d-drop-zone--active");
+                if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+            });
+        });
+        ["dragleave", "drop"].forEach(eventName => {
+            dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                dropZone.classList.remove("models3d-drop-zone--active");
+            });
+        });
+        dropZone.addEventListener("drop", async event => {
+            if (!containsFiles(event)) return;
+            await importGlbFiles([...(event.dataTransfer?.files ?? [])]);
+        });
+    }
+
+    on(EVENTS.PROJECT_REPLACED, () => renderModels());
+    renderModels();
+}
+
+async function importGlbFiles(files) {
+    if (!files.length) return;
+    const importedModels = [];
+    try {
+        for (const file of files) {
             validateGlbFile(file);
-            const data = await readFileAsBase64(file);
-            getModelLibrary().push({
+            importedModels.push({
                 id: crypto.randomUUID(),
                 name: file.name,
                 mimeType: file.type || "model/gltf-binary",
                 size: file.size,
                 encoding: "base64",
-                data
+                data: await readFileAsBase64(file)
             });
-            emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
-            saveProjectLocally();
-            renderModels();
-        } catch (error) {
-            renderModels(error instanceof Error ? error.message : "Impossible de lire ce fichier.");
         }
-    });
+        getModelLibrary().push(...importedModels);
+        emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+        saveProjectLocally();
+        renderModels();
+    } catch (error) {
+        renderModels(error instanceof Error ? error.message : "Impossible de lire ces fichiers.");
+    }
+}
 
-    on(EVENTS.PROJECT_REPLACED, () => renderModels());
-    renderModels();
+function containsFiles(event) {
+    return [...(event.dataTransfer?.types ?? [])].includes("Files");
 }
 
 function getModelLibrary() {
