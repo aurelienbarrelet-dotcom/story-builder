@@ -1,0 +1,68 @@
+diff --git a/README.md b/README.md
+index 04b5018..b44beb1 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,9 @@
++## SB-2.0.0-alpha.34.3.13
++
++### 2.0.0-alpha.34.3.13
++
++- Renomme le panneau Images en Enrichissements afin de préparer un gestionnaire de ressources unifié.
++
+ ## SB-2.0.0-alpha.34.3.12
+ 
+ ### 2.0.0-alpha.34.3.12
+diff --git a/index.html b/index.html
+index 5a9e7e2..33c90c0 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.12</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.13</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -104,7 +104,7 @@
+             <button type="button" class="right-panel-rail-button" data-panel="layersPanel" aria-label="Ouvrir Calques" title="Calques"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
+-            <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Images" title="Images"></button>
++            <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Enrichissements" title="Enrichissements"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="models3dPanel" aria-label="Ouvrir Modèles 3D" title="Modèles 3D"></button>
+         </nav>
+         <aside id="viewPanel" class="view-panel">
+@@ -200,7 +200,7 @@
+ 
+         <aside id="assetsPanel" class="assets-panel collection-panel" data-collection="assets">
+             <header class="assets-panel-header collection-panel-header">
+-                <h2>Images</h2>
++                <h2>Enrichissements</h2>
+                 <button id="importAssetsButton" class="ui-icon-button ui-icon-button--accent collection-add-button assets-import-button" type="button" aria-label="Importer des images" title="Importer des images">+</button>
+                 <input id="assetsFileInput" type="file" accept="image/*" multiple hidden>
+             </header>
+diff --git a/js/core/config.js b/js/core/config.js
+index e470aa0..cbd11e7 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.12";
++export const APP_VERSION = "2.0.0-alpha.34.3.13";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/layout/right-panels.js b/js/features/layout/right-panels.js
+index fc35d30..1363c5b 100644
+--- a/js/features/layout/right-panels.js
++++ b/js/features/layout/right-panels.js
+@@ -23,7 +23,7 @@ const panelConfig = {
+         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 9 9-5.8 5.8a2.8 2.8 0 0 1-4 0l-1-1a2.8 2.8 0 0 1 0-4L9 8"/><path d="M7.5 10.5h8.8"/><path d="M18.5 13.5s2.5 2.7 2.5 4.5a2.5 2.5 0 0 1-5 0c0-1.8 2.5-4.5 2.5-4.5Z"/></svg>`
+     },
+     assetsPanel: {
+-        label: "Images",
++        label: "Enrichissements",
+         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>`
+     },
+     models3dPanel: {

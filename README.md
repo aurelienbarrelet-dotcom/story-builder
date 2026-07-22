@@ -1,3 +1,9 @@
+## SB-2.0.0-alpha.34.3.13
+
+### 2.0.0-alpha.34.3.13
+
+- Renomme le panneau Images en Enrichissements afin de préparer un gestionnaire de ressources unifié.
+
 ## SB-2.0.0-alpha.34.3.12
 
 ### 2.0.0-alpha.34.3.12
