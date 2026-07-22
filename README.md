@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.1
+## SB-2.0.0-alpha.34.2.1
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -636,3 +636,10 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 
 - Le sélecteur de calques devient un composant commun configurable : titre, aide, mode simple ou multiple, éléments désactivés et message vide.
 - Les panneaux Légendes et Transitions continuent d’utiliser la même source de calques et les mêmes aperçus dynamiques.
+
+
+### 2.0.0-alpha.34.2.1
+
+- Ajout d’une entrée **Modèles 3D** dans le rail des panneaux de droite.
+- Ajout d’un panneau vide dédié, sans modification du format de projet ni de la carte Mapbox.
+- Cette étape prépare l’interface d’import GLB prévue pour la version suivante.
