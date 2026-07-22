@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.7
+## SB-2.0.0-alpha.34.3.8
 
-### 2.0.0-alpha.34.3.7
+### 2.0.0-alpha.34.3.8
+
+- Ajout du contrôle des animations GLB par instance.
 
 - Ajout des réglages d’éclairage par instance 3D.
 

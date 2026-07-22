@@ -5891,3 +5891,5 @@ body > .collection-menu { z-index: 1000; }
 .models3d-terrain-follow input { width: auto !important; min-height: auto !important; }
 
 .models3d-lighting-editor { grid-template-columns: 1fr 1fr; }
+
+.models3d-animation-editor { grid-template-columns: 1fr; }

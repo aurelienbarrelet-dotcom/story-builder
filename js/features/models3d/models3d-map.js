@@ -15,6 +15,7 @@ let renderRevision = 0;
 let selectedInstanceId = null;
 let moveModeActive = false;
 let draggingInstance = false;
+const animationClock = new THREE.Clock();
 
 export function setupModels3dMap() {
     on(EVENTS.MAP_STYLE_READY, () => {
@@ -128,7 +129,9 @@ export function renderModelInstances() {
             const mapMatrix = new THREE.Matrix4().fromArray(matrix);
             const camera = new THREE.Camera();
             renderer.resetState();
+            const delta = animationClock.getDelta();
             for (const entry of renderEntries) {
+                entry.mixer?.update(delta);
                 const transform = entry.transform;
                 const localMatrix = new THREE.Matrix4()
                     .makeTranslation(transform.translateX, transform.translateY, transform.translateZ)
@@ -183,9 +186,21 @@ async function loadRenderEntries(revision) {
                 helper.renderOrder = 1000;
                 scene.add(helper);
             }
+            let mixer = null;
+            const clips = Array.isArray(gltf.animations) ? gltf.animations : [];
+            if (clips.length && instance.animation?.enabled !== false) {
+                const clip = clips.find(item => item.name === instance.animation?.clip) || clips[0];
+                mixer = new THREE.AnimationMixer(root);
+                const action = mixer.clipAction(clip);
+                action.setLoop(instance.animation?.loop === false ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+                action.timeScale = Number(instance.animation?.speed) || 1;
+                action.play();
+            }
+            instance.availableAnimations = clips.map(clip => clip.name || "Animation");
             renderEntries.push({
                 instanceId: instance.id,
                 scene,
+                mixer,
                 transform: {
                     translateX: mercator.x,
                     translateY: mercator.y,

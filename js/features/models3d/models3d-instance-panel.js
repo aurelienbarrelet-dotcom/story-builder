@@ -122,7 +122,22 @@ export function renderInstanceEditor() {
         createNumberField("Lumière solaire", Number(instance.lighting.sun ?? 1.55), 0, 5, 0.05, value => { instance.lighting.sun = value; commitInstanceChange(); }),
         shadowLabel
     );
-    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor);
+    const animationEditor = document.createElement("fieldset");
+    animationEditor.className = "models3d-transform-editor models3d-animation-editor";
+    const animationLegend = document.createElement("legend");
+    animationLegend.textContent = "Animation GLB";
+    instance.animation ??= { enabled: true, clip: "", loop: true, speed: 1 };
+    const clips = Array.isArray(instance.availableAnimations) ? instance.availableAnimations : [];
+    const clipSelect = document.createElement("select");
+    clipSelect.disabled = clips.length === 0;
+    clipSelect.append(new Option(clips.length ? "Première animation" : "Aucune animation", ""));
+    clips.forEach(name => clipSelect.append(new Option(name, name)));
+    clipSelect.value = instance.animation.clip || "";
+    clipSelect.addEventListener("change", () => { instance.animation.clip = clipSelect.value; commitInstanceChange(); });
+    const enabled = createCheckboxField("Lire l’animation", instance.animation.enabled !== false, checked => { instance.animation.enabled = checked; commitInstanceChange(); });
+    const loop = createCheckboxField("Boucle", instance.animation.loop !== false, checked => { instance.animation.loop = checked; commitInstanceChange(); });
+    animationEditor.append(animationLegend, clipSelect, createNumberField("Vitesse", Number(instance.animation.speed) || 1, 0.05, 10, 0.05, value => { instance.animation.speed = value; commitInstanceChange(); }), enabled, loop);
+    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
     container.append(card);
 }
 
@@ -151,6 +166,17 @@ function createNumberField(labelText, value, min, max, step, onChange) {
         onChange(next);
     });
     label.append(text, input);
+    return label;
+}
+
+function createCheckboxField(labelText, checked, onChange) {
+    const label = document.createElement("label");
+    label.className = "models3d-terrain-follow";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = checked;
+    input.addEventListener("change", () => onChange(input.checked));
+    label.append(input, document.createTextNode(` ${labelText}`));
     return label;
 }
 
