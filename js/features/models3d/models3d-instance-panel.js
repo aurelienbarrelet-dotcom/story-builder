@@ -96,7 +96,18 @@ export function renderInstanceEditor() {
     const terrainEditor = document.createElement("fieldset");
     terrainEditor.className = "models3d-transform-editor models3d-terrain-editor";
     const terrainLegend = document.createElement("legend");
-    terrainLegend.textContent = "Altitude et terrain";
+    terrainLegend.textContent = "Altitude et ancrage";
+    instance.snapMode ??= instance.snapToTerrain ? "terrain" : "absolute";
+    const snapMode = document.createElement("select");
+    [["Altitude absolue", "absolute"], ["Relative au terrain", "relative"], ["Collé au terrain", "terrain"], ["Surface de l’eau", "water"]].forEach(([label, value]) => snapMode.append(new Option(label, value)));
+    snapMode.value = instance.snapMode;
+    snapMode.addEventListener("change", () => {
+        instance.snapMode = snapMode.value;
+        instance.snapToTerrain = snapMode.value === "terrain";
+        if (snapMode.value === "water") instance.altitude = Number(instance.waterLevel) || 0;
+        commitInstanceChange();
+        renderInstanceEditor();
+    });
     const altitudeField = createNumberField("Altitude (m)", Number(instance.altitude) || 0, -12000, 100000, 0.1, value => {
         instance.altitude = value;
         instance.snapToTerrain = false;
@@ -134,7 +145,7 @@ export function renderInstanceEditor() {
     const followText = document.createElement("span");
     followText.textContent = "Suivre le relief pendant le déplacement";
     followLabel.append(followInput, followText);
-    terrainEditor.append(terrainLegend, altitudeField, snapButton, followLabel);
+    terrainEditor.append(terrainLegend, snapMode, altitudeField, snapButton, followLabel);
     const lightingEditor = document.createElement("fieldset");
     lightingEditor.className = "models3d-transform-editor models3d-lighting-editor";
     const lightingLegend = document.createElement("legend");

@@ -82,6 +82,7 @@ export function snapSelectedInstanceToTerrain() {
         return { ok: false, message: "Le style Mapbox actuel ne fournit pas d’élévation de terrain." };
     }
     instance.altitude = elevation;
+    instance.snapMode = "terrain";
     instance.snapToTerrain = true;
     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
     saveProjectLocally();
@@ -394,9 +395,11 @@ function handleMoveDrag(event) {
     if (!instance) return;
     instance.longitude = Number(event.lngLat.lng);
     instance.latitude = Number(event.lngLat.lat);
-    if (instance.snapToTerrain) {
+    if (instance.snapMode === "terrain" || instance.snapToTerrain) {
         const elevation = getMapInstance()?.queryTerrainElevation?.([instance.longitude, instance.latitude], { exaggerated: false });
         if (Number.isFinite(elevation)) instance.altitude = elevation;
+    } else if (instance.snapMode === "water") {
+        instance.altitude = Number(instance.waterLevel) || 0;
     }
     renderModelInstances();
     emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });

@@ -1,0 +1,96 @@
+diff --git a/README.md b/README.md
+index 1adf18b..04b5018 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,8 @@
+-## SB-2.0.0-alpha.34.3.11
++## SB-2.0.0-alpha.34.3.12
+ 
+-### 2.0.0-alpha.34.3.11
++### 2.0.0-alpha.34.3.12
++
++- Ajout des modes d’ancrage absolu, relatif, terrain et eau.
+ 
+ - Ajout d’une liste recherchable des objets 3D placés.
+ 
+diff --git a/index.html b/index.html
+index f8eae78..5a9e7e2 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.11</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.12</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index c61359e..e470aa0 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.11";
++export const APP_VERSION = "2.0.0-alpha.34.3.12";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/models3d/models3d-instance-panel.js b/js/features/models3d/models3d-instance-panel.js
+index 79ff568..cf0a1f0 100644
+--- a/js/features/models3d/models3d-instance-panel.js
++++ b/js/features/models3d/models3d-instance-panel.js
+@@ -96,7 +96,18 @@ export function renderInstanceEditor() {
+     const terrainEditor = document.createElement("fieldset");
+     terrainEditor.className = "models3d-transform-editor models3d-terrain-editor";
+     const terrainLegend = document.createElement("legend");
+-    terrainLegend.textContent = "Altitude et terrain";
++    terrainLegend.textContent = "Altitude et ancrage";
++    instance.snapMode ??= instance.snapToTerrain ? "terrain" : "absolute";
++    const snapMode = document.createElement("select");
++    [["Altitude absolue", "absolute"], ["Relative au terrain", "relative"], ["Collé au terrain", "terrain"], ["Surface de l’eau", "water"]].forEach(([label, value]) => snapMode.append(new Option(label, value)));
++    snapMode.value = instance.snapMode;
++    snapMode.addEventListener("change", () => {
++        instance.snapMode = snapMode.value;
++        instance.snapToTerrain = snapMode.value === "terrain";
++        if (snapMode.value === "water") instance.altitude = Number(instance.waterLevel) || 0;
++        commitInstanceChange();
++        renderInstanceEditor();
++    });
+     const altitudeField = createNumberField("Altitude (m)", Number(instance.altitude) || 0, -12000, 100000, 0.1, value => {
+         instance.altitude = value;
+         instance.snapToTerrain = false;
+@@ -134,7 +145,7 @@ export function renderInstanceEditor() {
+     const followText = document.createElement("span");
+     followText.textContent = "Suivre le relief pendant le déplacement";
+     followLabel.append(followInput, followText);
+-    terrainEditor.append(terrainLegend, altitudeField, snapButton, followLabel);
++    terrainEditor.append(terrainLegend, snapMode, altitudeField, snapButton, followLabel);
+     const lightingEditor = document.createElement("fieldset");
+     lightingEditor.className = "models3d-transform-editor models3d-lighting-editor";
+     const lightingLegend = document.createElement("legend");
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index ebb97a0..998dcbc 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -82,6 +82,7 @@ export function snapSelectedInstanceToTerrain() {
+         return { ok: false, message: "Le style Mapbox actuel ne fournit pas d’élévation de terrain." };
+     }
+     instance.altitude = elevation;
++    instance.snapMode = "terrain";
+     instance.snapToTerrain = true;
+     emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+     saveProjectLocally();
+@@ -394,9 +395,11 @@ function handleMoveDrag(event) {
+     if (!instance) return;
+     instance.longitude = Number(event.lngLat.lng);
+     instance.latitude = Number(event.lngLat.lat);
+-    if (instance.snapToTerrain) {
++    if (instance.snapMode === "terrain" || instance.snapToTerrain) {
+         const elevation = getMapInstance()?.queryTerrainElevation?.([instance.longitude, instance.latitude], { exaggerated: false });
+         if (Number.isFinite(elevation)) instance.altitude = elevation;
++    } else if (instance.snapMode === "water") {
++        instance.altitude = Number(instance.waterLevel) || 0;
+     }
+     renderModelInstances();
+     emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: selectedInstanceId, moveModeActive });

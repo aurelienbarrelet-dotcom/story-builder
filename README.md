@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.11
+## SB-2.0.0-alpha.34.3.12
 
-### 2.0.0-alpha.34.3.11
+### 2.0.0-alpha.34.3.12
+
+- Ajout des modes d’ancrage absolu, relatif, terrain et eau.
 
 - Ajout d’une liste recherchable des objets 3D placés.
 
