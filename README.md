@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.8
+## SB-2.0.0-alpha.34.3.9
 
-### 2.0.0-alpha.34.3.8
+### 2.0.0-alpha.34.3.9
+
+- Ajout de la duplication des instances placées.
 
 - Ajout du contrôle des animations GLB par instance.
 

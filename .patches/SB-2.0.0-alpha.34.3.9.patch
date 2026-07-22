@@ -1,0 +1,92 @@
+diff --git a/README.md b/README.md
+index 7a49c7c..ed08dbb 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,8 @@
+-## SB-2.0.0-alpha.34.3.8
++## SB-2.0.0-alpha.34.3.9
+ 
+-### 2.0.0-alpha.34.3.8
++### 2.0.0-alpha.34.3.9
++
++- Ajout de la duplication des instances placées.
+ 
+ - Ajout du contrôle des animations GLB par instance.
+ 
+diff --git a/index.html b/index.html
+index 6015ba3..bad0c3b 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.8</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.9</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index b866ffb..d9a26ca 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.8";
++export const APP_VERSION = "2.0.0-alpha.34.3.9";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/models3d/models3d-instance-panel.js b/js/features/models3d/models3d-instance-panel.js
+index 395dfec..fe60bc8 100644
+--- a/js/features/models3d/models3d-instance-panel.js
++++ b/js/features/models3d/models3d-instance-panel.js
+@@ -1,7 +1,7 @@
+ import { emit, EVENTS, on } from "../../core/events.js";
+ import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
+-import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
++import { duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
+ 
+ export function setupModels3dInstancePanel() {
+     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
+@@ -137,7 +137,12 @@ export function renderInstanceEditor() {
+     const enabled = createCheckboxField("Lire l’animation", instance.animation.enabled !== false, checked => { instance.animation.enabled = checked; commitInstanceChange(); });
+     const loop = createCheckboxField("Boucle", instance.animation.loop !== false, checked => { instance.animation.loop = checked; commitInstanceChange(); });
+     animationEditor.append(animationLegend, clipSelect, createNumberField("Vitesse", Number(instance.animation.speed) || 1, 0.05, 10, 0.05, value => { instance.animation.speed = value; commitInstanceChange(); }), enabled, loop);
+-    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
++    const duplicateButton = document.createElement("button");
++    duplicateButton.type = "button";
++    duplicateButton.className = "ui-button ui-button--secondary";
++    duplicateButton.textContent = "Dupliquer l’instance";
++    duplicateButton.addEventListener("click", () => duplicateSelectedModelInstance());
++    card.append(heading, hint, details, moveButton, duplicateButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
+     container.append(card);
+ }
+ 
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index ce7c609..cfc847c 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -90,6 +90,22 @@ export function snapSelectedInstanceToTerrain() {
+     return { ok: true, elevation };
+ }
+ 
++
++export function duplicateSelectedModelInstance() {
++    const source = getInstanceLibrary().find(item => item.id === selectedInstanceId);
++    if (!source) return null;
++    const copy = structuredClone(source);
++    copy.id = crypto.randomUUID();
++    copy.longitude = Number(copy.longitude) + 0.00015;
++    copy.latitude = Number(copy.latitude) + 0.00015;
++    getInstanceLibrary().push(copy);
++    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
++    saveProjectLocally();
++    selectModelInstance(copy.id);
++    renderModelInstances();
++    return copy.id;
++}
++
+ export function removeInstancesForModel(modelId) {
+     const instances = getInstanceLibrary();
+     for (let index = instances.length - 1; index >= 0; index -= 1) {

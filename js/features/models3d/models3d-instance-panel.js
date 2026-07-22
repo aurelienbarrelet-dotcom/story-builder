@@ -1,7 +1,7 @@
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
-import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
+import { duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
 
 export function setupModels3dInstancePanel() {
     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
@@ -137,7 +137,12 @@ export function renderInstanceEditor() {
     const enabled = createCheckboxField("Lire l’animation", instance.animation.enabled !== false, checked => { instance.animation.enabled = checked; commitInstanceChange(); });
     const loop = createCheckboxField("Boucle", instance.animation.loop !== false, checked => { instance.animation.loop = checked; commitInstanceChange(); });
     animationEditor.append(animationLegend, clipSelect, createNumberField("Vitesse", Number(instance.animation.speed) || 1, 0.05, 10, 0.05, value => { instance.animation.speed = value; commitInstanceChange(); }), enabled, loop);
-    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
+    const duplicateButton = document.createElement("button");
+    duplicateButton.type = "button";
+    duplicateButton.className = "ui-button ui-button--secondary";
+    duplicateButton.textContent = "Dupliquer l’instance";
+    duplicateButton.addEventListener("click", () => duplicateSelectedModelInstance());
+    card.append(heading, hint, details, moveButton, duplicateButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
     container.append(card);
 }
 

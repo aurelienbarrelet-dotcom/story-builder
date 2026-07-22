@@ -90,6 +90,22 @@ export function snapSelectedInstanceToTerrain() {
     return { ok: true, elevation };
 }
 
+
+export function duplicateSelectedModelInstance() {
+    const source = getInstanceLibrary().find(item => item.id === selectedInstanceId);
+    if (!source) return null;
+    const copy = structuredClone(source);
+    copy.id = crypto.randomUUID();
+    copy.longitude = Number(copy.longitude) + 0.00015;
+    copy.latitude = Number(copy.latitude) + 0.00015;
+    getInstanceLibrary().push(copy);
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    selectModelInstance(copy.id);
+    renderModelInstances();
+    return copy.id;
+}
+
 export function removeInstancesForModel(modelId) {
     const instances = getInstanceLibrary();
     for (let index = instances.length - 1; index >= 0; index -= 1) {
