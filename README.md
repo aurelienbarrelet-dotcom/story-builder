@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.9
+## SB-2.0.0-alpha.34.3.10
 
-### 2.0.0-alpha.34.3.9
+### 2.0.0-alpha.34.3.10
+
+- Ajout de la suppression, de la visibilité et du verrouillage des instances.
 
 - Ajout de la duplication des instances placées.
 

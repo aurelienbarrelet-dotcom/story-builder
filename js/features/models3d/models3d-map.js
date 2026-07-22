@@ -91,6 +91,20 @@ export function snapSelectedInstanceToTerrain() {
 }
 
 
+export function deleteSelectedModelInstance() {
+    const instances = getInstanceLibrary();
+    const index = instances.findIndex(item => item.id === selectedInstanceId);
+    if (index < 0) return false;
+    instances.splice(index, 1);
+    selectedInstanceId = null;
+    setSelectedInstanceMoveMode(false);
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    emit(EVENTS.MODEL3D_INSTANCE_SELECTED, { instanceId: null, moveModeActive: false });
+    renderModelInstances();
+    return true;
+}
+
 export function duplicateSelectedModelInstance() {
     const source = getInstanceLibrary().find(item => item.id === selectedInstanceId);
     if (!source) return null;
@@ -181,6 +195,7 @@ async function loadRenderEntries(revision) {
     const loader = new GLTFLoader();
     for (const instance of getInstanceLibrary()) {
         if (revision !== renderRevision) return;
+        if (instance.visible === false) continue;
         const model = models.get(instance?.modelId);
         const longitude = Number(instance?.longitude);
         const latitude = Number(instance?.latitude);
@@ -364,7 +379,7 @@ function selectNearestInstance(event) {
 function handleMoveStart(event) {
     if (!moveModeActive || !selectedInstanceId) return;
     const instance = getInstanceLibrary().find(item => item.id === selectedInstanceId);
-    if (!instance) return;
+    if (!instance || instance.locked) return;
     const map = getMapInstance();
     const point = map.project([Number(instance.longitude), Number(instance.latitude)]);
     if (Math.hypot(point.x - event.point.x, point.y - event.point.y) > 45) return;

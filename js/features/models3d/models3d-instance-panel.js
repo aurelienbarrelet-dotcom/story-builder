@@ -1,7 +1,7 @@
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
-import { duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
+import { deleteSelectedModelInstance, duplicateSelectedModelInstance, getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode, snapSelectedInstanceToTerrain } from "./models3d-map.js";
 
 export function setupModels3dInstancePanel() {
     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
@@ -142,7 +142,21 @@ export function renderInstanceEditor() {
     duplicateButton.className = "ui-button ui-button--secondary";
     duplicateButton.textContent = "Dupliquer l’instance";
     duplicateButton.addEventListener("click", () => duplicateSelectedModelInstance());
-    card.append(heading, hint, details, moveButton, duplicateButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
+    const stateEditor = document.createElement("fieldset");
+    stateEditor.className = "models3d-transform-editor models3d-state-editor";
+    const stateLegend = document.createElement("legend");
+    stateLegend.textContent = "État";
+    stateEditor.append(stateLegend,
+        createCheckboxField("Visible", instance.visible !== false, checked => { instance.visible = checked; commitInstanceChange(); }),
+        createCheckboxField("Verrouillé", Boolean(instance.locked), checked => { instance.locked = checked; if (checked) setSelectedInstanceMoveMode(false); commitInstanceChange(); renderInstanceEditor(); })
+    );
+    moveButton.disabled = Boolean(instance.locked);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "ui-button ui-button--secondary models3d-action--danger";
+    deleteButton.textContent = "Supprimer l’instance";
+    deleteButton.addEventListener("click", () => { if (confirm("Supprimer cette instance 3D ?")) deleteSelectedModelInstance(); });
+    card.append(heading, hint, details, moveButton, duplicateButton, deleteButton, stateEditor, rotationEditor, scaleEditor, terrainEditor, lightingEditor, animationEditor);
     container.append(card);
 }
 
