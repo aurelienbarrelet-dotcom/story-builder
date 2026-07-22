@@ -39,6 +39,7 @@ import { setupChapterStyleClipboard } from "./features/chapters/chapter-style-cl
 import { exportPublication } from "./core/export-service.js";
 import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
 import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
+import { setupMotionManager } from "./features/motion/motion-manager.js";
 
 const ELEMENT_IDS = Object.freeze({
     addChapterButton: "addChapterButton",
@@ -236,6 +237,7 @@ function startApplication() {
     setupChapterStyleClipboard();
     setupProductivityShortcuts();
     setupReaderMode();
+    setupMotionManager();
 
     setProject(loadInitialProject());
     resetHistory();

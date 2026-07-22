@@ -10,6 +10,7 @@ export const defaultStory = {
     title: "Mon premier Story",
     mapboxToken: "",
     mapStyle: "mapbox://styles/mapbox/standard",
+    motions: [],
 
     projectConfig: {
         location: { ...defaultLocation },

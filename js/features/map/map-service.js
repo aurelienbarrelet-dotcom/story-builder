@@ -112,6 +112,8 @@ function handleStyleReady() {
     emit(EVENTS.MAP_STYLE_READY, { layers: getEditableLayers() });
 }
 
+export function getMapInstance() { return map; }
+
 export function destroyMap() { map?.remove(); map = null; editableLayerCatalog = []; baseLayerStyles = new Map(); }
 
 export function getCurrentCamera() {

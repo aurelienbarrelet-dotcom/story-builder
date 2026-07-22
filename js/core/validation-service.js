@@ -12,6 +12,7 @@ export function validateProjectDocument(project) {
     if (!project.story || typeof project.story !== "object") throw new Error("Le contenu story est manquant.");
     if (!project.assets || typeof project.assets !== "object") throw new Error("Le registre des ressources est manquant.");
     if (!Array.isArray(project.story.chapters)) throw new Error("Les chapitres sont invalides.");
+    if (project.story.motions !== undefined && !Array.isArray(project.story.motions)) throw new Error("Les trajectoires sont invalides.");
 
     const ids = new Set();
     project.story.chapters.forEach((chapter, index) => {

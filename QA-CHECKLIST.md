@@ -118,3 +118,13 @@
 - [ ] Vérifier le panneau Légendes : menu flottant, filtres fixes et défilement de la liste.
 - [ ] Vérifier le panneau Vue : contrôle Desktop/Mobile compact et fonctionnel.
 - [ ] Vérifier les cartes d’images : titres correctement espacés.
+
+
+## Alpha 34.1 — fondations des trajectoires
+
+- [ ] Un projet 34.0 sans `motions` s’ouvre avec `story.motions = []`.
+- [ ] Une couche Mapbox `model` apparaît dans le catalogue des acteurs.
+- [ ] Une couche Mapbox `line` apparaît dans le catalogue des parcours.
+- [ ] Une source GeoJSON contenant une `LineString` peut être préparée et évaluée entre 0 et 1.
+- [ ] Une plage de plusieurs chapitres produit une progression continue et réversible.
+- [ ] Sans trajectoire configurée, le comportement existant de la carte reste inchangé.

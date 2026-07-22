@@ -1,4 +1,4 @@
-## SB-2.0.0-alpha.34.0
+## SB-2.0.0-alpha.34.1
 
 ### Alpha 33.4 — contraste automatique des légendes
 
@@ -608,6 +608,15 @@ La gestion des images de chapitre est centralisée dans le panneau Enrichissemen
 - Les transitions spécifiques sont présentées comme des exceptions ; leur suppression rétablit l’héritage.
 - Le sélecteur commun affiche un aperçu visuel de chaque calque (surface, ligne, cercle, symbole ou raster) à partir du style Mapbox courant.
 
+
+
+### 2.0.0-alpha.34.1
+
+- Ajoute les fondations du moteur de trajectoires avec une collection globale `story.motions`, sans effet sur les projets qui ne définissent aucune trajectoire.
+- Détecte automatiquement les couches Mapbox de type `model` comme acteurs et les couches `line` comme parcours candidats.
+- Résout les `LineString` depuis les sources GeoJSON intégrées au style ou, lorsque nécessaire, depuis `querySourceFeatures`.
+- Prépare les routes par distance cumulée et calcule position, altitude et orientation pour une progression comprise entre plusieurs chapitres.
+- Expose une API interne de catalogue, préparation et évaluation qui servira à l’interface et au rendu des modèles dans les versions suivantes.
 
 ### 2.0.0-alpha.34.0
 

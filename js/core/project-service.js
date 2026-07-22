@@ -1,6 +1,7 @@
 import { MAPBOX_TOKEN_KEY, STORAGE_KEY } from "./config.js";
 import { projectStorage } from "./storage-service.js";
 import { defaultLocation, defaultStory } from "./default-project.js";
+import { normalizeMotions } from "../features/motion/motion-config.js";
 import { createProject, touchProject } from "./project-model.js";
 import { emit, EVENTS } from "./events.js";
 import { getProject, getStory, setProject } from "./store.js";
@@ -24,6 +25,7 @@ export function validateProject(project) {
     project.mapboxToken = String(project.mapboxToken ?? "").trim();
     project.mapStyle = String(project.mapStyle ?? "mapbox://styles/mapbox/standard");
     project.meta = validateMeta(project.meta, project.title);
+    project.motions = normalizeMotions(project.motions);
     const projectConfigSource = project.projectConfig && typeof project.projectConfig === "object" ? project.projectConfig : {};
     project.projectConfig = {
         location: validateLocation(projectConfigSource.location ?? project.chapters[0]?.location),

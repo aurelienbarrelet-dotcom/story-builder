@@ -35,3 +35,10 @@ Cette séparation permet d’ajouter ensuite un adaptateur Supabase sans modifie
 ## Prochaine étape
 
 Créer l’adaptateur distant et l’interface de connexion au stockage partagé.
+
+
+## Moteur de trajectoires (alpha.34.1)
+
+Les trajectoires sont stockées dans `story.motions` car une même animation peut traverser plusieurs chapitres. Elles référencent les objets Mapbox par `layerId`/`featureId` au lieu de dupliquer le modèle ou la géométrie.
+
+Le dossier `js/features/motion/` sépare la normalisation de configuration, le catalogue des couches Mapbox, la préparation des `LineString`, la progression inter-chapitres et l’évaluation d’une pose. Aucune pose n’est appliquée à la carte dans 34.1 : cette version fournit les fondations testables pour les interfaces et adaptateurs d’acteurs suivants.
