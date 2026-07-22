@@ -1,8 +1,7 @@
-export const APP_VERSION = "2.0.0-alpha.34.2";
+export const APP_VERSION = "2.0.0-alpha.34.1";
 export const PROJECT_FORMAT = "story-builder-project";
 export const PROJECT_FORMAT_VERSION = 1;
 export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
 export const MAX_IMAGE_SIZE = 2.5 * 1124 * 1124;
-export const MAX_MODEL_SIZE = 20 * 1024 * 1024;
 
 export const MAPBOX_TOKEN_KEY = "storyBuilderMapboxToken";

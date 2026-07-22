@@ -1,0 +1,288 @@
+diff --git a/README.md b/README.md
+index 4187c9f..2440475 100644
+--- a/README.md
++++ b/README.md
+@@ -1,10 +1,4 @@
+-## SB-2.0.0-alpha.34.2
+-
+-- Nouveau panneau de droite « Objets & animations ».
+-- Import de modèles 3D GLB/glTF dans la bibliothèque du projet (20 Mo maximum par fichier).
+-- Catalogue visible des couches Mapbox `model` et `line`.
+-- Synthèse des animations enregistrées dans `story.motions`.
+-
++## SB-2.0.0-alpha.34.1
+ 
+ ### Alpha 33.4 — contraste automatique des légendes
+ 
+diff --git a/index.html b/index.html
+index 3a26ddf..aed3dff 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.2</title>
++    <title>Story Builder — 2.0.0-alpha.34.1</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+@@ -105,7 +105,6 @@
+             <button type="button" class="right-panel-rail-button" data-panel="viewPanel" aria-label="Ouvrir Vue" title="Vue"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="legendPanel" aria-label="Ouvrir Légendes" title="Légendes"></button>
+             <button type="button" class="right-panel-rail-button" data-panel="assetsPanel" aria-label="Ouvrir Images" title="Images"></button>
+-            <button type="button" class="right-panel-rail-button" data-panel="objectsPanel" aria-label="Ouvrir Objets et animations" title="Objets & animations"></button>
+         </nav>
+         <aside id="viewPanel" class="view-panel">
+             <header class="view-panel-header">
+@@ -207,18 +206,6 @@
+             <div id="assetsPanelContent" class="assets-panel-content"></div>
+         </aside>
+ 
+-        <aside id="objectsPanel" class="objects-panel collection-panel" data-collection="models">
+-            <header class="objects-panel-header collection-panel-header">
+-                <div>
+-                    <h2>Objets & animations</h2>
+-                    <p>Modèles 3D et trajectoires du projet</p>
+-                </div>
+-                <button id="importModelsButton" class="ui-icon-button ui-icon-button--accent collection-add-button" type="button" aria-label="Importer des modèles 3D" title="Importer des modèles 3D">+</button>
+-                <input id="modelsFileInput" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" multiple hidden>
+-            </header>
+-            <div id="objectsPanelContent" class="objects-panel-content"></div>
+-        </aside>
+-
+         <aside id="properties" class="properties-panel">
+             <header class="properties-panel-header">
+                 <div class="properties-panel-title">
+diff --git a/js/app.js b/js/app.js
+index 0704f3b..f6e295a 100644
+--- a/js/app.js
++++ b/js/app.js
+@@ -40,7 +40,6 @@ import { exportPublication } from "./core/export-service.js";
+ import { copySelectedChapters, duplicateSelectedChapters, hasChapterClipboard, pasteChapters } from "./features/chapters/chapter-clipboard.js";
+ import { renderAssetsPanel, setupAssetsPanel } from "./features/assets/assets-panel.js";
+ import { setupMotionManager } from "./features/motion/motion-manager.js";
+-import { renderObjectsPanel, setupObjectsPanel } from "./features/objects/objects-panel.js";
+ 
+ const ELEMENT_IDS = Object.freeze({
+     addChapterButton: "addChapterButton",
+@@ -66,7 +65,6 @@ function renderApplication(options = {}) {
+     renderTransitionPanel();
+     renderLegendPanel();
+     renderAssetsPanel();
+-    renderObjectsPanel();
+ 
+     if (!options.preserveProperties) {
+         renderProperties();
+@@ -88,7 +86,6 @@ function setupApplicationEvents() {
+         renderTransitionPanel();
+         renderLegendPanel();
+         renderAssetsPanel();
+-        renderObjectsPanel();
+     });
+ 
+     on(EVENTS.PROJECT_REPLACED, ({ reason } = {}) => {
+@@ -237,7 +234,6 @@ function startApplication() {
+     setupRightPanels();
+     setupLegendPanel();
+     setupAssetsPanel();
+-    setupObjectsPanel();
+     setupChapterStyleClipboard();
+     setupProductivityShortcuts();
+     setupReaderMode();
+diff --git a/js/core/config.js b/js/core/config.js
+index b03796f..80364bc 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,8 +1,7 @@
+-export const APP_VERSION = "2.0.0-alpha.34.2";
++export const APP_VERSION = "2.0.0-alpha.34.1";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+ export const MAX_IMAGE_SIZE = 2.5 * 1124 * 1124;
+-export const MAX_MODEL_SIZE = 20 * 1024 * 1024;
+ 
+ export const MAPBOX_TOKEN_KEY = "storyBuilderMapboxToken";
+diff --git a/js/core/project-model.js b/js/core/project-model.js
+index c7bcd8e..24491c6 100644
+--- a/js/core/project-model.js
++++ b/js/core/project-model.js
+@@ -21,7 +21,6 @@ export function createProject(story, options = {}) {
+         story: cloneObject(story),
+         assets: {
+             images: [],
+-            models: [],
+             icons: [],
+             fonts: []
+         }
+diff --git a/js/features/layout/right-panels.js b/js/features/layout/right-panels.js
+index 51b928a..cb80149 100644
+--- a/js/features/layout/right-panels.js
++++ b/js/features/layout/right-panels.js
+@@ -1,4 +1,4 @@
+-const PANEL_IDS = ["properties", "transitionPanel", "layersPanel", "viewPanel", "legendPanel", "assetsPanel", "objectsPanel"];
++const PANEL_IDS = ["properties", "transitionPanel", "layersPanel", "viewPanel", "legendPanel", "assetsPanel"];
+ const ACTIVE_KEY = "storyBuilderActiveRightPanel";
+ 
+ const panelConfig = {
+@@ -25,10 +25,6 @@ const panelConfig = {
+     assetsPanel: {
+         label: "Images",
+         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>`
+-    },
+-    objectsPanel: {
+-        label: "Objets & animations",
+-        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9L12 2Z"/><path d="m4 6.5 8 4.5 8-4.5M12 11v9"/><path d="M17 13.5h4M19 11.5v4"/></svg>`
+     }
+ };
+ 
+diff --git a/js/features/objects/objects-panel.js b/js/features/objects/objects-panel.js
+deleted file mode 100644
+index 3694a69..0000000
+--- a/js/features/objects/objects-panel.js
++++ /dev/null
+@@ -1,105 +0,0 @@
+-import { MAX_MODEL_SIZE } from "../../core/config.js";
+-import { commitProjectChange } from "../../core/project-service.js";
+-import { getProject, getStory } from "../../core/store.js";
+-import { readFileAsDataUrl } from "../../core/utils.js";
+-import { getMotionLayerCatalog, refreshMotionLayerCatalog } from "../motion/motion-manager.js";
+-
+-function escapeHtml(value) {
+-    return String(value ?? "").replace(/[&<>\"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#039;" })[character]);
+-}
+-
+-function getModels() {
+-    const project = getProject();
+-    project.assets ??= { images: [], models: [], icons: [], fonts: [] };
+-    project.assets.models ??= [];
+-    return project.assets.models;
+-}
+-
+-function formatSize(bytes) {
+-    if (!Number.isFinite(bytes)) return "";
+-    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+-    return `${(bytes / 1024 / 1024).toFixed(1)} Mo`;
+-}
+-
+-async function importModels(files) {
+-    for (const file of files) {
+-        const extension = file.name.split(".").pop()?.toLowerCase();
+-        if (!["glb", "gltf"].includes(extension)) continue;
+-        if (file.size > MAX_MODEL_SIZE) throw new Error(`${file.name} dépasse la limite de 20 Mo.`);
+-        getModels().push({
+-            id: crypto.randomUUID(),
+-            name: file.name.replace(/\.(glb|gltf)$/i, ""),
+-            originalName: file.name,
+-            format: extension,
+-            type: file.type || (extension === "glb" ? "model/gltf-binary" : "model/gltf+json"),
+-            size: file.size,
+-            data: await readFileAsDataUrl(file),
+-            createdAt: new Date().toISOString()
+-        });
+-    }
+-    commitProjectChange();
+-}
+-
+-function deleteModel(modelId) {
+-    const models = getModels();
+-    const model = models.find(item => item.id === modelId);
+-    if (!model || !confirm(`Supprimer le modèle « ${model.name} » du projet ?`)) return;
+-    models.splice(models.indexOf(model), 1);
+-    commitProjectChange();
+-}
+-
+-export function renderObjectsPanel() {
+-    const container = document.getElementById("objectsPanelContent");
+-    if (!container) return;
+-    const models = getModels();
+-    const catalog = getMotionLayerCatalog();
+-    const motions = getStory()?.motions ?? [];
+-
+-    container.innerHTML = `
+-        <section class="objects-section">
+-            <div class="objects-section-heading">
+-                <div><p class="objects-eyebrow">Bibliothèque</p><h3>Modèles 3D</h3></div>
+-                <span class="objects-count">${models.length}</span>
+-            </div>
+-            ${models.length ? `<div class="model-assets-list">${models.map(model => `
+-                <article class="model-asset-card">
+-                    <div class="model-asset-icon" aria-hidden="true">3D</div>
+-                    <div class="model-asset-copy">
+-                        <strong>${escapeHtml(model.name)}</strong>
+-                        <span>${escapeHtml(model.originalName)} · ${formatSize(model.size)}</span>
+-                    </div>
+-                    <button type="button" class="ui-icon-button" data-delete-model="${model.id}" aria-label="Supprimer ${escapeHtml(model.name)}" title="Supprimer">×</button>
+-                </article>`).join("")}</div>` : `
+-                <div class="objects-empty-state"><strong>Aucun modèle importé</strong><p>Importe un fichier GLB ou glTF. Le format GLB est recommandé, car il regroupe modèle, matériaux et textures dans un seul fichier.</p></div>`}
+-        </section>
+-        <section class="objects-section">
+-            <div class="objects-section-heading">
+-                <div><p class="objects-eyebrow">Mapbox</p><h3>Éléments détectés</h3></div>
+-                <button type="button" class="button button-secondary button-small" id="refreshMotionCatalogButton">Actualiser</button>
+-            </div>
+-            <div class="motion-catalog-summary">
+-                <div><strong>${catalog.actors.length}</strong><span>couche modèle</span></div>
+-                <div><strong>${catalog.routes.length}</strong><span>trajectoire linéaire</span></div>
+-            </div>
+-            <p class="objects-help">Les couches <code>model</code> et <code>line</code> du style Mapbox sont cataloguées automatiquement.</p>
+-        </section>
+-        <section class="objects-section">
+-            <div class="objects-section-heading"><div><p class="objects-eyebrow">Mouvement</p><h3>Animations</h3></div><span class="objects-count">${motions.length}</span></div>
+-            ${motions.length ? `<div class="motion-summary-list">${motions.map(motion => `<div><strong>${escapeHtml(motion.name || motion.id)}</strong><span>${escapeHtml(motion.actor?.layerId || "Objet non défini")} → ${escapeHtml(motion.route?.layerId || "Trajet non défini")}</span></div>`).join("")}</div>` : `<div class="objects-empty-state compact"><strong>Aucune animation configurée</strong><p>La création guidée d’une trajectoire utilisera les modèles et les lignes affichés ci-dessus.</p></div>`}
+-        </section>`;
+-
+-    container.querySelectorAll("[data-delete-model]").forEach(button => button.addEventListener("click", () => deleteModel(button.dataset.deleteModel)));
+-    container.querySelector("#refreshMotionCatalogButton")?.addEventListener("click", () => { refreshMotionLayerCatalog(); renderObjectsPanel(); });
+-}
+-
+-export function setupObjectsPanel() {
+-    const button = document.getElementById("importModelsButton");
+-    const input = document.getElementById("modelsFileInput");
+-    if (!button || !input) return;
+-    button.addEventListener("click", () => input.click());
+-    input.addEventListener("change", async () => {
+-        try { await importModels([...input.files]); }
+-        catch (error) { alert(error.message || "Impossible d’importer ces modèles."); }
+-        finally { input.value = ""; }
+-    });
+-}
+diff --git a/style.css b/style.css
+index ec61c3d..81f7546 100644
+--- a/style.css
++++ b/style.css
+@@ -5837,33 +5837,3 @@ body > .collection-menu { z-index: 1000; }
+     .layer-picker-actions { display: grid; grid-template-columns: 1fr 1fr; }
+     .layer-picker-actions .button { width: 100%; min-height: 40px; }
+ }
+-
+-
+-/* 34.2 — Objets & animations */
+-.objects-panel { min-width: 0; height: 100%; overflow: hidden; background: var(--panel-bg, #fff); }
+-.objects-panel-header { display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid var(--border-color, #dfe3e8); }
+-.objects-panel-header > div { flex: 1; min-width: 0; }
+-.objects-panel-header h2 { margin: 0; font-size: 1rem; }
+-.objects-panel-header p { margin: 3px 0 0; color: #6b7280; font-size: .75rem; }
+-.objects-panel-content { height: calc(100% - 69px); overflow: auto; padding: 14px; }
+-.objects-section { padding: 14px; border: 1px solid var(--border-color, #dfe3e8); border-radius: 12px; background: #fff; }
+-.objects-section + .objects-section { margin-top: 12px; }
+-.objects-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+-.objects-section-heading h3 { margin: 0; font-size: .95rem; }
+-.objects-eyebrow { margin: 0 0 2px; color: #6b7280; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+-.objects-count { display: inline-grid; min-width: 25px; height: 25px; place-items: center; border-radius: 999px; background: #eef2ff; color: #3f51b5; font-size: .75rem; font-weight: 700; }
+-.model-assets-list, .motion-summary-list { display: grid; gap: 8px; }
+-.model-asset-card { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; }
+-.model-asset-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 9px; background: #111827; color: #fff; font-size: .72rem; font-weight: 800; }
+-.model-asset-copy { display: grid; min-width: 0; gap: 3px; }
+-.model-asset-copy strong, .model-asset-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+-.model-asset-copy span, .motion-summary-list span { color: #6b7280; font-size: .72rem; }
+-.objects-empty-state { padding: 18px; border: 1px dashed #cbd5e1; border-radius: 10px; text-align: center; color: #475569; }
+-.objects-empty-state.compact { padding: 13px; }
+-.objects-empty-state p, .objects-help { margin: 7px 0 0; color: #64748b; font-size: .78rem; line-height: 1.45; }
+-.motion-catalog-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+-.motion-catalog-summary > div { display: grid; gap: 2px; padding: 12px; border-radius: 10px; background: #f8fafc; }
+-.motion-catalog-summary strong { font-size: 1.25rem; }
+-.motion-catalog-summary span { color: #64748b; font-size: .72rem; }
+-.motion-summary-list > div { display: grid; gap: 3px; padding: 10px; border-radius: 9px; background: #f8fafc; }
+-.button-small { padding: 6px 9px; font-size: .72rem; }

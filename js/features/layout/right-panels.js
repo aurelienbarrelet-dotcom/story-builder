@@ -1,4 +1,4 @@
-const PANEL_IDS = ["properties", "transitionPanel", "layersPanel", "viewPanel", "legendPanel", "assetsPanel", "objectsPanel"];
+const PANEL_IDS = ["properties", "transitionPanel", "layersPanel", "viewPanel", "legendPanel", "assetsPanel"];
 const ACTIVE_KEY = "storyBuilderActiveRightPanel";
 
 const panelConfig = {
@@ -25,10 +25,6 @@ const panelConfig = {
     assetsPanel: {
         label: "Images",
         icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 2-2 5 5"/></svg>`
-    },
-    objectsPanel: {
-        label: "Objets & animations",
-        icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9L12 2Z"/><path d="m4 6.5 8 4.5 8-4.5M12 11v9"/><path d="M17 13.5h4M19 11.5v4"/></svg>`
     }
 };
 
