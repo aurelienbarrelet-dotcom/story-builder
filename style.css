@@ -5902,28 +5902,48 @@ body > .collection-menu { z-index: 1000; }
 .models3d-object-row { width:100%; padding:8px 10px; border:1px solid var(--panel-border,#d4d7da); border-radius:6px; background:white; text-align:left; cursor:pointer; }
 .models3d-object-row.is-selected { border-color:var(--accent-color,#2563eb); background:color-mix(in srgb,var(--accent-color,#2563eb) 8%,white); }
 
-/* Enrichissements : bibliothèque de ressources */
-.assets-import-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+/* Enrichissements : bibliothèque unifiée des médias */
+.asset-kind {
+    display: block;
+    margin-top: 0.45rem;
+    color: var(--text-muted, #68707a);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
-.assets-import-button--model {
-    width: auto;
-    min-width: 2.35rem;
-    padding-inline: 0.45rem;
-    font-size: 0.7rem;
-    font-weight: 800;
+.asset-preview--model,
+.assets-model-preview {
+    width: 100%;
+    height: 100%;
+    min-height: 112px;
 }
 
-.assets-library-section + .assets-library-section {
-    margin-top: 1.25rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border-color, rgba(127, 127, 127, 0.25));
+.assets-model-preview {
+    display: block;
+    pointer-events: none;
 }
 
-.assets-library-title {
-    margin: 0 0 0.75rem;
-    font-size: 0.95rem;
+.asset-metadata {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 0.75rem;
+    margin: 0;
+    font-size: 0.78rem;
+}
+
+.asset-metadata dt {
+    color: var(--text-muted, #68707a);
+}
+
+.asset-metadata dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.assets-instance-editor {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--panel-border, #d4d7da);
 }
