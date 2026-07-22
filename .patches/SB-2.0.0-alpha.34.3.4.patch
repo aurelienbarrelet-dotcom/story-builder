@@ -1,0 +1,115 @@
+diff --git a/README.md b/README.md
+index 293186c..c16ee0b 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+-## SB-2.0.0-alpha.34.3.3
++## SB-2.0.0-alpha.34.3.4
+ 
+-### 2.0.0-alpha.34.3.3
++### 2.0.0-alpha.34.3.4
+ 
+ - Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
+ - Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.
+diff --git a/index.html b/index.html
+index c3f4fb9..b4359f4 100644
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Story Builder — 2.0.0-alpha.34.3.3</title>
++    <title>Story Builder — 2.0.0-alpha.34.3.4</title>
+     <link href="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.css" rel="stylesheet">
+     <script src="https://api.mapbox.com/mapbox-gl-js/v3.25.0/mapbox-gl.js"></script>
+     <link rel="stylesheet" href="style.css">
+diff --git a/js/core/config.js b/js/core/config.js
+index b9129e8..f22cb91 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -1,4 +1,4 @@
+-export const APP_VERSION = "2.0.0-alpha.34.3.3";
++export const APP_VERSION = "2.0.0-alpha.34.3.4";
+ export const PROJECT_FORMAT = "story-builder-project";
+ export const PROJECT_FORMAT_VERSION = 1;
+ export const STORAGE_KEY = "storyBuilderProjectV2Architecture1";
+diff --git a/js/features/models3d/models3d-instance-panel.js b/js/features/models3d/models3d-instance-panel.js
+index e380000..fd141fc 100644
+--- a/js/features/models3d/models3d-instance-panel.js
++++ b/js/features/models3d/models3d-instance-panel.js
+@@ -1,6 +1,7 @@
+-import { EVENTS, on } from "../../core/events.js";
++import { emit, EVENTS, on } from "../../core/events.js";
++import { saveProjectLocally } from "../../core/project-service.js";
+ import { getProject } from "../../core/store.js";
+-import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
++import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
+ 
+ export function setupModels3dInstancePanel() {
+     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
+@@ -41,7 +42,20 @@ export function renderInstanceEditor() {
+         setSelectedInstanceMoveMode(!isSelectedInstanceMoveModeActive());
+         renderInstanceEditor();
+     });
+-    card.append(heading, hint, details, moveButton);
++    const rotationEditor = document.createElement("fieldset");
++    rotationEditor.className = "models3d-transform-editor";
++    const rotationLegend = document.createElement("legend");
++    rotationLegend.textContent = "Rotation";
++    rotationEditor.append(rotationLegend);
++    const rotation = Array.isArray(instance.rotation) ? instance.rotation : [0, 0, 0];
++    ["Tangage", "Roulis", "Cap"].forEach((label, index) => {
++        rotationEditor.append(createNumberField(label, rotation[index] || 0, -360, 360, 1, value => {
++            instance.rotation ??= [0, 0, 0];
++            instance.rotation[index] = value;
++            commitInstanceChange();
++        }));
++    });
++    card.append(heading, hint, details, moveButton, rotationEditor);
+     container.append(card);
+ }
+ 
+@@ -52,3 +66,29 @@ function appendDetail(list, label, value) {
+     description.textContent = value;
+     list.append(term, description);
+ }
++
++function createNumberField(labelText, value, min, max, step, onChange) {
++    const label = document.createElement("label");
++    label.className = "models3d-transform-field";
++    const text = document.createElement("span");
++    text.textContent = labelText;
++    const input = document.createElement("input");
++    input.type = "number";
++    input.value = String(value);
++    input.min = String(min);
++    input.max = String(max);
++    input.step = String(step);
++    input.addEventListener("change", () => {
++        const next = Math.min(max, Math.max(min, Number(input.value) || 0));
++        input.value = String(next);
++        onChange(next);
++    });
++    label.append(text, input);
++    return label;
++}
++
++function commitInstanceChange() {
++    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
++    saveProjectLocally();
++    renderModelInstances();
++}
+diff --git a/style.css b/style.css
+index 9e2b59f..9aa54b3 100644
+--- a/style.css
++++ b/style.css
+@@ -5878,3 +5878,8 @@ body > .collection-menu { z-index: 1000; }
+ 
+ .models3d-instance-move { width: 100%; margin-top: var(--space-4); }
+ .models3d-move-cursor { cursor: move !important; }
++
++.models3d-transform-editor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-4) 0 0; padding: var(--space-3); border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); }
++.models3d-transform-editor legend { padding: 0 var(--space-2); font-size: 12px; font-weight: 700; }
++.models3d-transform-field { display: grid; gap: var(--space-1); min-width: 0; font-size: 11px !important; }
++.models3d-transform-field input { min-width: 0; padding-inline: var(--space-2) !important; }

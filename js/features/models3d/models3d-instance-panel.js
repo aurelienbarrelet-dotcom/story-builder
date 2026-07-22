@@ -1,6 +1,7 @@
-import { EVENTS, on } from "../../core/events.js";
+import { emit, EVENTS, on } from "../../core/events.js";
+import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
-import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
+import { getSelectedModelInstanceId, isSelectedInstanceMoveModeActive, renderModelInstances, selectModelInstance, setSelectedInstanceMoveMode } from "./models3d-map.js";
 
 export function setupModels3dInstancePanel() {
     on(EVENTS.MODEL3D_INSTANCE_SELECTED, renderInstanceEditor);
@@ -41,7 +42,20 @@ export function renderInstanceEditor() {
         setSelectedInstanceMoveMode(!isSelectedInstanceMoveModeActive());
         renderInstanceEditor();
     });
-    card.append(heading, hint, details, moveButton);
+    const rotationEditor = document.createElement("fieldset");
+    rotationEditor.className = "models3d-transform-editor";
+    const rotationLegend = document.createElement("legend");
+    rotationLegend.textContent = "Rotation";
+    rotationEditor.append(rotationLegend);
+    const rotation = Array.isArray(instance.rotation) ? instance.rotation : [0, 0, 0];
+    ["Tangage", "Roulis", "Cap"].forEach((label, index) => {
+        rotationEditor.append(createNumberField(label, rotation[index] || 0, -360, 360, 1, value => {
+            instance.rotation ??= [0, 0, 0];
+            instance.rotation[index] = value;
+            commitInstanceChange();
+        }));
+    });
+    card.append(heading, hint, details, moveButton, rotationEditor);
     container.append(card);
 }
 
@@ -51,4 +65,30 @@ function appendDetail(list, label, value) {
     const description = document.createElement("dd");
     description.textContent = value;
     list.append(term, description);
+}
+
+function createNumberField(labelText, value, min, max, step, onChange) {
+    const label = document.createElement("label");
+    label.className = "models3d-transform-field";
+    const text = document.createElement("span");
+    text.textContent = labelText;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.value = String(value);
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.addEventListener("change", () => {
+        const next = Math.min(max, Math.max(min, Number(input.value) || 0));
+        input.value = String(next);
+        onChange(next);
+    });
+    label.append(text, input);
+    return label;
+}
+
+function commitInstanceChange() {
+    emit(EVENTS.PROJECT_DIRTY_CHANGED, { isDirty: true });
+    saveProjectLocally();
+    renderModelInstances();
 }

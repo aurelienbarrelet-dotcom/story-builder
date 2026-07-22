@@ -1,6 +1,6 @@
-## SB-2.0.0-alpha.34.3.3
+## SB-2.0.0-alpha.34.3.4
 
-### 2.0.0-alpha.34.3.3
+### 2.0.0-alpha.34.3.4
 
 - Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
 - Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.

@@ -5878,3 +5878,8 @@ body > .collection-menu { z-index: 1000; }
 
 .models3d-instance-move { width: 100%; margin-top: var(--space-4); }
 .models3d-move-cursor { cursor: move !important; }
+
+.models3d-transform-editor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); margin: var(--space-4) 0 0; padding: var(--space-3); border: var(--border-width) solid var(--panel-border, #d4d7da); border-radius: var(--control-radius); }
+.models3d-transform-editor legend { padding: 0 var(--space-2); font-size: 12px; font-weight: 700; }
+.models3d-transform-field { display: grid; gap: var(--space-1); min-width: 0; font-size: 11px !important; }
+.models3d-transform-field input { min-width: 0; padding-inline: var(--space-2) !important; }
