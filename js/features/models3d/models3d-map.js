@@ -176,7 +176,7 @@ async function loadRenderEntries(revision) {
             const altitude = Number(instance.altitude) || 0;
             const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
             const userScale = Number(instance.scale) || 1;
-            const scene = createScene(root);
+            const scene = createScene(root, instance);
             if (instance.id === selectedInstanceId) {
                 const helper = new THREE.BoxHelper(root, 0x2563eb);
                 helper.material.depthTest = false;
@@ -240,13 +240,19 @@ function handleMapClick(event) {
     renderModelInstances();
 }
 
-function createScene(root) {
+function createScene(root, instance = {}) {
     const scene = new THREE.Scene();
     scene.add(root);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x6b7280, 1.35));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.55);
+    const lighting = instance.lighting || {};
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x6b7280, Number(lighting.ambient ?? 1.35)));
+    const sun = new THREE.DirectionalLight(0xffffff, Number(lighting.sun ?? 1.55));
     sun.position.set(30, -20, 50);
     scene.add(sun);
+    root.traverse(object => {
+        if (!object.isMesh) return;
+        object.castShadow = Boolean(lighting.shadows);
+        object.receiveShadow = Boolean(lighting.shadows);
+    });
     return scene;
 }
 

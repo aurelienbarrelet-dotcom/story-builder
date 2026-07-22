@@ -5889,3 +5889,5 @@ body > .collection-menu { z-index: 1000; }
 .models3d-terrain-editor { grid-template-columns: 1fr; }
 .models3d-terrain-follow { display: flex !important; align-items: center; gap: var(--space-2); font-size: 11px !important; }
 .models3d-terrain-follow input { width: auto !important; min-height: auto !important; }
+
+.models3d-lighting-editor { grid-template-columns: 1fr 1fr; }

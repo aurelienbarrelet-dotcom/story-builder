@@ -105,7 +105,24 @@ export function renderInstanceEditor() {
     followText.textContent = "Suivre le relief pendant le déplacement";
     followLabel.append(followInput, followText);
     terrainEditor.append(terrainLegend, altitudeField, snapButton, followLabel);
-    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor);
+    const lightingEditor = document.createElement("fieldset");
+    lightingEditor.className = "models3d-transform-editor models3d-lighting-editor";
+    const lightingLegend = document.createElement("legend");
+    lightingLegend.textContent = "Éclairage";
+    instance.lighting ??= { ambient: 1.35, sun: 1.55, shadows: false };
+    const shadowLabel = document.createElement("label");
+    shadowLabel.className = "models3d-terrain-follow";
+    const shadowInput = document.createElement("input");
+    shadowInput.type = "checkbox";
+    shadowInput.checked = Boolean(instance.lighting.shadows);
+    shadowInput.addEventListener("change", () => { instance.lighting.shadows = shadowInput.checked; commitInstanceChange(); });
+    shadowLabel.append(shadowInput, document.createTextNode(" Ombres du modèle"));
+    lightingEditor.append(lightingLegend,
+        createNumberField("Lumière ambiante", Number(instance.lighting.ambient ?? 1.35), 0, 5, 0.05, value => { instance.lighting.ambient = value; commitInstanceChange(); }),
+        createNumberField("Lumière solaire", Number(instance.lighting.sun ?? 1.55), 0, 5, 0.05, value => { instance.lighting.sun = value; commitInstanceChange(); }),
+        shadowLabel
+    );
+    card.append(heading, hint, details, moveButton, rotationEditor, scaleEditor, terrainEditor, lightingEditor);
     container.append(card);
 }
 

@@ -1,6 +1,8 @@
-## SB-2.0.0-alpha.34.3.6
+## SB-2.0.0-alpha.34.3.7
 
-### 2.0.0-alpha.34.3.6
+### 2.0.0-alpha.34.3.7
+
+- Ajout des réglages d’éclairage par instance 3D.
 
 - Remplace les boîtes d’aperçu du mode Lecture par un véritable calque 3D Mapbox.
 - Charge les GLB embarqués avec Three.js et les positionne directement aux coordonnées enregistrées.
