@@ -88,6 +88,8 @@ export function initializeMap() {
     map = new window.mapboxgl.Map({
         container: "map",
         style: getStory()?.mapStyle ?? "mapbox://styles/mapbox/standard",
+        projection: "mercator",
+        antialias: true,
         ...location
     });
     map.addControl(new window.mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");

@@ -1,0 +1,233 @@
+diff --git a/js/features/map/map-service.js b/js/features/map/map-service.js
+index 1666fee..5dbfe7a 100644
+--- a/js/features/map/map-service.js
++++ b/js/features/map/map-service.js
+@@ -88,6 +88,8 @@ export function initializeMap() {
+     map = new window.mapboxgl.Map({
+         container: "map",
+         style: getStory()?.mapStyle ?? "mapbox://styles/mapbox/standard",
++        projection: "mercator",
++        antialias: true,
+         ...location
+     });
+     map.addControl(new window.mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+diff --git a/js/features/models3d/models3d-map.js b/js/features/models3d/models3d-map.js
+index 7a66fac..c3fe8b0 100644
+--- a/js/features/models3d/models3d-map.js
++++ b/js/features/models3d/models3d-map.js
+@@ -10,7 +10,6 @@ let placementModelId = null;
+ let boundMap = null;
+ let renderer = null;
+ let renderEntries = [];
+-let objectUrls = [];
+ let renderRevision = 0;
+ let selectedInstanceId = null;
+ let moveModeActive = false;
+@@ -160,7 +159,6 @@ export function renderModelInstances() {
+     if (!map?.getStyle?.()) return;
+     const revision = ++renderRevision;
+     removeEditorLayer(map);
+-    releaseObjectUrls();
+     renderEntries = [];
+ 
+     const customLayer = {
+@@ -174,7 +172,8 @@ export function renderModelInstances() {
+                 antialias: true
+             });
+             renderer.autoClear = false;
+-            loadRenderEntries(revision).then(() => currentMap.triggerRepaint());
++            renderer.outputColorSpace = THREE.SRGBColorSpace;
++            loadRenderEntries(revision, currentMap);
+         },
+         render(gl, matrix) {
+             if (!renderer || revision !== renderRevision) return;
+@@ -200,7 +199,7 @@ export function renderModelInstances() {
+         onRemove() {
+             renderer?.dispose();
+             renderer = null;
+-            releaseObjectUrls();
++            disposeRenderEntries();
+             renderEntries = [];
+         }
+     };
+@@ -212,7 +211,7 @@ export function renderModelInstances() {
+     }
+ }
+ 
+-async function loadRenderEntries(revision) {
++async function loadRenderEntries(revision, map) {
+     const models = new Map(getModelLibrary().map(model => [model.id, model]));
+     const loader = new GLTFLoader();
+     for (const instance of getInstanceLibrary()) {
+@@ -222,23 +221,27 @@ async function loadRenderEntries(revision) {
+         const longitude = Number(instance?.longitude);
+         const latitude = Number(instance?.latitude);
+         if (!model || !Number.isFinite(longitude) || !Number.isFinite(latitude)) continue;
++
+         try {
+-            const gltf = await loader.loadAsync(createGlbObjectUrl(model));
++            const gltf = await parseGlbModel(loader, model);
+             if (revision !== renderRevision) return;
+             const root = gltf.scene || gltf.scenes?.[0];
+-            if (!root) continue;
+-            fitModelToGround(root);
++            if (!root) throw new Error("Le fichier GLB ne contient aucune scène exploitable.");
++
++            const normalizationScale = normalizeModel(root);
+             const rotation = Array.isArray(instance.rotation) ? instance.rotation : [0, 0, 0];
+             const altitude = Number(instance.altitude) || 0;
+             const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
+             const userScale = Number(instance.scale) || 1;
+             const scene = createScene(root, instance);
++
+             if (instance.id === selectedInstanceId) {
+                 const helper = new THREE.BoxHelper(root, 0x2563eb);
+                 helper.material.depthTest = false;
+                 helper.renderOrder = 1000;
+                 scene.add(helper);
+             }
++
+             let mixer = null;
+             const clips = Array.isArray(gltf.animations) ? gltf.animations : [];
+             if (clips.length && instance.animation?.enabled !== false) {
+@@ -249,6 +252,7 @@ async function loadRenderEntries(revision) {
+                 action.timeScale = Number(instance.animation?.speed) || 1;
+                 action.play();
+             }
++
+             instance.availableAnimations = clips.map(clip => clip.name || "Animation");
+             renderEntries.push({
+                 instanceId: instance.id,
+@@ -261,15 +265,92 @@ async function loadRenderEntries(revision) {
+                     rotateX: Math.PI / 2 + degreesToRadians(rotation[0]),
+                     rotateY: degreesToRadians(rotation[1]),
+                     rotateZ: degreesToRadians(rotation[2]),
+-                    scale: mercator.meterInMercatorCoordinateUnits() * userScale
++                    scale: mercator.meterInMercatorCoordinateUnits() * normalizationScale * userScale
+                 }
+             });
++            map.triggerRepaint();
+         } catch (error) {
+-            console.warn("Impossible de charger un modèle 3D dans l’éditeur.", error);
++            const message = error instanceof Error ? error.message : String(error);
++            console.error(`Impossible de charger le modèle 3D « ${model.name || model.id} ».`, error);
++            renderEntries.push(createErrorMarkerEntry(instance, longitude, latitude));
++            map.triggerRepaint();
++            window.setTimeout(() => {
++                window.alert(`Le modèle 3D « ${model.name || "sans nom"} » n’a pas pu être affiché.\n\n${message}`);
++            }, 0);
+         }
+     }
+ }
+ 
++function parseGlbModel(loader, model) {
++    const buffer = decodeGlbArrayBuffer(model);
++    return new Promise((resolve, reject) => {
++        loader.parse(buffer, "", resolve, error => {
++            reject(error instanceof Error ? error : new Error("Décodage GLB impossible."));
++        });
++    });
++}
++
++function decodeGlbArrayBuffer(model) {
++    if (model.encoding !== "base64" || !model.data) throw new Error("Données GLB indisponibles.");
++    const binary = atob(model.data);
++    const bytes = new Uint8Array(binary.length);
++    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
++    if (bytes.length < 12 || bytes[0] !== 0x67 || bytes[1] !== 0x6c || bytes[2] !== 0x54 || bytes[3] !== 0x46) {
++        throw new Error("Le fichier importé n’est pas un GLB valide.");
++    }
++    return bytes.buffer;
++}
++
++function normalizeModel(root) {
++    root.updateMatrixWorld(true);
++    const bounds = new THREE.Box3().setFromObject(root);
++    if (bounds.isEmpty()) throw new Error("Le modèle ne contient aucun maillage visible.");
++    const size = bounds.getSize(new THREE.Vector3());
++    const longestSide = Math.max(size.x, size.y, size.z);
++    if (!Number.isFinite(longestSide) || longestSide <= 0) throw new Error("Les dimensions du modèle sont invalides.");
++    const center = bounds.getCenter(new THREE.Vector3());
++    root.position.x -= center.x;
++    root.position.y -= bounds.min.y;
++    root.position.z -= center.z;
++    root.updateMatrixWorld(true);
++    return 50 / longestSide;
++}
++
++function createErrorMarkerEntry(instance, longitude, latitude) {
++    const altitude = Number(instance.altitude) || 0;
++    const mercator = window.mapboxgl.MercatorCoordinate.fromLngLat([longitude, latitude], altitude);
++    const geometry = new THREE.BoxGeometry(12, 12, 12);
++    const material = new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true });
++    const marker = new THREE.Mesh(geometry, material);
++    marker.position.y = 6;
++    const scene = new THREE.Scene();
++    scene.add(marker);
++    return {
++        instanceId: instance.id,
++        scene,
++        mixer: null,
++        transform: {
++            translateX: mercator.x,
++            translateY: mercator.y,
++            translateZ: mercator.z,
++            rotateX: Math.PI / 2,
++            rotateY: 0,
++            rotateZ: 0,
++            scale: mercator.meterInMercatorCoordinateUnits()
++        }
++    };
++}
++
++function disposeRenderEntries() {
++    for (const entry of renderEntries) {
++        entry.scene?.traverse(object => {
++            object.geometry?.dispose?.();
++            if (Array.isArray(object.material)) object.material.forEach(material => material?.dispose?.());
++            else object.material?.dispose?.();
++        });
++    }
++}
++
+ function bindMapClickHandler() {
+     const map = getMapInstance();
+     if (!map || map === boundMap) return;
+@@ -325,15 +406,6 @@ function createScene(root, instance = {}) {
+     return scene;
+ }
+ 
+-function fitModelToGround(root) {
+-    const bounds = new THREE.Box3().setFromObject(root);
+-    if (bounds.isEmpty()) return;
+-    const center = bounds.getCenter(new THREE.Vector3());
+-    root.position.x -= center.x;
+-    root.position.y -= bounds.min.y;
+-    root.position.z -= center.z;
+-}
+-
+ function removeEditorLayer(map) {
+     try {
+         if (map.getLayer?.(LAYER_ID)) map.removeLayer(LAYER_ID);
+@@ -361,21 +433,6 @@ function getInstanceLibrary() {
+     return project.models3dInstances;
+ }
+ 
+-function createGlbObjectUrl(model) {
+-    if (model.encoding !== "base64" || !model.data) throw new Error("Données GLB indisponibles.");
+-    const binary = atob(model.data);
+-    const bytes = new Uint8Array(binary.length);
+-    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+-    const url = URL.createObjectURL(new Blob([bytes], { type: model.mimeType || "model/gltf-binary" }));
+-    objectUrls.push(url);
+-    return url;
+-}
+-
+-function releaseObjectUrls() {
+-    objectUrls.forEach(url => URL.revokeObjectURL(url));
+-    objectUrls = [];
+-}
+-
+ function degreesToRadians(value) {
+     return Number(value || 0) * Math.PI / 180;
+ }
