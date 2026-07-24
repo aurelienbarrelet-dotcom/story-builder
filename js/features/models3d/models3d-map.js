@@ -1,11 +1,13 @@
 import * as THREE from "https://esm.sh/three@0.180.0";
 import { GLTFLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/DRACOLoader.js";
 import { emit, EVENTS, on } from "../../core/events.js";
 import { saveProjectLocally } from "../../core/project-service.js";
 import { getProject } from "../../core/store.js";
 import { getMapInstance } from "../map/map-service.js";
 
 const LAYER_ID = "story-builder-models3d-editor";
+const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.7/";
 let placementModelId = null;
 let boundMap = null;
 let renderer = null;
@@ -211,9 +213,17 @@ export function renderModelInstances() {
     }
 }
 
+function createGltfLoader() {
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath(DRACO_DECODER_PATH);
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    return loader;
+}
+
 async function loadRenderEntries(revision, map) {
     const models = new Map(getModelLibrary().map(model => [model.id, model]));
-    const loader = new GLTFLoader();
+    const loader = createGltfLoader();
     for (const instance of getInstanceLibrary()) {
         if (revision !== renderRevision) return;
         if (instance.visible === false) continue;

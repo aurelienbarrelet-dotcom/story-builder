@@ -254,8 +254,10 @@ function createReaderModels3dScript(project) {
     return `<script type="module" id="story-builder-models3d-reader">
         import * as THREE from "https://esm.sh/three@0.180.0";
         import { GLTFLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js";
+        import { DRACOLoader } from "https://esm.sh/three@0.180.0/examples/jsm/loaders/DRACOLoader.js";
 
         const payload = ${escapeClosingScript(payload)};
+        const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.7/";
         const objectUrls = [];
         const renderEntries = [];
         let renderer = null;
@@ -301,7 +303,10 @@ function createReaderModels3dScript(project) {
 
         async function loadEntries() {
             const modelsById = new Map((payload.models || []).map(model => [model.id, model]));
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath(DRACO_DECODER_PATH);
             const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
 
             for (const instance of payload.instances || []) {
                 const model = modelsById.get(instance && instance.modelId);
