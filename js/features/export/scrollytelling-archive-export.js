@@ -1,10 +1,11 @@
-import { getStory } from "../../core/store.js";
+import { getProject, getStory } from "../../core/store.js";
 import { createSlug } from "../../core/utils.js";
 import {
     buildByline,
     createMapboxScrollytellingConfig,
     serializeMapboxConfig
 } from "./mapbox-config-export.js";
+import { collectUsedModels3d, createModels3dRuntimeScript } from "../models3d/models3d-publication.js";
 
 const MASTER_INDEX_URL = new URL(
     "../../../templates/scrollytelling/index.html",
@@ -129,6 +130,36 @@ function extractChapterImages(config, zip, usedNames) {
     });
 }
 
+
+function extractUsedModels3d(project, zip) {
+    const payload = collectUsedModels3d(project);
+    if (!payload.instances.length) return null;
+
+    const usedNames = new Set();
+    const exportedModels = payload.models.flatMap((model, index) => {
+        if (model?.encoding !== "base64" || !model?.data) return [];
+        const originalBase = String(model.name || `modele-${index + 1}`).replace(/\.[^.]+$/, "");
+        const filename = createUniqueFilename(originalBase, "glb", usedNames);
+        zip.file(`assets/models3d/${filename}`, base64ToUint8Array(model.data));
+        return [{
+            id: model.id,
+            name: model.name || filename,
+            mimeType: model.mimeType || "model/gltf-binary",
+            url: `assets/models3d/${filename}`
+        }];
+    });
+
+    const exportedIds = new Set(exportedModels.map(model => model.id));
+    const instances = payload.instances.filter(instance => exportedIds.has(instance.modelId));
+    if (!instances.length) return null;
+    return { models: exportedModels, instances };
+}
+
+function injectModels3dRuntime(masterIndex, payload) {
+    if (!payload?.instances?.length) return masterIndex;
+    return masterIndex.replace("</body>", `${createModels3dRuntimeScript(payload)}\n</body>`);
+}
+
 export async function downloadScrollytellingArchive() {
     if (!window.JSZip) {
         throw new Error(
@@ -136,6 +167,7 @@ export async function downloadScrollytellingArchive() {
         );
     }
 
+    const project = getProject();
     const story = getStory();
     const config = createMapboxScrollytellingConfig(story);
 
@@ -156,9 +188,11 @@ export async function downloadScrollytellingArchive() {
     const usedAssetNames = new Set();
     extractAuthorImages(story, config, zip, usedAssetNames);
     extractChapterImages(config, zip, usedAssetNames);
+    const models3dPayload = extractUsedModels3d(project, zip);
+    const publicationIndex = injectModels3dRuntime(masterIndex, models3dPayload);
 
-    // Les deux fichiers maîtres sont copiés tels quels. Seul config.js est généré.
-    zip.file("index.html", masterIndex);
+    // Le moteur 3D et les GLB ne sont ajoutés que lorsqu’une instance placée les utilise.
+    zip.file("index.html", publicationIndex);
     zip.file("style.css", masterStyle);
     zip.file("config.js", serializeMapboxConfig(config));
 

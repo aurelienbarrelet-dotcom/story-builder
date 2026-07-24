@@ -16,6 +16,7 @@ let renderRevision = 0;
 let selectedInstanceId = null;
 let moveModeActive = false;
 let draggingInstance = false;
+let warnedProjectionName = null;
 const animationClock = new THREE.Clock();
 
 export function setupModels3dMap() {
@@ -159,6 +160,19 @@ export function removeInstancesForModel(modelId) {
 export function renderModelInstances() {
     const map = getMapInstance();
     if (!map?.getStyle?.()) return;
+    const projectionName = map.getProjection?.()?.name || "mercator";
+    if (projectionName !== "mercator") {
+        removeEditorLayer(map);
+        renderEntries = [];
+        if (warnedProjectionName !== projectionName) {
+            warnedProjectionName = projectionName;
+            const message = `Les objets 3D sont masqués : la projection Mapbox « ${projectionName} » n’est pas compatible avec ce moteur 3D. La projection du style est conservée.`;
+            console.warn(message);
+            window.setTimeout(() => window.alert(message), 0);
+        }
+        return;
+    }
+    warnedProjectionName = null;
     const revision = ++renderRevision;
     removeEditorLayer(map);
     renderEntries = [];
